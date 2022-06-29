@@ -23,9 +23,13 @@ src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-th
 <p align="left">
 <a href="https://aws.amazon.com/" target="_blank" rel="noreferrer"><img src="https://miro.medium.com/max/600/1*W02WEmR0_JeJXfLWN2zHwQ.png" width="56" height="42" alt="Amazon Web Services" /></a>
 <a href="https://azure.microsoft.com/en-us/" target="_blank" rel="noreferrer"><img src="https://azure.microsoft.com/svghandler/microsoft-sentinel/?width=36&height=36" width="36" height="36" alt="Microsoft Azure" /></a>
+<a href="https://render.com" target="_blank" rel="noreferrer"><img src="https://aws1.discourse-cdn.com/business6/uploads/render/original/1X/c4a1a8040b3441076615dc5bc6fd34fe719b9cbe.png" width="36" height="36" alt="Render.com" /></a>
 <a href="https://cloud.google.com" target="_blank" rel="noreferrer"><img src="https://www.ucloudstore.com/wp-content/uploads/2021/09/gcp-02.png" width="36" height="36" alt="Google Cloud Platform" /></a>
+</p>
+
 
 #### Languages
+<p align="left">
 <a href="https://www.terraform.io/" target="_blank" rel="noreferrer"><img src="https://www.terraform.io/img/docs/tfe_logo.png" width="36" height="36" alt="Terraform" /></a>
 <a href="https://www.python.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/python-colored.svg" width="36" height="36" alt="Python" /></a>
 <a href="https://www.typescriptlang.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/typescript-colored.svg" width="36" height="36" alt="Typescript" /></a>
