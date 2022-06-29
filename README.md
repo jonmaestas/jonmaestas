@@ -18,10 +18,17 @@ src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-th
 
 ### Skills
 
+#### Clouds
 <p align="left">
+<a href="https://aws.amazon.com/" target="_blank" rel="noreferrer"><img src="https://miro.medium.com/max/600/1*W02WEmR0_JeJXfLWN2zHwQ.png" width="56" height="42" alt="Amazon Web Services" /></a>
+<a href="https://azure.microsoft.com/en-us/" target="_blank" rel="noreferrer"><img src="https://azure.microsoft.com/svghandler/microsoft-sentinel/?width=36&height=36" width="36" height="36" alt="Microsoft Azure" /></a>
+<a href="https://cloud.google.com" target="_blank" rel="noreferrer"><img src="https://www.ucloudstore.com/wp-content/uploads/2021/09/gcp-02.png" width="36" height="36" alt="Google Cloud Platform" /></a>
+
+#### Languages
+<a href="https://www.terraform.io/" target="_blank" rel="noreferrer"><img src="https://www.terraform.io/img/docs/tfe_logo.png" width="36" height="36" alt="Terraform" /></a>
+<a href="https://www.python.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/python-colored.svg" width="36" height="36" alt="Python" /></a>
 <a href="https://www.typescriptlang.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/typescript-colored.svg" width="36" height="36" alt="Typescript" /></a>
 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/javascript-colored.svg" width="36" height="36" alt="Javascript" /></a>
-<a href="https://www.python.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/python-colored.svg" width="36" height="36" alt="Python" /></a>
 <a href="https://developer.mozilla.org/en-US/docs/Glossary/HTML5" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/html5-colored.svg" width="36" height="36" alt="HTML5" /></a>
 <a href="https://svelte.dev/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/svelte-colored.svg" width="36" height="36" alt="Svelte" /></a>
 <a href="https://reactjs.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/react-colored.svg" width="36" height="36" alt="React" /></a>
@@ -45,7 +52,5 @@ src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-th
 <a href="http://www.github.com/jonmaestas"><img src="https://github-readme-stats.vercel.app/api?username=jonmaestas&show_icons=true&hide=stars,&count_private=true&title_color=0891b2&text_color=ffffff&icon_color=0891b2&bg_color=1c1917&hide_border=true&show_icons=true" alt="jonmaestas's GitHub stats" /></a>
 
 <a href="https://github.com/jonmaestas" align="left"><img src="https://github-readme-stats.vercel.app/api/top-langs/?username=jonmaestas&langs_count=10&title_color=0891b2&text_color=ffffff&icon_color=0891b2&bg_color=1c1917&hide_border=true&locale=en&custom_title=Top%20%Languages" alt="Top Languages" /></a>
-
-### Support Me
 
 <a href="https://www.buymeacoffee.com/jonmaestas"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="200" /></a>
