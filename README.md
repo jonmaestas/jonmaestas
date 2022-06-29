@@ -6,11 +6,12 @@ Engineer
 
 I enjoy learning new technologies. I'm always looking for new and better ways to do things and always trying to keep things as simple as possible.
 
-* 🌍  I'm based in St. Louis, Missouri
-* 🖥️  See my portfolio at [maestas.xyz](http://maestas.xyz)
+* 🌍  I'm based in Wright City, Missouri
+* 🖥️  See my portfolio [here](http://maestas.xyz)
 * ✉️  You can contact me at [jonathan.maestas@gmail.com](mailto:jonathan.maestas@gmail.com)
-* 🚀  I'm currently working on [Rainout.Info](http://Rainout.Info)
-* 🧠  I'm learning Full Stack development
+* 🚀  I'm currently working on [rainout.info](http://rainout.info)
+* 🧠  I'm learning Full Stack development and Leadership skills
+* 📑  See my resume [here](http://resume.maestas.xyz)
 * 🤝  I'm open to collaborating on anything fun and exciting
 
 <a href="https://www.github.com/jonmaestas" target="_blank" rel="noreferrer"><img
@@ -45,9 +46,8 @@ src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-th
 
 <p align="left"> <a href="https://www.github.com/jonmaestas" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/github-dark.svg" width="32" height="32" /></a> <a href="https://www.linkedin.com/in/jonmaestas/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/socials/linkedin.svg" width="32" height="32" /></a></p>
 
-### Badges
 
-<b>My GitHub Stats</b>
+### GitHub Stats
 
 <a href="http://www.github.com/jonmaestas"><img src="https://github-readme-stats.vercel.app/api?username=jonmaestas&show_icons=true&hide=stars,&count_private=true&title_color=0891b2&text_color=ffffff&icon_color=0891b2&bg_color=1c1917&hide_border=true&show_icons=true" alt="jonmaestas's GitHub stats" /></a>
 
