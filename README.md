@@ -9,10 +9,10 @@ I enjoy learning new technologies. I'm always looking for new and better ways to
 * 🌍  I'm based in Wright City, Missouri
 * 🖥️  See my portfolio [here](http://maestas.xyz)
 * ✉️  You can contact me at [jonathan.maestas@gmail.com](mailto:jonathan.maestas@gmail.com)
-* 🚀  I'm currently working on [rainout.info](http://rainout.info)
+* 🚀  I'm currently working on [rainout.info](http://rainout.info) & a budgeting app (url tbd :)).
 * 🧠  I'm learning Full Stack development and Leadership skills
-* 📑  See my resume [here](http://resume.maestas.xyz)
-* 🤝  I'm open to collaborating on anything fun and exciting
+* 📑  See my resume [here](http://jonmaestas.com)
+* 🤝  I'm open to collaborating on anything fun and exciting.
 
 <a href="https://www.github.com/jonmaestas" target="_blank" rel="noreferrer"><img
 src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-the-badge&color=0891b2&labelColor=1c1917" /></a>
