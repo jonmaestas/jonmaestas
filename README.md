@@ -7,19 +7,16 @@ Engineer
 I enjoy learning new technologies. I'm always looking for new and better ways to do things and always trying to keep things as simple as possible.
 
 * 🌍  I'm based in Wright City, Missouri
-* 🖥️  See my portfolio [here](http://maestas.xyz)
+* 🖥️  See my portfolio [here](http://jonmaestas.com)
 * ✉️  You can contact me at [jonathan.maestas@gmail.com](mailto:jonathan.maestas@gmail.com)
-* 🚀  I'm currently working on [rainout.info](http://rainout.info) & a budgeting app (url tbd :)).
+* 🚀  I'm currently working on [Wright City Sports](https://wrightcitysports.org), [rainout.info](https://rainout.info) & a budgeting app.
 * 🧠  I'm learning Full Stack development and Leadership skills
-* 📑  See my resume [here](http://jonmaestas.com)
 * 🤝  I'm open to collaborating on anything fun and exciting.
 
 <a href="https://www.github.com/jonmaestas" target="_blank" rel="noreferrer"><img
 src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-the-badge&color=0891b2&labelColor=1c1917" /></a>
 
-### Skills
-
-#### Clouds
+### Clouds
 <p align="left">
   <a href="https://aws.amazon.com/" target="_blank" rel="noreferrer">
     <img src="https://miro.medium.com/max/600/1*W02WEmR0_JeJXfLWN2zHwQ.png" width="56" height="42" alt="Amazon Web Services" />
@@ -33,9 +30,9 @@ src="https://img.shields.io/github/followers/jonmaestas?logo=github&style=for-th
 </p>
 
 
-#### Languages
+### Languages
 <p align="left">
-<a href="https://www.terraform.io/" target="_blank" rel="noreferrer"><img src="https://www.terraform.io/img/docs/tfe_logo.png" width="36" height="36" alt="Terraform" /></a>
+<a href="https://www.terraform.io/" target="_blank" rel="noreferrer"><img src="https://www.hashicorp.com/_next/static/media/color.d7bf990e.svg" width="36" height="36" alt="Terraform" /></a>
 <a href="https://www.python.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/python-colored.svg" width="36" height="36" alt="Python" /></a>
 <a href="https://www.typescriptlang.org/" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/typescript-colored.svg" width="36" height="36" alt="Typescript" /></a>
 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/danielcranney/readme-generator/main/public/icons/skills/javascript-colored.svg" width="36" height="36" alt="Javascript" /></a>
