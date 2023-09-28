@@ -6,36 +6,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jon Maestas - jonmaestas.com</title>
   <link rel="stylesheet" href="./index.css">
+  <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+  <script async src="https://analytics.jonmaestas.com/script.js"
+    data-website-id="974195be-c414-48b4-8e3c-59cb26de1785"></script>
 </head>
 
 <body>
-  <section>
-    <div class="section__content">
-      <svg>
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
-          Jon Maestas
-        </text>
-      </svg>
+
+  <main>
+
+    <div class="workspace">
+      <h1>Jon Maestas</h1>
     </div>
-  </section>
-  <section>
-    <div class="section__content">
-      <a href="https://wrightcitysports.org">
-        WrightCitySports.org
-      </a>
-      <a href="https://coach.wrightcitysports.org">
-        Coach's Playbook
-      </a>
-      <a href="https://gopitch.wrightcitysports.org">
-        At-home Pitch Tracker
-      </a>
-    </div>
-  </section>
-  <section>
-    <div class="section__content">
-      <h2>jon@jonmaestas.com</h2>
-    </div>
-  </section>
+
+    <nav>
+      <ul>
+        <li>
+          Projects 🔽
+          <ul>
+            <li>
+              <a target="_blank" href="https://wrightcitysports.org">
+                WrightCitySports.org
+              </a>
+            </li>
+            <li>
+              <a target="_blank" href="https://coach.wrightcitysports.org">
+                Coach's Playbook
+              </a>
+            </li>
+            <li>
+              <a target="_blank" href="https://gopitch.wrightcitysports.org">
+                At-home Pitch Tracker
+              </a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          Socials 🔽
+          <ul>
+            <li>
+              <a target="_blank" href="https://www.linkedin.com/in/jonmaestas/">
+                LinkedIn
+              </a>
+            </li>
+            <li>
+              <a target="_blank" href="https://github.com/jonmaestas">
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a href="mailto:jon@jonmaestas.com">
+                Email
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+
+    <div class="footer">Made with 💙 by Jon</div>
+
+  </main>
+
+  <script>
+    const zoomElement = document.querySelector(".workspace");
+    let zoom = 1;
+    const ZOOM_SPEED = 0.1;
+
+    document.addEventListener("wheel", function (e) {
+      if (e.deltaY > 0) {
+        zoomElement.style.transform = `scale(${(zoom += ZOOM_SPEED)})`;
+      } else {
+        zoomElement.style.transform = `scale(${(zoom -= ZOOM_SPEED)})`;
+      }
+    });
+
+  </script>
 </body>
 
 </html>
