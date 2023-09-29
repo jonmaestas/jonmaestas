@@ -75,6 +75,7 @@
     const ZOOM_SPEED = 0.1;
     let lastTouchY = null;
     let lastTouchTime = null;
+    let velocity = 0;
 
     // Disable Scrolling and Pull-to-Refresh
     document.addEventListener("touchmove", function (e) {
@@ -99,8 +100,14 @@
     });
 
     document.addEventListener("touchend", function () {
-      lastTouchY = null;
-      lastTouchTime = null;
+      setTimeout(() => {
+        velocity *= 0.9;
+        if (Math.abs(velocity) > 0.01) {
+          zoom += velocity;
+          zoomElement.style.transform = `scale(${zoom})`;
+          setTimeout(arguments.callee, 20);
+        }
+      }, 20);
     });
 
     document.addEventListener("touchmove", function (e) {
@@ -109,22 +116,17 @@
         let deltaY = currentTouchY - lastTouchY;
         let currentTime = Date.now();
         let deltaTime = currentTime - lastTouchTime;
-        let velocity = deltaY / deltaTime;
 
-        let flickFactor = 100; // Adjust as needed
+        velocity = deltaY / deltaTime / 10; // adjusted for smoother flick
 
-        let effectiveZoomSpeed = ZOOM_SPEED + Math.abs(velocity) * flickFactor;
-
-        if (deltaY > 0) {
-          zoomElement.style.transform = `scale(${(zoom += effectiveZoomSpeed)})`;
-        } else {
-          zoomElement.style.transform = `scale(${(zoom -= effectiveZoomSpeed)})`;
-        }
+        zoom += ZOOM_SPEED * Math.sign(deltaY);
+        zoomElement.style.transform = `scale(${zoom})`;
 
         lastTouchY = currentTouchY;
         lastTouchTime = currentTime;
       }
     });
+
   </script>
 </body>
 
