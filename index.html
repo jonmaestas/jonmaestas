@@ -116,7 +116,7 @@
     document.addEventListener("wheel", function (e) {
       let proposedZoom = (e.deltaY > 0) ? (zoom + ZOOM_SPEED) : (zoom - ZOOM_SPEED);
 
-      if (proposedZoom < MIN_ZOOM && !isBouncing) {
+      if (proposedZoom < MIN_ZOOM) {
       } else if (proposedZoom <= MAX_ZOOM && proposedZoom >= MIN_ZOOM) {
         zoom = proposedZoom;
         zoomElement.style.transform = `scale(${zoom})`;
@@ -152,8 +152,13 @@
 
         velocity = deltaY / deltaTime / 10; // adjusted for smoother flick
 
-        zoom += ZOOM_SPEED * Math.sign(deltaY);
-        zoomElement.style.transform = `scale(${zoom})`;
+        let proposedZoom = zoom + ZOOM_SPEED * Math.sign(deltaY);
+
+        if (proposedZoom >= MIN_ZOOM && proposedZoom <= MAX_ZOOM) {
+          zoom = proposedZoom;
+          zoomElement.style.transform = `scale(${zoom})`;
+          updateGradientTransform();
+        }
 
         lastTouchY = currentTouchY;
         lastTouchTime = currentTime;
