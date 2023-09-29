@@ -74,6 +74,7 @@
     let zoom = 1;
     const ZOOM_SPEED = 0.1;
     let lastTouchY = null;
+    let lastTouchTime = null;
 
     // Disable Scrolling and Pull-to-Refresh
     document.addEventListener("touchmove", function (e) {
@@ -93,20 +94,35 @@
     document.addEventListener("touchstart", function (e) {
       if (e.touches.length === 1) {
         lastTouchY = e.touches[0].clientY;
+        lastTouchTime = Date.now();
       }
+    });
+
+    document.addEventListener("touchend", function () {
+      lastTouchY = null;
+      lastTouchTime = null;
     });
 
     document.addEventListener("touchmove", function (e) {
       if (e.touches.length === 1 && lastTouchY !== null) {
-        let deltaY = e.touches[0].clientY - lastTouchY;
+        let currentTouchY = e.touches[0].clientY;
+        let deltaY = currentTouchY - lastTouchY;
+        let currentTime = Date.now();
+        let deltaTime = currentTime - lastTouchTime;
+        let velocity = deltaY / deltaTime;
+
+        let flickFactor = 100; // Adjust as needed
+
+        let effectiveZoomSpeed = ZOOM_SPEED + Math.abs(velocity) * flickFactor;
 
         if (deltaY > 0) {
-          zoomElement.style.transform = `scale(${(zoom += ZOOM_SPEED)})`;
+          zoomElement.style.transform = `scale(${(zoom += effectiveZoomSpeed)})`;
         } else {
-          zoomElement.style.transform = `scale(${(zoom -= ZOOM_SPEED)})`;
+          zoomElement.style.transform = `scale(${(zoom -= effectiveZoomSpeed)})`;
         }
 
-        lastTouchY = e.touches[0].clientY;
+        lastTouchY = currentTouchY;
+        lastTouchTime = currentTime;
       }
     });
   </script>
