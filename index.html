@@ -73,6 +73,7 @@
     const zoomElement = document.querySelector(".workspace");
     let zoom = 1;
     const ZOOM_SPEED = 0.1;
+    let lastTouchY = null;
 
     // For Desktop
     document.addEventListener("wheel", function (e) {
@@ -84,32 +85,26 @@
     });
 
     // For Mobile
-    let initialTouchDistance;
     document.addEventListener("touchstart", function (e) {
-      if (e.touches.length >= 2) {
-        initialTouchDistance = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
+      if (e.touches.length === 1) {
+        lastTouchY = e.touches[0].clientY;
       }
     });
 
     document.addEventListener("touchmove", function (e) {
-      if (e.touches.length >= 2 && initialTouchDistance) {
-        const newDistance = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
+      if (e.touches.length === 1 && lastTouchY !== null) {
+        let deltaY = e.touches[0].clientY - lastTouchY;
 
-        if (newDistance > initialTouchDistance) {
+        if (deltaY > 0) {
           zoomElement.style.transform = `scale(${(zoom += ZOOM_SPEED)})`;
         } else {
           zoomElement.style.transform = `scale(${(zoom -= ZOOM_SPEED)})`;
         }
 
-        initialTouchDistance = newDistance;
+        lastTouchY = e.touches[0].clientY;
       }
     });
+
   </script>
 </body>
 
