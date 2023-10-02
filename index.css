@@ -1,29 +1,39 @@
-.workspace {
+body,
+html {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.sections {
+  scroll-snap-type: y mandatory;
+  scroll-snap-points-y: repeat(300px);
+  overflow-y: scroll;
   height: 100vh;
-  position: fixed;
   width: 100%;
-  bottom: 0;
-  left: 0;
-  display: grid;
-  place-items: center;
-  font: 700 12px system-ui;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-section {
-  height: 50vh;
-  position: relative;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  place-items: center;
-  font: 700 12px system-ui;
+.sections::-webkit-scrollbar {
+  display: none;
 }
 
-.footer {
-  position: fixed;
+.section {
+  height: 100vh;
+  width: 100%;
+  scroll-snap-align: start;
+  margin: 1rem 1rem;
+  padding: 1rem 1rem;
+}
+
+footer {
+  position: absolute;
   bottom: 0;
   right: 0;
   font-style: italic;
-  font-size: .5rem;
-  margin: 1rem 1rem;
+  font-size: 1rem;
+  margin: 0rem 0rem;
+  padding: 0rem 1rem;
 }
