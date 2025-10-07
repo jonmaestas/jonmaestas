@@ -11,6 +11,7 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
 body {
@@ -19,9 +20,11 @@ body {
   background: Canvas;
   color: CanvasText;
   display: flex;
-  justify-content: center;
+  justify-content: center; /* center content horizontally */
+  align-items: flex-start;  /* start at top */
 }
 
+/* Main container */
 main {
   width: 100%;
   max-width: var(--maxw);
@@ -29,6 +32,13 @@ main {
   display: flex;
   flex-direction: column;
   gap: var(--gap);
+  box-sizing: border-box;
+
+  /* Center the block itself */
+  margin: 0 auto;
+
+  /* Give breathing room on large screens */
+  text-align: left;
 }
 
 /* Headings */
