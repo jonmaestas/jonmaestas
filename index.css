@@ -1,10 +1,11 @@
-/* Modern plain-text vibe; dark-mode aware */
 :root {
   color-scheme: light dark;
-  --maxw: 48rem;
-  --pad: 1rem;
-  --gap: 1.25rem;
-  --border: color-mix(in oklab, currentColor 20%, transparent);
+  --maxw: 46rem;
+  --pad-x: 1.5rem;
+  --pad-y: 3rem;
+  --gap: 2rem;
+  --border: color-mix(in oklab, currentColor 15%, transparent);
+  --link-color: color-mix(in oklab, currentColor 80%, blue 30%);
 }
 
 html, body {
@@ -13,55 +14,73 @@ html, body {
 }
 
 body {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   line-height: 1.6;
   background: Canvas;
   color: CanvasText;
+  display: flex;
+  justify-content: center;
 }
 
-/* Layout: keeps footer at bottom on short pages,
-   but footer still scrolls with content (not fixed). */
 main {
-  min-height: 100svh;
+  width: 100%;
   max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 2rem var(--pad);
+  padding: var(--pad-y) var(--pad-x);
   display: flex;
   flex-direction: column;
   gap: var(--gap);
 }
 
-/* Typography */
+/* Headings */
 h1, h2 {
+  margin: 0 0 0.5rem;
   line-height: 1.2;
-  margin: 0 0 .5rem 0;
 }
-h1 { font-size: clamp(1.5rem, 2.5vw + 1rem, 2.25rem); }
-h2 { font-size: 1.15rem; }
+h1 {
+  font-size: clamp(1.8rem, 3vw + 1rem, 2.4rem);
+  letter-spacing: -0.02em;
+}
+h2 {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
 
-/* Sections feel like well-separated “plain text” blocks */
+/* Section separation */
 section + section {
   border-top: 1px solid var(--border);
   padding-top: var(--gap);
 }
 
-/* Links: underlined, readable, keyboard friendly */
+/* Links */
 a {
-  color: LinkText;
+  color: var(--link-color);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+a:hover {
+  text-shadow: 0 0 1px currentColor;
+  color: color-mix(in oklab, currentColor 90%, dodgerblue 25%);
 }
 a:focus-visible {
   outline: 2px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-/* Footer sits at the bottom when content is short,
-   and naturally follows content when long */
+/* Footer */
 footer {
-  margin-top: auto;     /* pushes footer to bottom of viewport if content is short */
-  padding-top: var(--gap);
+  margin-top: auto;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border);
-  opacity: 0.8;
+  text-align: right;
+  font-style: italic;
+  font-size: 0.95rem;
+  opacity: 0.75;
 }
-footer small { font-size: .95rem; }
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  main {
+    padding: 2rem 1rem;
+  }
+}
