@@ -1,15 +1,67 @@
-body,
-html {
+/* Modern plain-text vibe; dark-mode aware */
+:root {
+  color-scheme: light dark;
+  --maxw: 48rem;
+  --pad: 1rem;
+  --gap: 1.25rem;
+  --border: color-mix(in oklab, currentColor 20%, transparent);
+}
+
+html, body {
   margin: 0;
   padding: 0;
 }
 
-footer {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  font-style: italic;
-  font-size: 1rem;
-  margin: 0rem 0rem;
-  padding: 0rem 1rem;
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.6;
+  background: Canvas;
+  color: CanvasText;
 }
+
+/* Layout: keeps footer at bottom on short pages,
+   but footer still scrolls with content (not fixed). */
+main {
+  min-height: 100svh;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 2rem var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* Typography */
+h1, h2 {
+  line-height: 1.2;
+  margin: 0 0 .5rem 0;
+}
+h1 { font-size: clamp(1.5rem, 2.5vw + 1rem, 2.25rem); }
+h2 { font-size: 1.15rem; }
+
+/* Sections feel like well-separated “plain text” blocks */
+section + section {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+}
+
+/* Links: underlined, readable, keyboard friendly */
+a {
+  color: LinkText;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Footer sits at the bottom when content is short,
+   and naturally follows content when long */
+footer {
+  margin-top: auto;     /* pushes footer to bottom of viewport if content is short */
+  padding-top: var(--gap);
+  border-top: 1px solid var(--border);
+  opacity: 0.8;
+}
+footer small { font-size: .95rem; }
