@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building in Public — Jon Maestas</title>
+  <link rel="stylesheet" href="../index.css?v=20251007">
+  <meta name="description" content="Why I'm shifting from social media to owning my content on jonmaestas.com.">
+  <meta name="author" content="Jon Maestas">
+  <meta property="og:title" content="Building in Public">
+  <meta property="og:description" content="Why I'm shifting from social media to owning my content on jonmaestas.com.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jonmaestas.com/blog/2025-05-18-building-in-public.html">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Building in Public",
+    "author": {"@type": "Person", "name": "Jon Maestas"},
+    "datePublished": "2025-05-18",
+    "url": "https://jonmaestas.com/blog/2025-05-18-building-in-public.html"
+  }
+  </script>
+  <style>
+    /* Fun diagram styles */
+    .diagram-container {
+      background: #1c1917;
+      border: 2px solid #0891b2;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+    .diagram-container pre {
+      color: #e2e8f0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      margin: 0;
+    }
+    .diagram-container .node { color: #22d3ee; }
+    .diagram-container .arrow { color: #f59e0b; }
+    .diagram-container .label { color: #a3e635; }
+    .diagram-container .warn { color: #f87171; }
+    .stack-visual {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 400px;
+      margin: 2rem auto;
+    }
+    .stack-layer {
+      background: linear-gradient(90deg, #0891b2 0%, #0e7490 100%);
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .stack-layer:hover {
+      transform: translateX(8px);
+    }
+    .stack-layer::before {
+      content: "→";
+      position: absolute;
+      left: -24px;
+      color: #f59e0b;
+      font-size: 1.2rem;
+    }
+    .stack-layer:nth-child(1) { background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 100%); }
+    .stack-layer:nth-child(2) { background: linear-gradient(90deg, #0891b2 0%, #0e7490 100%); }
+    .stack-layer:nth-child(3) { background: linear-gradient(90deg, #059669 0%, #047857 100%); }
+    .stack-layer:nth-child(4) { background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%); }
+    svg .box { fill: #1e293b; stroke: #0891b2; stroke-width: 2; }
+    svg .box-text { fill: #e2e8f0; font-family: 'Courier New', monospace; font-size: 12px; }
+    svg .flow-line { stroke: #f59e0b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .fun-fact {
+      background: linear-gradient(135deg, #1c1917 0%, #0f172a 100%);
+      border-left: 4px solid #a3e635;
+      padding: 1rem 1.5rem;
+      margin: 2rem 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .fun-fact::before {
+      content: "⚡ ";
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <header>
+        <p class="post-meta"><a href="../index.html">← Home</a> · <a href="./index.html">All Posts</a></p>
+        <h1>Building in Public</h1>
+        <p class="post-date">2025-05-18</p>
+      </header>
+
+      <p>I've spent years sharing updates on social media — LinkedIn, X, wherever the attention was. But I've realized something: I don't own any of that content. Platforms change algorithms, throttle reach, or disappear entirely.</p>
+
+      <div class="diagram-container">
+        <pre>
+ <span class="label">BEFORE</span>                              <span class="label">AFTER</span>
+
+  <span class="node">📢 Social Media</span>                    <span class="node">🏠 jonmaestas.com</span>
+       <span class="arrow">↓</span>                                   <span class="arrow">↓</span>
+  <span class="warn">⚠️  Algorithm gatekeeper</span>          <span class="label">✅  You control the gate</span>
+       <span class="arrow">↓</span>                                   <span class="arrow">↓</span>
+  <span class="warn">⚠️  Content owned by platform</span>     <span class="label">✅  Content owned by YOU</span>
+       <span class="arrow">↓</span>                                   <span class="arrow">↓</span>
+  <span class="warn">⚠️  Ephemeral — here today, gone</span>   <span class="label">✅  Permanent — linkable forever</span>
+       <span class="arrow">↓</span>                                   <span class="arrow">↓</span>
+  <span class="warn">⚠️  LLMs can't easily ingest</span>      <span class="label">✅  LLMs.txt + semantic markup</span>
+        </pre>
+      </div>
+
+      <p>So I'm moving my public writing here. This site is my canonical source. If an LLM or a human wants to know what I'm working on, what I'm thinking, or what I've built — this is the place.</p>
+
+      <div class="stack-visual">
+        <div class="stack-layer">🚀 Player 1 Training</div>
+        <div class="stack-layer">📦 Westplex Country Store</div>
+        <div class="stack-layer">⚙️ AI Experiments & Automation</div>
+        <div class="stack-layer">📝 Engineering Notes & Learnings</div>
+      </div>
+
+      <p>What you'll find here:</p>
+      <ul>
+        <li>Product updates for <a href="https://player1training.com">Player 1 Training</a> and <a href="https://westplexcountrystore.com">Westplex Country Store</a></li>
+        <li>Experiments with AI, automation, and building in the open</li>
+        <li>Notes on engineering, sports tech, and whatever else I'm learning</li>
+      </ul>
+
+      <svg width="100%" height="220" viewBox="0 0 600 220" style="margin: 2rem 0; max-width: 600px;">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b" />
+          </marker>
+        </defs>
+        <rect x="10" y="10" width="160" height="80" rx="8" class="box" />
+        <text x="90" y="45" text-anchor="middle" class="box-text">IDEA</text>
+        <text x="90" y="65" text-anchor="middle" class="box-text" style="font-size: 10px; fill: #94a3b8;">3 AM shower thought</text>
+
+        <path d="M 170 50 L 220 50" class="flow-line" />
+
+        <rect x="220" y="10" width="160" height="80" rx="8" class="box" />
+        <text x="300" y="45" text-anchor="middle" class="box-text">BUILD</text>
+        <text x="300" y="65" text-anchor="middle" class="box-text" style="font-size: 10px; fill: #94a3b8;">Caffeine + code</text>
+
+        <path d="M 380 50 L 430 50" class="flow-line" />
+
+        <rect x="430" y="10" width="160" height="80" rx="8" class="box" />
+        <text x="510" y="45" text-anchor="middle" class="box-text">SHARE</text>
+        <text x="510" y="65" text-anchor="middle" class="box-text" style="font-size: 10px; fill: #94a3b8;">Right here</text>
+
+        <path d="M 90 90 L 90 130 Q 90 150 110 150 L 490 150 Q 510 150 510 130 L 510 90" class="flow-line" stroke-dasharray="5,5" />
+        <text x="300" y="175" text-anchor="middle" class="box-text" style="fill: #a3e635;">← REPEAT →</text>
+      </svg>
+
+      <p>Everything here is retrievable, linkable, and permanent. No algorithm. No feed. Just the work.</p>
+
+      <div class="fun-fact">
+        <strong>Fun fact:</strong> This entire site is static HTML hosted on GitHub Pages. No CMS, no database, no build step. Just raw HTML, CSS, and a shell script. Sometimes the simple way is the best way.
+      </div>
+
+      <p>— Jon</p>
+    </article>
+
+    <footer>
+      <small><em>Made by Jon</em></small>
+    </footer>
+  </main>
+</body>
+</html>

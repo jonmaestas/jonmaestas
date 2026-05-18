@@ -88,6 +88,48 @@ footer {
   opacity: 0.75;
 }
 
+/* Blog styles */
+article {
+  max-width: 65ch;
+}
+.post-meta {
+  font-size: 0.9rem;
+  opacity: 0.7;
+  margin-bottom: 0.5rem;
+}
+.post-date {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.post-list li {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.post-list li:last-child {
+  border-bottom: none;
+}
+.post-list a {
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.post-list .post-date {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.post-list .post-excerpt {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+
 /* Responsive tweaks */
 @media (max-width: 600px) {
   main {

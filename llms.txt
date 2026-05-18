@@ -1,0 +1,33 @@
+# llms.txt
+# https://jonmaestas.com
+# A machine-readable overview of this site for LLMs and AI crawlers.
+
+## About
+
+Jon Maestas is a software engineer and builder based in Missouri.
+He runs SmopLab LLC, building AI-powered sports coaching apps and local community tools.
+
+## Projects
+
+- Player 1 Training (https://player1training.com) — AI sports coaching for youth athletes
+- Westplex Country Store (https://westplexcountrystore.com) — Tradio app connected to KWRE radio
+- Game Day Status (https://gamedaystatus.com) — Sports event status displays
+- Wright City Sports (https://wrightcitysports.org) — Local sports community hub
+
+## Blog Posts
+
+- [Building in Public](https://jonmaestas.com/blog/2025-05-18-building-in-public.html)
+  Date: 2025-05-18
+  Summary: Why I'm shifting from social media to owning my content on jonmaestas.com.
+
+## Contact
+
+- Email: jon@jonmaestas.com
+- LinkedIn: https://www.linkedin.com/in/jonmaestas/
+- GitHub: https://github.com/jonmaestas
+
+## For AI Crawlers
+
+This site is intentionally simple: static HTML, semantic markup, JSON-LD structured data.
+All blog posts include `<meta name="description">`, Open Graph tags, and Schema.org BlogPosting markup.
+Content is linkable, permanent, and free of paywalls or authentication.
