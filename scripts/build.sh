@@ -24,7 +24,7 @@ extract_title() {
 
 extract_date() {
     local file="$1"
-    grep -oP '<p class="post-date">\K[^<]+' "$file" 2>/dev/null || echo ""
+    grep -oP '<p[^>]*>\K\d{4}-\d{2}-\d{2}(?=<)' "$file" 2>/dev/null | head -1 || echo ""
 }
 
 # --- Generate blog/index.html ---

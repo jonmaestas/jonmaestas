@@ -16,6 +16,12 @@ He runs SmopLab LLC, building AI-powered sports coaching apps and local communit
 
 ## Blog Posts
 
+- [My Newest App Feature Cost Less Than a Cup of Coffee](https://jonmaestas.com/blog/2026-05-20-less-than-a-cup-of-coffee.html)
+  Summary: An accidental 4-second lag became Mirror Mode in Player 1 Training. Built and deployed for $1.50.
+
+- [The 4-Second Delay That Became a Feature](https://jonmaestas.com/blog/2026-05-19-the-4-second-delay.html)
+  Summary: An accidental projector lag in my barn turned into an instant replay feature for athletes.
+
 - [Building in Public](https://jonmaestas.com/blog/2026-05-18-building-in-public.html)
   Summary: Moving my public writing off social media and onto my own site.
 
