@@ -18,7 +18,7 @@ He runs SmopLab LLC, building AI-powered sports coaching apps and local communit
 
 - [Why Your AI Needs a Loop (And a Skill)](https://jonmaestas.com/blog/2026-05-22-why-your-ai-needs-a-loop.html)
   Date: 2026-05-22
-  Summary: From one-in-one-out to agentic AI: how a loop and a skill file turned the same model into something completely different.
+  Summary: The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.
 
 - [My Newest App Feature Cost Less Than a Cup of Coffee](https://jonmaestas.com/blog/2026-05-20-less-than-a-cup-of-coffee.html)
   Date: 2026-05-20

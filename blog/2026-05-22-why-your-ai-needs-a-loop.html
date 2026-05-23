@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Why Your AI Needs a Loop (And a Skill) — Jon Maestas</title>
   <link rel="stylesheet" href="../index.css?v=20251007">
-  <meta name="description" content="From one-in-one-out to agentic AI: how a loop and a skill file turned the same model into something completely different.">
+  <meta name="description" content="The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.">
   <meta name="author" content="Jon Maestas">
 
   <meta property="og:title" content="Why Your AI Needs a Loop (And a Skill)">
-  <meta property="og:description" content="From one-in-one-out to agentic AI: how a loop and a skill file turned the same model into something completely different.">
+  <meta property="og:description" content="The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://jonmaestas.com/blog/2026-05-22-why-your-ai-needs-a-loop.html">
   <meta property="og:site_name" content="Jon Maestas">
@@ -20,7 +20,7 @@
   <meta name="twitter:site" content="@jonmaestas">
   <meta name="twitter:creator" content="@jonmaestas">
   <meta name="twitter:title" content="Why Your AI Needs a Loop (And a Skill)">
-  <meta name="twitter:description" content="From one-in-one-out to agentic AI: how a loop and a skill file turned the same model into something completely different.">
+  <meta name="twitter:description" content="The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.">
 
   <script type="application/ld+json">
   {
@@ -35,7 +35,6 @@
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    /* Phase Explorer */
     .phase-explorer {
       background: #1c1917;
       border: 2px solid #44403c;
@@ -85,21 +84,38 @@
       min-height: 1.5rem;
     }
 
-    /* D3 Nodes */
     .node-box { rx: 8; }
     .node-text { fill: #e7e5e4; font-family: system-ui, sans-serif; font-size: 13px; font-weight: 600; text-anchor: middle; }
     .node-sub { fill: #a8a29e; font-family: system-ui, sans-serif; font-size: 10px; text-anchor: middle; }
     .link-line { fill: none; stroke: #f59e0b; stroke-width: 2; }
     .link-label { fill: #a3e635; font-family: system-ui, sans-serif; font-size: 11px; font-weight: 600; }
-    .arrow-head { fill: #f59e0b; }
-
-    /* Loop token animation */
     .loop-token {
       fill: #f472b6;
       filter: drop-shadow(0 0 6px #f472b6);
     }
 
-    /* Analogy sections */
+    .diagram-box {
+      background: #1c1917;
+      border: 2px solid #44403c;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+    .diagram-box pre {
+      color: #e2e8f0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .diagram-box .node { color: #22d3ee; }
+    .diagram-box .arrow { color: #f59e0b; }
+    .diagram-box .label { color: #a3e635; }
+    .diagram-box .warn { color: #f87171; }
+    .diagram-box .highlight { color: #f472b6; }
+    .diagram-box .user { color: #0891b2; }
+
     .analogy-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -146,29 +162,6 @@
       text-align: center;
     }
 
-    /* Code/diagram boxes */
-    .diagram-box {
-      background: #1c1917;
-      border: 2px solid #44403c;
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin: 2rem 0;
-      overflow-x: auto;
-    }
-    .diagram-box pre {
-      color: #e2e8f0;
-      font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      margin: 0;
-    }
-    .diagram-box .node { color: #22d3ee; }
-    .diagram-box .arrow { color: #f59e0b; }
-    .diagram-box .label { color: #a3e635; }
-    .diagram-box .warn { color: #f87171; }
-    .diagram-box .highlight { color: #f472b6; }
-
-    /* Comparison */
     .comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -216,25 +209,80 @@
     <h1>Why Your AI Needs a Loop (And a Skill)</h1>
     <p style="opacity:0.6; font-size:0.9rem;">2026-05-22</p>
 
-    <p>People still don't understand what generative AI really is.</p>
+    <p>You already know how to iterate with AI.</p>
 
-    <p>They're used to Google: type a question, get a response. ChatGPT came out: type a question, get a response. Give it an email, ask it to edit it, get a response.</p>
+    <p>You type a prompt. It gives you something close. You adjust. It gets better. You adjust again. Eventually it's right.</p>
 
-    <p>Every interaction was one-in, one-out.</p>
+    <p>That back-and-forth isn't new. You've been doing it since ChatGPT came out.</p>
 
-    <p>But that's not where the real power is.</p>
+    <p>But here's what most people miss: <strong>that back-and-forth can happen without you.</strong></p>
 
-    <h2>The Architecture Nobody Draws</h2>
+    <h2>The ChatGPT Dance</h2>
 
-    <p>I built an application that gave the AI tools. A question would come in, the AI would pick a tool, invoke it, and return the result.</p>
+    <p>This is what everyone does today. You and the AI volley until it's right:</p>
 
-    <p>Still one-in, one-out. But now there was a step in the middle: one → <em>do something</em> → one out.</p>
+    <div class="diagram-box">
+      <pre>
+ <span class="user">You:</span>  "How much revenue did we do last quarter?"
 
-    <p>Then I gave it more tools. Depending on the question type, it would route to the right tool and return an answer.</p>
+ <span class="node">AI:</span>   "Here's a breakdown by month..." 
+       <span class="warn">❌ (wrong — you needed by region)</span>
 
-    <p>All of that was still one-in, one-out. Linear. Predictable. Limited.</p>
+ <span class="user">You:</span>  "No, I need it broken down by region."
 
-    <p>Then I added a loop.</p>
+ <span class="node">AI:</span>   "Here's Q3 revenue by region..."
+       <span class="warn">❌ (wrong — you said Q4)</span>
+
+ <span class="user">You:</span>  "That's Q3. I said Q4."
+
+ <span class="node">AI:</span>   "Here's Q4 revenue by region..."
+       <span class="label">✅ (finally right, after 3 tries)</span>
+      </pre>
+    </div>
+
+    <p>Three prompts from you. Three responses from the AI. That's the standard experience.</p>
+
+    <p>The user is driving the iteration. The user is the one saying "no, that's wrong, try again."</p>
+
+    <h2>Now Flip It</h2>
+
+    <p>What if instead of <em>you</em> doing that back-and-forth, the AI did it with itself?</p>
+
+    <p>Same task. Same model. Same tools. But this time, <strong>you send one prompt and walk away.</strong></p>
+
+    <p>Inside the system, the AI generates a query, checks the result, realizes it's wrong, tries a different query, checks again, combines findings, validates, and only when it's satisfied does it return <em>one single answer</em> to you.</p>
+
+    <div class="diagram-box">
+      <pre>
+ <span class="user">You:</span>  "How much revenue did we do last quarter?"
+
+       <span class="arrow">────────────────────────────────────────────────────</span>
+       <span class="highlight">AI goes to work — you do nothing</span>
+       <span class="arrow">────────────────────────────────────────────────────</span>
+
+  <span class="warn">Query 1: by month → "Does this match the ask? No."</span>
+  <span class="warn">Query 2: Q3 by region → "Does this match the ask? No."</span>
+  <span class="warn">Query 3: Q4 by product → "Does this match the ask? No."</span>
+  <span class="node">Query 4: Q4 by region → "Does this match the ask? Yes. ✅"</span>
+
+       <span class="arrow">────────────────────────────────────────────────────</span>
+
+ <span class="node">AI:</span>   "Here's Q4 revenue by region..."
+       <span class="label">✅ Right on the first response to YOU</span>
+      </pre>
+    </div>
+
+    <p>Fundamentally, it's the same thing. There's still iteration. There's still trial and error. There's still correction.</p>
+
+    <p>But <strong>the AI is doing the prompting, not you.</strong> It's going back and forth with itself instead of with you.</p>
+
+    <p>One prompt in. One answer out. Zero back-and-forth with a human.</p>
+
+    <h2>How the Loop Works</h2>
+
+    <p>All agents have a <strong>finish reason</strong>. It's a signal that says why the agent stopped: did it call a tool? Did it finish answering? Did it hit a limit?</p>
+
+    <p>I used that finish reason to build a loop. The agent calls a tool, gets a result, checks if the result satisfies the original request, and uses the finish reason to decide whether to keep going or stop.</p>
 
     <div class="phase-explorer">
       <div class="phase-tabs">
@@ -247,44 +295,21 @@
       <p class="phase-desc" id="phase-desc">Type a question. Get an answer. That's it.</p>
     </div>
 
-    <p>All agents have what's called a <strong>finish reason</strong>. It can be anything from <code>tool_call</code> to <code>stop</code> — meaning it's done.</p>
+    <h2>But Even Loops Fumble</h2>
 
-    <p>I took that same agent, gave it the same tools, and put it in a loop. When a question came in, the agent began invoking tools to satisfy the request. But it did something new: it checked whether the response actually satisfied what the user was looking for.</p>
+    <p>Here's the catch: even with a loop, the AI still has to figure out the right approach every single time.</p>
 
-    <p>The first app I wrote was a SQL database query tool. Without the loop: ask a question, generate a query, get the response. Done. If it was wrong, you started over.</p>
-
-    <p>With the loop: ask a question, generate a query, <em>analyze the response</em>, determine if it satisfies the request. If yes, return it. If no, try a different query. Combine all the responses to figure out what's missing. <em>Then</em> return the result.</p>
-
-    <p>The exact same AI model. Not a different model. Nothing changed in the weights. But it behaved completely differently.</p>
-
-    <div class="comparison">
-      <div class="comparison-card inactive">
-        <div class="icon">🔄</div>
-        <div class="title">Without Loop</div>
-        <div class="desc">One shot. If it's wrong, the user starts over manually.</div>
-      </div>
-      <div class="comparison-card active">
-        <div class="icon">✅</div>
-        <div class="title">With Loop</div>
-        <div class="desc">Self-correcting. The AI retries until the answer is right.</div>
-      </div>
-    </div>
-
-    <h2>But Tools Still Aren't Enough</h2>
-
-    <p>Here's the problem: even with a loop, the AI still has to fumble through the trial-and-error every single time.</p>
-
-    <p>Ask it a SQL question today, it tries four queries before getting it right. Ask the same question tomorrow, it tries four queries again.</p>
+    <p>Ask it a SQL question today, it tries four queries before getting it right. Ask a similar question tomorrow, it tries four queries again.</p>
 
     <p>That's not intelligence. That's persistence.</p>
 
-    <h2>The Carpenter and the Hammer</h2>
+    <h2>From Tools to Skills</h2>
 
-    <p>You can hand a carpenter some two-by-fours, a hammer, nails, a nail gun, and an air compressor.</p>
+    <p>This is where the real leap happens.</p>
 
-    <p>Those are <strong>tools</strong>.</p>
+    <p>You can hand a carpenter some two-by-fours, a hammer, nails, a nail gun, and an air compressor. Those are <strong>tools</strong>.</p>
 
-    <p>But until you teach them how to frame a wall, they're just holding equipment. Once they know the sequence, the spacing, the technique — the next time you need a wall framed, you just say "frame the wall." It's now a <strong>skill</strong> that person carries with them.</p>
+    <p>But until you teach them how to frame a wall, they're just holding equipment. Once they know the sequence, the spacing, the technique — it's now a <strong>skill</strong> they carry with them.</p>
 
     <div class="analogy-row">
       <div class="analogy-card">
@@ -303,13 +328,7 @@
       </div>
     </div>
 
-    <h2>The IKEA Analogy</h2>
-
-    <p>When you buy IKEA furniture, you get all the pieces, all the fasteners, and some tools.</p>
-
-    <p>But you also get instructions. The instructions — the script — <em>that's the skill</em>.</p>
-
-    <p>Without it, you have a pile of parts and a confused person. With it, you have a functioning bookshelf.</p>
+    <p>Or think about IKEA furniture. You get pieces, fasteners, and tools. But you also get instructions. The instructions — the script — <em>that's the skill</em>.</p>
 
     <div class="analogy-row">
       <div class="analogy-card">
@@ -328,42 +347,49 @@
       </div>
     </div>
 
-    <h2>What This Means for AI</h2>
-
     <p>For an AI, tools are the functions it can call. Skills are the learned procedures that tell it which tools to use, in what order, and with what parameters — because it's already done the trial-and-error once.</p>
 
-    <p>The first time, it might try four SQL queries before getting it right. The second time, with the skill captured, it knows which query pattern works for that type of question. The skill is the instruction manual built from real experience.</p>
+    <p>The first time, it might try four SQL queries before getting it right. The second time, with the skill captured, it knows which query pattern works for that type of question.</p>
 
     <div class="diagram-box">
       <pre>
- <span class="label">FIRST TIME (no skill)</span>
+ <span class="label">FIRST TIME (loop only, no skill)</span>
 
-  <span class="node">User asks for Q3 revenue</span>
+  <span class="user">You:</span>  "Q3 revenue by region?"
        <span class="arrow">↓</span>
-  <span class="warn">Query 1 → wrong columns</span>
-       <span class="arrow">↓</span>
-  <span class="warn">Query 2 → wrong filter</span>
-       <span class="arrow">↓</span>
-  <span class="warn">Query 3 → wrong join</span>
-       <span class="arrow">↓</span>
+  <span class="warn">Query 1 → wrong columns → retry</span>
+  <span class="warn">Query 2 → wrong filter → retry</span>
+  <span class="warn">Query 3 → wrong join → retry</span>
   <span class="node">Query 4 → correct ✅</span>
+       <span class="arrow">↓</span>
+  <span class="label">4 iterations. You waited. It got there.</span>
 
 
  <span class="label">SECOND TIME (skill applied)</span>
 
-  <span class="node">User asks for Q4 revenue</span>
+  <span class="user">You:</span>  "Q4 revenue by region?"
        <span class="arrow">↓</span>
   <span class="highlight">SKILL: revenue_query_pattern</span>
        <span class="arrow">↓</span>
   <span class="node">Query 1 → correct ✅</span>
+       <span class="arrow">↓</span>
+  <span class="label">1 iteration. Instant.</span>
       </pre>
     </div>
 
-    <p>And I think it can go further.</p>
+    <p>The skill is the instruction manual built from real experience. Not generic documentation — the specific sequence that worked.</p>
 
-    <p>One-in, many-out. Many-in, one-out. Zero-in, many-out. The architecture is what matters, not the model size.</p>
+    <h2>What This Changes</h2>
 
-    <p>You don't need a bigger model. You need a loop. And then you need to capture that loop as a skill.</p>
+    <p>Most people think the next breakthrough in AI is a bigger model with more parameters.</p>
+
+    <p>It's not.</p>
+
+    <p>The breakthrough is architecture. One prompt in. The AI iterates with itself. One answer out. Then capture that iteration as a skill so it never has to relearn it.</p>
+
+    <p>And I think it can go further: one-in, many-out. Many-in, one-out. Zero-in, many-out.</p>
+
+    <p>The model doesn't change. The way you use it does.</p>
 
     <p>— Jon</p>
 
@@ -450,17 +476,14 @@
       .attr("fill", "#f59e0b");
 
     const g = svg.append("g");
-
     let loopAnim = null;
 
     function render(phaseKey) {
       const p = phases[phaseKey];
       d3.select("#phase-desc").text(p.desc);
 
-      // Nodes
       const nodes = g.selectAll(".node-group")
         .data(p.nodes, d => d.id);
-
       nodes.exit().transition().duration(250).style("opacity", 0).remove();
 
       const nodesEnter = nodes.enter().append("g")
@@ -492,11 +515,9 @@
         .style("opacity", 1)
         .attr("transform", d => `translate(${d.x},${d.y})`);
 
-      // Links
       const linkKey = d => d.source + "-" + d.target;
       const links = g.selectAll(".link-group")
         .data(p.links, linkKey);
-
       links.exit().transition().duration(200).style("opacity", 0).remove();
 
       const linksEnter = links.enter().append("g")
@@ -534,7 +555,6 @@
         })
         .text(d => d.label);
 
-      // Loop animation
       if (loopAnim) { loopAnim.stop(); loopAnim = null; }
       g.selectAll(".loop-token").remove();
 
@@ -560,7 +580,6 @@
       }
     }
 
-    // Tab switching
     document.querySelectorAll('.phase-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
