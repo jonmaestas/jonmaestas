@@ -14,17 +14,19 @@ LLMS_FILE="$REPO_ROOT/llms.txt"
 extract_meta() {
     local file="$1"
     local key="$2"
-    grep -oP "<meta[^>]*name=\"$key\"[^>]*content=\"\K[^\"]+" "$file" 2>/dev/null || echo ""
+    perl -ne 'if (/<meta[^>]*name="'"$key"'"[^>]*content="([^"]+)"/) { print "$1\n"; exit }' "$file" 2>/dev/null || echo ""
 }
 
 extract_title() {
     local file="$1"
-    grep -oP '<title>\K[^<]+' "$file" 2>/dev/null | sed 's/ — Jon Maestas//' || echo "Untitled"
+    local title
+    title=$(perl -ne 'if (/<title>([^<]+)/) { print "$1\n"; exit }' "$file" 2>/dev/null | sed 's/ — Jon Maestas//')
+    echo "${title:-Untitled}"
 }
 
 extract_date() {
     local file="$1"
-    grep -oP '<p[^>]*>\K\d{4}-\d{2}-\d{2}(?=<)' "$file" 2>/dev/null | head -1 || echo ""
+    perl -ne 'if (/<p[^>]*>(\d{4}-\d{2}-\d{2})<\//) { print "$1\n"; exit }' "$file" 2>/dev/null || echo ""
 }
 
 # --- Generate blog/index.html ---
