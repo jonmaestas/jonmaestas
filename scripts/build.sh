@@ -9,6 +9,9 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BLOG_DIR="$REPO_ROOT/blog"
 INDEX_FILE="$BLOG_DIR/index.html"
 LLMS_FILE="$REPO_ROOT/llms.txt"
+ROBOTS_FILE="$REPO_ROOT/robots.txt"
+SITEMAP_FILE="$REPO_ROOT/sitemap.xml"
+SITE_URL="https://jonmaestas.com"
 
 # Extract metadata from a blog post
 extract_meta() {
@@ -57,6 +60,14 @@ posts=()
 while IFS= read -r -d '' file; do
     posts+=("$file")
 done < <(find "$BLOG_DIR" -maxdepth 1 -name '*.html' ! -name 'index.html' -print0 | sort -rz)
+
+# --- Generate robots.txt ---
+cat > "$ROBOTS_FILE" << ROBOTS
+User-agent: *
+Allow: /
+
+Sitemap: $SITE_URL/sitemap.xml
+ROBOTS
 
 for post in "${posts[@]}"; do
     filename=$(basename "$post")
@@ -138,7 +149,54 @@ All blog posts include `<meta name="description">`, Open Graph tags, and Schema.
 Content is linkable, permanent, and free of paywalls or authentication.
 LLMS_FOOT
 
+# --- Generate sitemap.xml ---
+today=$(date -u +%Y-%m-%d)
+cat > "$SITEMAP_FILE" << SITEMAP_HEAD
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>$SITE_URL/</loc>
+    <lastmod>$today</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>$SITE_URL/blog/</loc>
+    <lastmod>$today</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>$SITE_URL/llms.txt</loc>
+    <lastmod>$today</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+SITEMAP_HEAD
+
+for post in "${posts[@]}"; do
+    filename=$(basename "$post")
+    date=$(extract_date "$post")
+    if [[ -z "$date" ]]; then
+        date="$today"
+    fi
+    cat >> "$SITEMAP_FILE" << SITEMAP_URL
+  <url>
+    <loc>$SITE_URL/blog/$filename</loc>
+    <lastmod>$date</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+SITEMAP_URL
+done
+
+cat >> "$SITEMAP_FILE" << 'SITEMAP_FOOT'
+</urlset>
+SITEMAP_FOOT
+
 echo "✅ Generated $INDEX_FILE"
 echo "✅ Generated $LLMS_FILE"
+echo "✅ Generated $ROBOTS_FILE"
+echo "✅ Generated $SITEMAP_FILE"
 echo ""
 echo "Posts found: ${#posts[@]}"
