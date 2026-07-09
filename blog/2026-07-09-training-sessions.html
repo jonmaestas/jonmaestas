@@ -126,19 +126,46 @@
 
     <p>New flow: record a full session. The app identifies each rep automatically. Then you can save individual reps, compare any two side-by-side, ask AI questions about the entire session, or send any rep back into the original per-rep breakdown and analysis flow.</p>
 
-    <div class="diagram-container">
-      <pre>
-<span class="label">OLD FLOW</span>                              <span class="label">NEW FLOW</span>
-
-  <span class="node">Record single rep</span>                   <span class="node">Record full session</span>
-         <span class="arrow">↓</span>                                      <span class="arrow">↓</span>
-  <span class="node">Get feedback on that rep</span>            <span class="node">Auto-identify all reps</span>
-                                                     <span class="arrow">↓</span>
-                                          <span class="ok">• Save good reps</span>
-                                          <span class="ok">• Compare any 2 side-by-side</span>
-                                          <span class="ok">• Ask AI about whole session</span>
-                                          <span class="ok">• Drill into any rep for details</span>
-      </pre>
+    <div class="diagram-container" style="padding: 2rem;">
+      <svg width="100%" height="320" viewBox="0 0 720 320" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%;">
+        <!-- OLD FLOW -->
+        <text x="100" y="30" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14" font-weight="600">OLD FLOW</text>
+        
+        <!-- Old boxes -->
+        <rect x="40" y="60" width="180" height="50" rx="8" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
+        <text x="130" y="90" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record single rep</text>
+        
+        <path d="M130 115 L130 145" stroke="#64748b" stroke-width="2"/>
+        <polygon points="124,140 130,150 136,140" fill="#64748b"/>
+        
+        <rect x="40" y="160" width="180" height="50" rx="8" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
+        <text x="130" y="190" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Get feedback on that rep</text>
+        
+        <!-- NEW FLOW -->
+        <text x="480" y="30" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14" font-weight="600">NEW FLOW</text>
+        
+        <!-- New boxes -->
+        <rect x="420" y="60" width="200" height="45" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="2"/>
+        <text x="520" y="88" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record full session</text>
+        
+        <path d="M520 110 L520 140" stroke="#22c55e" stroke-width="2"/>
+        <polygon points="514,135 520,145 526,135" fill="#22c55e"/>
+        
+        <rect x="420" y="150" width="200" height="45" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="2"/>
+        <text x="520" y="178" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Auto-identify all reps</text>
+        
+        <path d="M520 200 L520 225" stroke="#22c55e" stroke-width="2"/>
+        <polygon points="514,220 520,230 526,220" fill="#22c55e"/>
+        
+        <!-- Benefits list -->
+        <rect x="380" y="235" width="280" height="70" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="520" y="255" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle" font-weight="600">• Save good reps</text>
+        <text x="520" y="272" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">• Compare 2 reps side-by-side</text>
+        <text x="520" y="289" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">• Ask AI about whole session</text>
+        
+        <!-- Divider line -->
+        <line x1="260" y1="60" x2="380" y2="60" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
+      </svg>
     </div>
 
     <p>The technical change behind this: switched from Gemini to TwelveLabs Pegasus in June 2026.</p>
