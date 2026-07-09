@@ -16,6 +16,10 @@ He runs SmopLab LLC, building AI-powered sports coaching apps and local communit
 
 ## Blog Posts
 
+- [Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence](https://jonmaestas.com/blog/2026-07-09-training-sessions.html)
+  Date: 2026-07-09
+  Summary: New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis.
+
 - [Athletic Intelligence Means Knowing How to Get Better](https://jonmaestas.com/blog/2026-06-03-athletic-intelligence-knowing-how-to-get-better.html)
   Date: 2026-06-03
   Summary: Athletic Intelligence is knowing how to get better: seeing your movement, understanding the mistake, and knowing what to fix on the next rep.
