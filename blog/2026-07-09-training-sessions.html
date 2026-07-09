@@ -36,78 +36,57 @@
   </script>
   <!-- CUSTOM_CSS_START -->
   <style>
-    .diagram-container {
-      background: #1c1917;
-      border: 2px solid #0891b2;
+    .flow-diagram {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 2rem;
       margin: 2rem 0;
-      overflow-x: auto;
     }
-    .diagram-container pre {
-      color: #e2e8f0;
-      font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      white-space: pre;
-    }
-    .label { color: #94a3b8; font-weight: bold; }
-    .node { color: #e2e8f0; }
-    .arrow { color: #64748b; }
-    .warn { color: #f59e0b; }
-    .ok { color: #22c55e; }
-
-    .comparison-grid {
+    
+    .comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
       margin: 2rem 0;
     }
-    .model-card {
-      background: #1c1917;
-      border: 2px solid #334155;
-      border-radius: 12px;
+    
+    .model {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
       padding: 1.25rem;
+      background: white;
     }
-    .model-card.gemini {
-      border-color: #f59e0b;
+    
+    .model.gemini {
+      border-color: #fed7aa;
     }
-    .model-card.pegasus {
-      border-color: #22c55e;
+    
+    .model.pegasus {
+      border-color: #bbf7d0;
     }
-    .model-card h3 {
-      margin: 0 0 1rem 0;
-      font-size: 1.1rem;
+    
+    .model h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 1.05rem;
     }
-    .model-card ul {
+    
+    .model ul {
       margin: 0;
-      padding-left: 1.25rem;
+      padding-left: 1.1rem;
+      line-height: 1.5;
     }
-    .model-card li {
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
+    
+    .model li {
+      margin-bottom: 0.35rem;
     }
-
-    .session-flow {
-      background: #1c1917;
-      border: 2px solid #0891b2;
-      border-radius: 12px;
-      padding: 1.5rem;
+    
+    .outcome {
+      background: #f8fafc;
+      border-left: 4px solid #0ea5e9;
+      padding: 1rem 1.25rem;
       margin: 2rem 0;
-      text-align: center;
-    }
-    .rep-bar {
-      height: 40px;
-      background: linear-gradient(90deg, #22c55e 0%, #22c55e 20%, #eab308 20%, #eab308 40%, #3b82f6 40%, #3b82f6 60%, #a855f7 60%, #a855f7 80%, #ef4444 80%, #ef4444 100%);
-      border-radius: 6px;
-      margin: 1rem 0;
-      position: relative;
-    }
-    .rep-label {
-      position: absolute;
-      top: -20px;
-      font-size: 0.75rem;
-      color: #94a3b8;
+      font-size: 1.02rem;
     }
   </style>
   <!-- CUSTOM_CSS_END -->
@@ -124,53 +103,44 @@
 
     <p>That last part is the real unlock. You get the same quality of analysis whether you’re looking at one rep or the whole workout.</p>
 
-    <div class="diagram-container" style="padding: 2rem;">
-      <svg width="100%" height="340" viewBox="0 0 720 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%;">
-        <!-- OLD FLOW -->
-        <text x="100" y="30" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14" font-weight="600">OLD FLOW</text>
+    <div class="flow-diagram">
+      <svg width="100%" height="260" viewBox="0 0 680 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- OLD -->
+        <text x="120" y="22" fill="#64748b" font-family="system-ui, sans-serif" font-size="12" font-weight="600">OLD FLOW</text>
+        <rect x="20" y="40" width="200" height="48" rx="8" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="120" y="70" fill="#334155" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record single rep</text>
         
-        <!-- Old boxes -->
-        <rect x="40" y="60" width="180" height="50" rx="8" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
-        <text x="130" y="90" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record single rep</text>
+        <path d="M120 93 L120 118" stroke="#94a3b8" stroke-width="2"/>
+        <polygon points="114,113 120,123 126,113" fill="#94a3b8"/>
         
-        <path d="M130 115 L130 145" stroke="#64748b" stroke-width="2"/>
-        <polygon points="124,140 130,150 136,140" fill="#64748b"/>
+        <rect x="20" y="130" width="200" height="48" rx="8" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="120" y="160" fill="#334155" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Get feedback on that rep</text>
         
-        <rect x="40" y="160" width="180" height="50" rx="8" fill="#1c1917" stroke="#f59e0b" stroke-width="2"/>
-        <text x="130" y="190" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Get feedback on that rep</text>
+        <!-- NEW -->
+        <text x="520" y="22" fill="#64748b" font-family="system-ui, sans-serif" font-size="12" font-weight="600">NEW FLOW</text>
+        <rect x="420" y="40" width="200" height="48" rx="8" fill="white" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="520" y="70" fill="#334155" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record full session</text>
         
-        <!-- NEW FLOW -->
-        <text x="480" y="30" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14" font-weight="600">NEW FLOW</text>
+        <path d="M520 93 L520 118" stroke="#22c55e" stroke-width="2"/>
+        <polygon points="514,113 520,123 526,113" fill="#22c55e"/>
         
-        <!-- New boxes -->
-        <rect x="420" y="60" width="200" height="45" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="2"/>
-        <text x="520" y="88" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Record full session</text>
+        <rect x="420" y="130" width="200" height="48" rx="8" fill="white" stroke="#22c55e" stroke-width="1.5"/>
+        <text x="520" y="160" fill="#334155" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Auto-identify every rep</text>
         
-        <path d="M520 110 L520 140" stroke="#22c55e" stroke-width="2"/>
-        <polygon points="514,135 520,145 526,135" fill="#22c55e"/>
+        <path d="M520 183 L520 205" stroke="#22c55e" stroke-width="2"/>
+        <polygon points="514,200 520,210 526,200" fill="#22c55e"/>
         
-        <rect x="420" y="150" width="200" height="45" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="2"/>
-        <text x="520" y="178" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="13" text-anchor="middle">Auto-identify all reps</text>
-        
-        <path d="M520 200 L520 225" stroke="#22c55e" stroke-width="2"/>
-        <polygon points="514,220 520,230 526,220" fill="#22c55e"/>
-        
-        <!-- Benefits list -->
-        <rect x="380" y="235" width="280" height="90" rx="8" fill="#1c1917" stroke="#22c55e" stroke-width="1.5"/>
-        <text x="520" y="255" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle" font-weight="600">• Save good reps</text>
-        <text x="520" y="272" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">• Compare 2 reps side-by-side</text>
-        <text x="520" y="289" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">• Ask AI about whole session</text>
-        <text x="520" y="306" fill="#22c55e" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">• Get feedback on any rep + session</text>
-        
-        <!-- Divider line -->
-        <line x1="260" y1="60" x2="380" y2="60" stroke="#334155" stroke-width="1" stroke-dasharray="4 2"/>
+        <rect x="380" y="215" width="280" height="38" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+        <text x="520" y="240" fill="#166534" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle" font-weight="500">Get feedback on any rep + full session</text>
       </svg>
     </div>
 
-    <p>The technical change that made this possible: we switched from Gemini to TwelveLabs Pegasus in June 2026.</p>
+    <div class="outcome">
+      <strong>The technical change that made this possible:</strong> we switched from Gemini to TwelveLabs Pegasus in June 2026.
+    </div>
 
-    <div class="comparison-grid">
-      <div class="model-card gemini">
+    <div class="comparison">
+      <div class="model gemini">
         <h3>Gemini</h3>
         <ul>
           <li>No real rep identification in longer videos</li>
@@ -178,7 +148,7 @@
           <li>Frame-by-frame workarounds</li>
         </ul>
       </div>
-      <div class="model-card pegasus">
+      <div class="model pegasus">
         <h3>TwelveLabs Pegasus</h3>
         <ul>
           <li>Native video model, purpose-built for session-level breakdowns</li>
@@ -190,20 +160,7 @@
 
     <p>Side-by-side testing on individual reps showed Pegasus matched coach-level accuracy while delivering more consistent feedback. It was faster and cheaper too.</p>
 
-    <p>Feedback is now much more consistent, concise, and faster. The session layer only became possible because Pegasus handles video natively.</p>
-
-    <div class="session-flow">
-      <p style="margin:0 0 0.5rem 0; font-weight:bold; color:#94a3b8;">Example session breakdown</p>
-      <div style="position:relative; height:60px; margin:1rem 0;">
-        <div class="rep-bar"></div>
-        <div style="position:absolute; left:10%; top:45px; font-size:0.7rem; color:#22c55e;">Rep 1</div>
-        <div style="position:absolute; left:30%; top:45px; font-size:0.7rem; color:#eab308;">Rep 2</div>
-        <div style="position:absolute; left:50%; top:45px; font-size:0.7rem; color:#3b82f6;">Rep 3</div>
-        <div style="position:absolute; left:70%; top:45px; font-size:0.7rem; color:#a855f7;">Rep 4</div>
-        <div style="position:absolute; left:90%; top:45px; font-size:0.7rem; color:#ef4444;">Rep 5</div>
-      </div>
-      <p style="font-size:0.85rem; color:#64748b; margin:0;">Auto-detected reps across the full video. Click any to save, compare, or query.</p>
-    </div>
+    <p>Feedback is now much more consistent, concise, and faster across the board. The session layer only became possible because Pegasus understands video natively.</p>
     <!-- BODY_END -->
 
     <p>— Jon</p>
