@@ -253,6 +253,22 @@
       50% { opacity: 0.6; }
     }
 
+    #audioCuesBtn {
+      width: min(480px, 100%);
+      margin-top: 6px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      border-radius: 14px;
+      background: #1e3a5f;
+      border-color: #1e40af;
+      color: #93c5fd;
+    }
+    #audioCuesBtn.off {
+      background: var(--btn);
+      border-color: var(--btn-border);
+      color: var(--muted);
+    }
+
     .hint {
       margin-top: 10px;
       color: var(--muted);
@@ -389,8 +405,9 @@
   </div>
 
   <button id="voiceBtn" type="button">🎙 Voice Off — tap to enable</button>
+  <button id="audioCuesBtn" type="button">🔊 Audio Cues On</button>
 
-  <p class="hint">45s work · 15s rest · Start Now skips rest early</p>
+  <p class="hint">45s work · 15s rest · Start Now skips rest early · Spoken cues read drills aloud</p>
 
   <div class="list-toggle">
     <details>
@@ -441,6 +458,7 @@
       prevBtn: document.getElementById("prevBtn"),
       skipBtn: document.getElementById("skipBtn"),
       voiceBtn: document.getElementById("voiceBtn"),
+      audioCuesBtn: document.getElementById("audioCuesBtn"),
       sessionFill: document.getElementById("sessionFill"),
       sessionPct: document.getElementById("sessionPct"),
       sessionMarkers: document.getElementById("sessionMarkers"),
@@ -478,6 +496,50 @@
         if (Ctx) audioCtx = new Ctx();
       }
       if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    // ========== SPOKEN CUES ==========
+    let audioCuesEnabled = true;
+
+    function speak(text, opts) {
+      opts = opts || {};
+      if (!audioCuesEnabled) return;
+      if (!("speechSynthesis" in window)) return;
+      try {
+        if (!opts.queue) speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = opts.rate || 1.15;
+        u.pitch = opts.pitch || 1.0;
+        u.volume = opts.volume || 1.0;
+        if (opts.lang) u.lang = opts.lang;
+        speechSynthesis.speak(u);
+      } catch (_) {}
+    }
+
+    // ========== SUSTAINED BELL ==========
+    function playBell(durationSec) {
+      durationSec = durationSec || 4;
+      try {
+        ensureAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        // Bell harmonics — C5 major chord with long decay
+        const freqs = [523.25, 659.25, 783.99, 1046.50];
+        freqs.forEach((f, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.frequency.setValueAtTime(f, now);
+          o.type = i === 0 ? "sine" : "triangle";
+          const peak = 0.18 / (i + 1);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(peak, now + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+          o.start(now);
+          o.stop(now + durationSec + 0.1);
+        });
+      } catch (_) {}
     }
 
     function beep(kind) {
@@ -669,6 +731,8 @@
       endAt = performance.now() + WORK_SEC * 1000;
       beep("work");
       flash("work");
+      // Speak the drill name so she never has to look at the screen
+      speak(DRILLS[index]);
       updateUI();
       if (!running) startLoop();
     }
@@ -678,7 +742,6 @@
         finishSession();
         return;
       }
-      // Mark current drill complete
       completedDrills.add(index);
       index += 1;
       phase = "rest";
@@ -687,6 +750,8 @@
       endAt = performance.now() + REST_SEC * 1000;
       beep("rest");
       flash("rest");
+      // Announce rest + what's next
+      speak("Rest. Next up: " + DRILLS[index]);
       updateUI();
     }
 
@@ -697,7 +762,8 @@
       remaining = 0;
       phaseTotal = 1;
       releaseWakeLock();
-      beep("done");
+      speak("Session complete. Great work!");
+      playBell(4);
       flash("done");
       updateUI();
     }
@@ -709,7 +775,16 @@
       remaining = Math.max(0, msLeft / 1000);
       const nextCeil = Math.ceil(remaining);
 
-      if (nextCeil !== prevCeil && nextCeil > 0 && nextCeil <= 3) beep("tick");
+      if (nextCeil !== prevCeil && nextCeil > 0) {
+        if (phase === "work" && nextCeil <= 10) {
+          // Spoken countdown from 10 during work
+          speak(String(nextCeil), { rate: 1.6 });
+          if (nextCeil <= 3) beep("tick");
+        } else if (phase === "rest") {
+          if (nextCeil === 5) speak("Get ready", { rate: 1.3 });
+          if (nextCeil <= 3) beep("tick");
+        }
+      }
 
       updateUI();
 
@@ -912,6 +987,15 @@
         els.voiceBtn.classList.remove("listening");
         els.voiceBtn.textContent = "🎙 Voice Off — tap to enable";
       }
+    });
+
+    // ========== AUDIO CUES TOGGLE ==========
+    els.audioCuesBtn.addEventListener("click", () => {
+      audioCuesEnabled = !audioCuesEnabled;
+      els.audioCuesBtn.classList.toggle("off", !audioCuesEnabled);
+      els.audioCuesBtn.textContent = audioCuesEnabled ? "🔊 Audio Cues On" : "🔇 Audio Cues Off";
+      if (audioCuesEnabled) speak("Audio cues on", { rate: 1.3 });
+      else speechSynthesis.cancel();
     });
 
     // Init UI
