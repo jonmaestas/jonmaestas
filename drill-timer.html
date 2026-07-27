@@ -60,15 +60,49 @@
       padding: 6px 12px;
     }
 
-    .phase {
-      font-weight: 700;
-      color: var(--text);
-    }
-
+    .phase { font-weight: 700; color: var(--text); }
     .phase.work { color: var(--work); }
     .phase.rest { color: var(--rest); }
     .phase.done { color: var(--done); }
     .phase.ready { color: var(--muted); }
+
+    /* --- Session progress bar with drill markers --- */
+    .session-progress {
+      width: min(480px, 100%);
+      margin: 4px 0 8px;
+    }
+    .session-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .session-track {
+      position: relative;
+      height: 28px;
+      background: #1f2937;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .session-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #1e40af, #2563eb);
+      transition: width 0.3s ease;
+    }
+    .session-markers {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      pointer-events: none;
+    }
+    .marker {
+      flex: 1;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .marker:last-child { border-right: none; }
 
     main {
       flex: 1;
@@ -119,7 +153,6 @@
       line-height: 1.35;
       max-width: 28ch;
     }
-
     .next strong {
       color: var(--text);
       display: block;
@@ -135,17 +168,30 @@
       overflow: hidden;
       margin: 8px 0 4px;
     }
-
     .progress-bar {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, #22c55e, #4ade80);
       transition: width 0.2s linear;
     }
-
     .progress-bar.rest {
       background: linear-gradient(90deg, #f59e0b, #fbbf24);
     }
+
+    /* --- Nav row: prev / skip --- */
+    .nav-row {
+      display: flex;
+      gap: 12px;
+      width: min(480px, 100%);
+      margin-top: 6px;
+    }
+    .nav-btn {
+      flex: 1;
+      padding: 12px 8px;
+      font-size: 0.95rem;
+      border-radius: 14px;
+    }
+    .nav-btn:disabled { opacity: 0.3; }
 
     .controls {
       display: grid;
@@ -166,13 +212,8 @@
       font-weight: 700;
       cursor: pointer;
     }
-
     button:active { transform: scale(0.98); }
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
     #startNow {
       grid-column: 1 / -1;
@@ -182,21 +223,34 @@
       font-size: 1.2rem;
       padding: 22px 14px;
     }
-
     #startNow:disabled {
       background: var(--btn);
       border-color: var(--btn-border);
       color: var(--muted);
     }
+    #primary { background: #1d4ed8; border-color: #2563eb; }
+    #reset { background: #7f1d1d; border-color: #991b1b; }
 
-    #primary {
-      background: #1d4ed8;
-      border-color: #2563eb;
+    /* --- Voice button --- */
+    #voiceBtn {
+      width: min(480px, 100%);
+      margin-top: 10px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      border-radius: 14px;
+      background: #1a1040;
+      border-color: #312e81;
+      color: #a5b4fc;
     }
-
-    #reset {
-      background: #7f1d1d;
-      border-color: #991b1b;
+    #voiceBtn.listening {
+      background: #5b21b6;
+      border-color: #7c3aed;
+      color: #ede9fe;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
 
     .hint {
@@ -217,33 +271,68 @@
       border-radius: 14px;
       padding: 10px 14px;
     }
-
     summary {
       cursor: pointer;
       font-weight: 700;
       color: var(--muted);
       list-style: none;
     }
-
     summary::-webkit-details-marker { display: none; }
 
     ol {
       margin: 10px 0 4px;
-      padding-left: 1.3rem;
-      text-align: left;
+      padding-left: 0;
+      list-style: none;
+      counter-reset: drill;
+    }
+    ol li {
+      counter-increment: drill;
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
       color: var(--muted);
       font-size: 0.95rem;
-      line-height: 1.55;
+      line-height: 1.4;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-
+    ol li:last-child { border-bottom: none; }
+    ol li::before {
+      content: counter(drill);
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
     ol li.current {
       color: var(--text);
       font-weight: 700;
+      background: rgba(37,99,235,0.15);
+      border-radius: 8px;
     }
-
+    ol li.current::before {
+      background: #2563eb;
+      color: #fff;
+    }
     ol li.done-item {
-      opacity: 0.45;
-      text-decoration: line-through;
+      opacity: 0.5;
+    }
+    ol li.done-item::before {
+      background: #166534;
+      color: #4ade80;
+    }
+    ol li.done-item::after {
+      content: "✓";
+      color: var(--work);
+      font-weight: 700;
+      margin-left: auto;
     }
 
     footer {
@@ -264,6 +353,18 @@
     <div class="badge phase ready" id="phaseBadge">Ready</div>
   </div>
 
+  <!-- Session progress bar with drill markers -->
+  <div class="session-progress">
+    <div class="session-label">
+      <span>Session Progress</span>
+      <span id="sessionPct">0%</span>
+    </div>
+    <div class="session-track">
+      <div class="session-fill" id="sessionFill"></div>
+      <div class="session-markers" id="sessionMarkers"></div>
+    </div>
+  </div>
+
   <main>
     <div class="label" id="phaseLabel">Tap Start when ready</div>
     <div class="exercise" id="exerciseName">Tick tocks/Foundations</div>
@@ -275,17 +376,25 @@
     </div>
   </main>
 
+  <!-- Nav: prev / skip -->
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" type="button">⏮ Prev Drill</button>
+    <button class="nav-btn" id="skipBtn" type="button">Skip ⏭</button>
+  </div>
+
   <div class="controls">
     <button id="startNow" type="button" disabled>Start Now</button>
     <button id="primary" type="button">Start</button>
-    <button id="reset" type="button">Reset</button>
+    <button id="reset" type="button">Restart Drill</button>
   </div>
+
+  <button id="voiceBtn" type="button">🎙 Voice Off — tap to enable</button>
 
   <p class="hint">45s work · 15s rest · Start Now skips rest early</p>
 
   <div class="list-toggle">
     <details>
-      <summary>Full drill list</summary>
+      <summary>Full drill list — tap to jump</summary>
       <ol id="drillList"></ol>
     </details>
   </div>
@@ -329,6 +438,12 @@
       primary: document.getElementById("primary"),
       reset: document.getElementById("reset"),
       drillList: document.getElementById("drillList"),
+      prevBtn: document.getElementById("prevBtn"),
+      skipBtn: document.getElementById("skipBtn"),
+      voiceBtn: document.getElementById("voiceBtn"),
+      sessionFill: document.getElementById("sessionFill"),
+      sessionPct: document.getElementById("sessionPct"),
+      sessionMarkers: document.getElementById("sessionMarkers"),
     };
 
     let index = 0;
@@ -340,6 +455,15 @@
     let endAt = 0;
     let wakeLock = null;
     let audioCtx = null;
+
+    // Track which drills have been completed (for session %)
+    let completedDrills = new Set();
+
+    // --- Build session markers ---
+    function buildMarkers() {
+      els.sessionMarkers.innerHTML = DRILLS.map(() => '<div class="marker"></div>').join("");
+    }
+    buildMarkers();
 
     function fmt(sec) {
       const s = Math.max(0, Math.ceil(sec));
@@ -371,40 +495,34 @@
           g.gain.setValueAtTime(0.0001, now);
           g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
           g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-          o.start(now);
-          o.stop(now + 0.2);
+          o.start(now); o.stop(now + 0.2);
         } else if (kind === "rest") {
           o.frequency.setValueAtTime(523.25, now);
           g.gain.setValueAtTime(0.0001, now);
           g.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
           g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
-          o.start(now);
-          o.stop(now + 0.28);
+          o.start(now); o.stop(now + 0.28);
         } else if (kind === "tick") {
           o.type = "square";
           o.frequency.setValueAtTime(660, now);
           g.gain.setValueAtTime(0.0001, now);
           g.gain.exponentialRampToValueAtTime(0.08, now + 0.005);
           g.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
-          o.start(now);
-          o.stop(now + 0.09);
+          o.start(now); o.stop(now + 0.09);
         } else if (kind === "done") {
           [523.25, 659.25, 783.99].forEach((f, i) => {
             const o2 = audioCtx.createOscillator();
             const g2 = audioCtx.createGain();
-            o2.connect(g2);
-            g2.connect(audioCtx.destination);
+            o2.connect(g2); g2.connect(audioCtx.destination);
             const t = now + i * 0.14;
             o2.frequency.setValueAtTime(f, t);
             g2.gain.setValueAtTime(0.0001, t);
             g2.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
             g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-            o2.start(t);
-            o2.stop(t + 0.24);
+            o2.start(t); o2.stop(t + 0.24);
           });
         }
       } catch (_) {}
-
       if (navigator.vibrate) {
         if (kind === "work") navigator.vibrate([40, 40, 80]);
         else if (kind === "rest") navigator.vibrate(60);
@@ -421,11 +539,8 @@
         }
       } catch (_) {}
     }
-
     async function releaseWakeLock() {
-      try {
-        if (wakeLock) await wakeLock.release();
-      } catch (_) {}
+      try { if (wakeLock) await wakeLock.release(); } catch (_) {}
       wakeLock = null;
     }
 
@@ -440,16 +555,44 @@
     function renderList() {
       els.drillList.innerHTML = DRILLS.map((name, i) => {
         let cls = "";
-        if (phase === "done" || i < index) cls = "done-item";
-        else if (i === index) cls = "current";
-        return `<li class="${cls}">${name}</li>`;
+        if (completedDrills.has(i)) cls = "done-item";
+        if (i === index && phase !== "done") cls += (cls ? " " : "") + "current";
+        return `<li class="${cls}" data-idx="${i}">${name}</li>`;
       }).join("");
+      // Wire up click-to-jump
+      els.drillList.querySelectorAll("li").forEach((li) => {
+        li.addEventListener("click", () => {
+          const idx = parseInt(li.dataset.idx, 10);
+          jumpToDrill(idx);
+        });
+      });
     }
 
     function setPhaseClasses(p) {
       els.timer.className = "timer " + p;
       els.phaseBadge.className = "badge phase " + p;
       els.progressBar.className = "progress-bar" + (p === "rest" ? " rest" : "");
+    }
+
+    function updateSessionProgress() {
+      const total = DRILLS.length;
+      let pct;
+      if (phase === "done") {
+        pct = 100;
+      } else {
+        // Each drill = 1/total. Within a drill, progress is partial.
+        const drillFraction = completedDrills.size / total;
+        let inDrillFraction = 0;
+        if (phase === "work") {
+          inDrillFraction = (1 - remaining / WORK_SEC) / total;
+        } else if (phase === "rest") {
+          inDrillFraction = (1 / total) - (remaining / REST_SEC / total);
+        }
+        pct = Math.round((drillFraction + inDrillFraction) * 100);
+      }
+      pct = Math.max(0, Math.min(100, pct));
+      els.sessionFill.style.width = pct + "%";
+      els.sessionPct.textContent = pct + "%";
     }
 
     function updateUI() {
@@ -469,6 +612,9 @@
         els.startNow.disabled = true;
         els.primary.textContent = "Start";
         els.primary.disabled = false;
+        els.prevBtn.disabled = (index === 0);
+        els.skipBtn.disabled = (index >= total - 1);
+        els.reset.textContent = "Restart Drill";
       } else if (phase === "work") {
         els.phaseBadge.textContent = "Work";
         els.phaseLabel.textContent = "Go!";
@@ -477,6 +623,9 @@
         els.startNow.disabled = true;
         els.primary.textContent = running ? "Pause" : "Resume";
         els.primary.disabled = false;
+        els.prevBtn.disabled = (index === 0);
+        els.skipBtn.disabled = (index >= total - 1);
+        els.reset.textContent = "Restart Drill";
       } else if (phase === "rest") {
         els.phaseBadge.textContent = "Rest";
         els.phaseLabel.textContent = "Rest — next move coming up";
@@ -486,6 +635,9 @@
         els.startNow.disabled = false;
         els.primary.textContent = running ? "Pause" : "Resume";
         els.primary.disabled = false;
+        els.prevBtn.disabled = (index === 0);
+        els.skipBtn.disabled = (index >= total - 1);
+        els.reset.textContent = "Restart Drill";
       } else if (phase === "done") {
         els.phaseBadge.textContent = "Done";
         els.phaseLabel.textContent = "Nice work";
@@ -493,12 +645,15 @@
         els.startNow.disabled = true;
         els.primary.textContent = "Restart";
         els.primary.disabled = false;
+        els.prevBtn.disabled = true;
+        els.skipBtn.disabled = true;
         els.timer.textContent = "0:00";
         els.progressBar.style.width = "100%";
       }
 
       setPhaseClasses(phase);
       renderList();
+      updateSessionProgress();
     }
 
     function stopLoop() {
@@ -507,7 +662,7 @@
       rafId = null;
     }
 
-    function enterWork(fromRestSkip) {
+    function enterWork() {
       phase = "work";
       phaseTotal = WORK_SEC;
       remaining = WORK_SEC;
@@ -523,6 +678,8 @@
         finishSession();
         return;
       }
+      // Mark current drill complete
+      completedDrills.add(index);
       index += 1;
       phase = "rest";
       phaseTotal = REST_SEC;
@@ -534,6 +691,7 @@
     }
 
     function finishSession() {
+      completedDrills.add(index);
       stopLoop();
       phase = "done";
       remaining = 0;
@@ -551,18 +709,13 @@
       remaining = Math.max(0, msLeft / 1000);
       const nextCeil = Math.ceil(remaining);
 
-      if (nextCeil !== prevCeil && nextCeil > 0 && nextCeil <= 3) {
-        beep("tick");
-      }
+      if (nextCeil !== prevCeil && nextCeil > 0 && nextCeil <= 3) beep("tick");
 
       updateUI();
 
       if (msLeft <= 0) {
-        if (phase === "work") {
-          enterRest();
-        } else if (phase === "rest") {
-          enterWork(false);
-        }
+        if (phase === "work") enterRest();
+        else if (phase === "rest") enterWork();
       }
 
       if (running) rafId = requestAnimationFrame(tick);
@@ -592,67 +745,177 @@
     function startSession() {
       ensureAudio();
       index = 0;
-      enterWork(false);
-      if (!running) startLoop();
+      completedDrills.clear();
+      enterWork();
     }
 
-    function resetAll() {
+    // Restart ONLY the current drill (not the whole session)
+    function restartCurrentDrill() {
       stopLoop();
-      index = 0;
-      phase = "ready";
-      remaining = WORK_SEC;
-      phaseTotal = WORK_SEC;
-      releaseWakeLock();
-      updateUI();
+      completedDrills.delete(index);
+      enterWork();
+    }
+
+    // Jump to a specific drill by index (from list tap)
+    function jumpToDrill(targetIdx) {
+      if (targetIdx < 0 || targetIdx >= DRILLS.length) return;
+      stopLoop();
+      index = targetIdx;
+      // Remove completion for this and all drills after
+      for (let i = targetIdx; i < DRILLS.length; i++) completedDrills.delete(i);
+      enterWork();
+    }
+
+    // Navigate to previous drill
+    function prevDrill() {
+      if (index <= 0) return;
+      jumpToDrill(index - 1);
+    }
+
+    // Skip current drill (forward)
+    function skipDrill() {
+      if (index >= DRILLS.length - 1) return;
+      completedDrills.add(index);
+      jumpToDrill(index + 1);
     }
 
     els.primary.addEventListener("click", () => {
       ensureAudio();
-      if (phase === "ready") {
-        startSession();
-      } else if (phase === "done") {
-        resetAll();
-        startSession();
-      } else if (running) {
-        pause();
-      } else {
-        resume();
-      }
+      if (phase === "ready") startSession();
+      else if (phase === "done") { startSession(); }
+      else if (running) pause();
+      else resume();
     });
 
     els.startNow.addEventListener("click", () => {
       if (phase !== "rest") return;
       ensureAudio();
-      // Keep current index (already advanced at start of rest). Skip remaining rest.
       remaining = 0;
       endAt = performance.now();
-      if (!running) {
-        enterWork(true);
-        startLoop();
-      } else {
-        // loop will flip on next frame; force immediately
-        enterWork(true);
-      }
+      enterWork();
     });
 
     els.reset.addEventListener("click", () => {
-      resetAll();
+      restartCurrentDrill();
     });
 
+    els.prevBtn.addEventListener("click", () => { prevDrill(); });
+    els.skipBtn.addEventListener("click", () => { skipDrill(); });
+
     document.addEventListener("visibilitychange", async () => {
-      if (document.visibilityState === "visible" && running) {
-        await requestWakeLock();
+      if (document.visibilityState === "visible" && running) await requestWakeLock();
+    });
+
+    // ========== VOICE COMMANDS ==========
+    let recognition = null;
+    let voiceOn = false;
+
+    function initVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        els.voiceBtn.textContent = "🎙 Voice not supported on this browser";
+        els.voiceBtn.disabled = true;
+        return;
+      }
+      recognition = new SR();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+
+      recognition.onresult = (event) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript.trim().toLowerCase();
+          // Check commands on interim results for faster response
+          if (transcript.includes("pause") || transcript.includes("hold")) {
+            doCommand("pause");
+          } else if (transcript.includes("resume") || transcript.includes("go") || transcript.includes("continue")) {
+            doCommand("resume");
+          } else if (transcript.includes("skip") || transcript.includes("next")) {
+            doCommand("skip");
+          } else if (transcript.includes("start now") || transcript.includes("start")) {
+            doCommand("startnow");
+          } else if (transcript.includes("restart") || transcript.includes("reset")) {
+            doCommand("restart");
+          } else if (transcript.includes("back") || transcript.includes("previous")) {
+            doCommand("prev");
+          }
+        }
+      };
+
+      recognition.onerror = (e) => {
+        if (e.error === "not-allowed") {
+          els.voiceBtn.textContent = "🎙 Mic blocked — allow mic access";
+          voiceOn = false;
+        }
+      };
+
+      recognition.onend = () => {
+        // Auto-restart if still supposed to be on
+        if (voiceOn) {
+          try { recognition.start(); } catch (_) {}
+        }
+      };
+    }
+
+    let lastCommandTime = 0;
+    const COMMAND_COOLDOWN = 800; // ms
+
+    function doCommand(cmd) {
+      const now = Date.now();
+      if (now - lastCommandTime < COMMAND_COOLDOWN) return;
+      lastCommandTime = now;
+
+      switch (cmd) {
+        case "pause":
+          if (running) pause();
+          break;
+        case "resume":
+          if (!running && phase !== "ready" && phase !== "done") resume();
+          else if (phase === "ready") startSession();
+          break;
+        case "skip":
+          skipDrill();
+          break;
+        case "startnow":
+          if (phase === "rest") {
+            remaining = 0;
+            endAt = performance.now();
+            enterWork();
+          } else if (phase === "ready") {
+            startSession();
+          }
+          break;
+        case "restart":
+          restartCurrentDrill();
+          break;
+        case "prev":
+          prevDrill();
+          break;
+      }
+    }
+
+    els.voiceBtn.addEventListener("click", () => {
+      if (!recognition) initVoice();
+      if (!recognition) return;
+
+      if (!voiceOn) {
+        voiceOn = true;
+        ensureAudio();
+        try {
+          recognition.start();
+          els.voiceBtn.classList.add("listening");
+          els.voiceBtn.textContent = "🔴 Listening — say: pause, resume, skip, back, start, restart";
+        } catch (_) {}
+      } else {
+        voiceOn = false;
+        try { recognition.stop(); } catch (_) {}
+        els.voiceBtn.classList.remove("listening");
+        els.voiceBtn.textContent = "🎙 Voice Off — tap to enable";
       }
     });
 
-    // Prevent iOS double-tap zoom on buttons
-    document.querySelectorAll("button").forEach((btn) => {
-      btn.addEventListener("touchend", (e) => {
-        // let click fire; just reduce delay quirks
-      }, { passive: true });
-    });
-
-    resetAll();
+    // Init UI
+    updateUI();
   </script>
 </body>
 </html>
