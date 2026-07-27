@@ -480,21 +480,37 @@ function draw() {
     ctx.fillText(String(i+1), bx*CELL+CELL/2, by*CELL+CELL/2);
   }
 
-  // Aim line — drawn from ball to aimTarget
+  // Aim arrow — shows direction only (die determines distance)
   if (aimTarget && !animating && isMyTurn()) {
     const ball = getCurrentBall();
     if (ball) {
-      ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 2; ctx.setLineDash([5,5]);
-      ctx.beginPath();
-      ctx.moveTo(ball.x*CELL+CELL/2, ball.y*CELL+CELL/2);
-      ctx.lineTo(aimTarget.x*CELL+CELL/2, aimTarget.y*CELL+CELL/2);
-      ctx.stroke(); ctx.setLineDash([]);
+      const bx = ball.x * CELL + CELL / 2;
+      const by = ball.y * CELL + CELL / 2;
+      const angle = Math.atan2(aimTarget.y - ball.y, aimTarget.x - ball.x);
 
-      // Target reticle
-      ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(aimTarget.x*CELL+CELL/2, aimTarget.y*CELL+CELL/2, CELL*0.4, 0, Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(aimTarget.x*CELL+CELL/2 - CELL*0.5, aimTarget.y*CELL+CELL/2); ctx.lineTo(aimTarget.x*CELL+CELL/2 + CELL*0.5, aimTarget.y*CELL+CELL/2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(aimTarget.x*CELL+CELL/2, aimTarget.y*CELL+CELL/2 - CELL*0.5); ctx.lineTo(aimTarget.x*CELL+CELL/2, aimTarget.y*CELL+CELL/2 + CELL*0.5); ctx.stroke();
+      // Draw direction arrow (fixed length, shows direction not distance)
+      const arrowLen = CELL * 3.5;
+      const tipX = bx + Math.cos(angle) * arrowLen;
+      const tipY = by + Math.sin(angle) * arrowLen;
+
+      // Shaft
+      ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipX, tipY); ctx.stroke();
+
+      // Arrowhead
+      const headLen = CELL * 0.8;
+      ctx.fillStyle = "rgba(255,255,255,0.8)";
+      ctx.beginPath();
+      ctx.moveTo(tipX, tipY);
+      ctx.lineTo(tipX - Math.cos(angle - 0.5) * headLen, tipY - Math.sin(angle - 0.5) * headLen);
+      ctx.lineTo(tipX - Math.cos(angle + 0.5) * headLen, tipY - Math.sin(angle + 0.5) * headLen);
+      ctx.closePath(); ctx.fill();
+
+      // Faint dashed extension to tap point
+      ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+      ctx.beginPath(); ctx.moveTo(tipX, tipY);
+      ctx.lineTo(aimTarget.x * CELL + CELL / 2, aimTarget.y * CELL + CELL / 2);
+      ctx.stroke(); ctx.setLineDash([]);
     }
   }
 }
@@ -560,11 +576,21 @@ function setAimTarget(tx, ty) {
   if (!ball) return;
   if (tx === ball.x && ty === ball.y) return;
 
-  aimTarget = { x: tx, y: ty };
+  // If on the green, auto-aim toward hole — don't let them aim freely
+  const distToHole = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
+  const onGreen = (grid[ball.y][ball.x] === T.GREEN);
+  if (onGreen && distToHole <= 4) {
+    // Auto-putt: target is the hole, player just rolls
+    aimTarget = { x: holeX, y: holeY };
+    document.getElementById("aimHint").textContent = "⛳ On the green — tap die to putt!";
+    document.getElementById("dieInfo").innerHTML = `<strong>PUTT</strong><br>Aiming at hole. Roll determines distance.`;
+  } else {
+    aimTarget = { x: tx, y: ty };
+    document.getElementById("dieInfo").innerHTML = `Direction set<br><strong>Tap die to roll!</strong>`;
+    document.getElementById("aimHint").textContent = "👆 Direction set — tap die to roll!";
+  }
   die.classList.remove("disabled");
-  document.getElementById("dieInfo").innerHTML = `Aiming at cell<br><strong>(${tx}, ${ty})</strong><br>Tap die to roll!`;
   document.getElementById("swingBtn").disabled = false;
-  document.getElementById("aimHint").textContent = "👆 Tap the die to swing!";
   draw();
 }
 
@@ -575,16 +601,12 @@ function doSwing() {
   if (!aimTarget || animating || !isMyTurn()) return;
   const ball = getCurrentBall();
 
-  // PUTT: move exactly 1 space toward hole
+  // Check if putting (on green, within 4 of hole)
   const distToHole = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
-  const isPutt = (distToHole <= 3 && grid[ball.y][ball.x] === T.GREEN);
+  const isPutt = (grid[ball.y][ball.x] === T.GREEN && distToHole <= 4);
 
-  let roll;
-  if (isPutt) {
-    roll = 1;
-  } else {
-    roll = 1 + Math.floor(Math.random() * 6);
-  }
+  // Always roll the die — even on putts
+  const roll = 1 + Math.floor(Math.random() * 6);
 
   die.classList.add("rolling");
   document.getElementById("swingBtn").disabled = true;
@@ -594,7 +616,7 @@ function doSwing() {
     if (++rc >= 7) {
       clearInterval(ri);
       die.classList.remove("rolling");
-      die.textContent = isPutt ? "P" : roll;
+      die.textContent = roll;
       processShot(roll, isPutt);
     }
   }, 55);
@@ -602,9 +624,9 @@ function doSwing() {
 
 function processShot(roll, isPutt) {
   const ball = getCurrentBall();
-  let dist = isPutt ? 1 : roll;
+  let dist = roll;
 
-  // Terrain modifier
+  // Terrain modifier (full swings only, not putts)
   const terrain = grid[ball.y][ball.x];
   let modifierText = "";
   if (!isPutt) {
@@ -617,40 +639,45 @@ function processShot(roll, isPutt) {
     }
   }
 
-  // Trace path from ball to aimTarget
-  let targetX, targetY;
+  // For putts: aim is auto-set to the hole in setAimTarget()
+  // For swings: aim is where the player tapped
+  const targetX = isPutt ? holeX : aimTarget.x;
+  const targetY = isPutt ? holeY : aimTarget.y;
+
+  // For putts, extend the path past the hole so overshoot works naturally
+  let fullTargetX = targetX, fullTargetY = targetY;
   if (isPutt) {
-    targetX = holeX;
-    targetY = holeY;
-  } else {
-    targetX = aimTarget.x;
-    targetY = aimTarget.y;
+    const dx = Math.sign(holeX - ball.x);
+    const dy = Math.sign(holeY - ball.y);
+    // Extend 6 cells past the hole in same direction
+    fullTargetX = Math.max(0, Math.min(COLS - 1, holeX + dx * 6));
+    fullTargetY = Math.max(0, Math.min(ROWS - 1, holeY + dy * 6));
   }
 
-  const path = linePath(ball.x, ball.y, targetX, targetY);
+  const path = linePath(ball.x, ball.y, fullTargetX, fullTargetY);
 
   // Walk the path for `dist` steps
   let newX = ball.x, newY = ball.y;
   let hitTree = false, landedInWater = false;
   let stepsTaken = 0;
+  let passedHole = false;
 
   for (let i = 0; i < path.length && stepsTaken < dist; i++) {
     const pt = path[i];
     const cellTerrain = grid[pt.y] && grid[pt.y][pt.x];
-
-    // Trees block
-    if (cellTerrain === T.TREE) {
-      hitTree = true;
-      break;
-    }
-
-    newX = pt.x;
-    newY = pt.y;
+    if (cellTerrain === T.TREE) { hitTree = true; break; }
+    newX = pt.x; newY = pt.y;
     stepsTaken++;
 
-    // Reached the hole!
-    if (newX === holeX && newY === holeY) break;
+    // Reached the hole exactly!
+    if (newX === holeX && newY === holeY) {
+      // Ball sinks! Stop here regardless of remaining distance
+      break;
+    }
   }
+
+  // Check if ball landed exactly on the hole
+  const sankPutt = (newX === holeX && newY === holeY);
 
   ball.strokes++;
 
@@ -667,6 +694,15 @@ function processShot(roll, isPutt) {
       ball.done = true;
       ball.safeX = holeX; ball.safeY = holeY;
       showMsg(scoreName(ball.strokes, par) + "!", "success");
+    } else if (isPutt) {
+      // Putt didn't go in — either short or overshot
+      const ballDist = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
+      if (ballDist <= 1) {
+        showMsg("Lipped out! Try again — you're right there.", "warn");
+      } else {
+        showMsg("Missed the putt. " + ballDist + " away.", "warn");
+      }
+      ball.safeX = ball.x; ball.safeY = ball.y;
     } else if (landedInWater) {
       ball.strokes++;
       showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 penalty", "error");
