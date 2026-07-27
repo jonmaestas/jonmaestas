@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a1a0a" />
-  <meta name="description" content="Pocket Golf — solo or multiplayer roll-and-write golf game. Roll the die, aim your shot, navigate terrain to the hole." />
-  <title>Pocket Golf — Multiplayer Golf Game</title>
+  <meta name="description" content="Pocket Golf — real-time multiplayer roll-and-write golf. Create a clubhouse, share the code, play together." />
+  <title>Pocket Golf — Multiplayer Clubhouse</title>
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
       --bg: #0a1a0a;
@@ -14,1260 +15,1263 @@
       --panel2: #1a3326;
       --text: #e8f5e9;
       --muted: #81a893;
-      --fairway: #2d5a1e;
+      --fairway: #3a7a28;
       --rough: #4a6b2a;
       --sand: #d4a84b;
       --water: #2563a8;
       --tree: #1a3d10;
       --tee: #fbbf24;
-      --hole: #1a1a1a;
       --accent: #4ade80;
       --btn: #1e3a1e;
       --btn-border: #2d5a2d;
       --danger: #ef4444;
     }
-
-    /* Player colors */
-    .p0 { --pc: #60a5fa; } /* blue */
-    .p1 { --pc: #f87171; } /* red */
-    .p2 { --pc: #fbbf24; } /* yellow */
-    .p3 { --pc: #c084fc; } /* purple */
+    .p0 { --pc: #60a5fa; }
+    .p1 { --pc: #f87171; }
+    .p2 { --pc: #fbbf24; }
+    .p3 { --pc: #c084fc; }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+    body { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: max(8px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
 
-    html, body {
-      margin: 0; padding: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    }
+    .hidden { display: none !important; }
 
-    body {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: max(8px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    /* === OVERLAYS === */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+      display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px;
     }
+    .overlay-card {
+      background: var(--panel); border: 1px solid var(--btn-border); border-radius: 20px;
+      padding: 24px; max-width: 420px; width: 100%; max-height: 92vh; overflow-y: auto;
+    }
+    .overlay-card h1 { font-size: 1.6rem; margin: 0 0 6px; }
+    .overlay-card h1 span { color: var(--accent); }
+    .overlay-card h2 { font-size: 1.1rem; margin: 14px 0 6px; }
+    .overlay-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; margin: 6px 0; }
+    .overlay-card ul { padding-left: 1.2rem; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+    .overlay-card .btn { width: 100%; margin-top: 8px; padding: 16px; font-size: 1.05rem; }
+    .overlay-card .btn-row { display: flex; gap: 8px; }
+    .overlay-card .btn-row .btn { flex: 1; }
+
+    /* === BUTTONS === */
+    .btn {
+      border: 1px solid var(--btn-border); background: var(--btn); color: var(--text);
+      border-radius: 14px; padding: 14px 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: transform 0.1s, background 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-primary { background: #15803d; border-color: #16a34a; }
+    .btn-blue { background: #1e40af; border-color: #2563eb; }
+    .btn-amber { background: #78350f; border-color: #92400e; }
+
+    /* === CLUBHOUSE SCREEN === */
+    .clubhouse-options { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+    .room-code-display {
+      font-size: 2.5rem; font-weight: 900; letter-spacing: 0.15em; text-align: center;
+      color: var(--accent); background: var(--bg); border-radius: 14px; padding: 16px; margin: 12px 0;
+      border: 2px dashed var(--btn-border);
+    }
+    .code-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--btn-border); border-radius: 12px;
+      color: var(--text); padding: 14px 16px; font-size: 1.3rem; font-weight: 700; text-align: center;
+      letter-spacing: 0.1em; text-transform: uppercase; margin: 6px 0;
+    }
+    .player-list-item {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px;
+      background: var(--bg); margin-bottom: 4px; font-size: 0.9rem;
+    }
+    .player-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
     /* === HEADER === */
     .header {
-      width: 100%;
-      max-width: 560px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
+      width: 100%; max-width: 560px; display: flex; justify-content: space-between;
+      align-items: center; gap: 8px; margin-bottom: 4px;
     }
-    .logo { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.02em; }
+    .logo { font-size: 1.2rem; font-weight: 900; }
     .logo span { color: var(--accent); }
     .hole-badge {
-      background: var(--panel);
-      border: 1px solid var(--btn-border);
-      border-radius: 999px;
-      padding: 5px 12px;
-      font-size: 0.8rem;
-      color: var(--muted);
+      background: var(--panel); border: 1px solid var(--btn-border); border-radius: 999px;
+      padding: 4px 10px; font-size: 0.75rem; color: var(--muted);
     }
     .hole-badge strong { color: var(--text); }
+    .conn-badge {
+      background: var(--panel); border: 1px solid var(--btn-border); border-radius: 999px;
+      padding: 4px 8px; font-size: 0.7rem; color: var(--muted);
+    }
+    .conn-badge.connected { color: var(--accent); border-color: var(--accent); }
 
-    /* === CURRENT PLAYER BANNER === */
+    /* === TURN BANNER === */
     .turn-banner {
-      width: 100%;
-      max-width: 560px;
-      background: var(--panel);
-      border: 1px solid var(--btn-border);
-      border-left: 4px solid var(--pc, var(--accent));
-      border-radius: 12px;
-      padding: 8px 12px;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--btn-border);
+      border-left: 4px solid var(--pc, var(--accent)); border-radius: 10px; padding: 6px 12px; margin-bottom: 4px;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .turn-name {
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: var(--pc, var(--accent));
-    }
-    .turn-strokes {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    /* === STATS BAR === */
-    .stats {
-      width: 100%;
-      max-width: 560px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-    .stat {
-      background: var(--panel);
-      border: 1px solid var(--btn-border);
-      border-radius: 12px;
-      padding: 6px 4px;
-      text-align: center;
-    }
-    .stat-label {
-      font-size: 0.6rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .stat-val {
-      font-size: 1.2rem;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-
-    /* === GAME AREA === */
-    .game-area {
-      width: 100%;
-      max-width: 560px;
-      position: relative;
-    }
-    canvas {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: 12px;
-      background: var(--rough);
-      touch-action: none;
-    }
+    .turn-name { font-size: 1rem; font-weight: 800; color: var(--pc, var(--accent)); }
+    .turn-info { font-size: 0.78rem; color: var(--muted); }
 
     /* === DIE === */
-    .die-section {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 8px;
-    }
+    .die-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; }
     .die {
-      width: 72px; height: 72px;
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      color: #1a1a1a;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.4rem;
-      font-weight: 900;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 -2px 4px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: transform 0.15s;
-      border: 2px solid #cbd5e1;
-      user-select: none;
+      width: 68px; height: 68px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); color: #1a1a1a;
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      cursor: pointer; transition: transform 0.15s; border: 2px solid #cbd5e1; user-select: none;
     }
-    .die:active { transform: scale(0.93); }
+    .die:active { transform: scale(0.92); }
     .die.rolling { animation: shake 0.5s ease; }
-    .die.disabled { opacity: 0.4; cursor: not-allowed; }
-    .die.putt-mode {
-      background: linear-gradient(135deg, #93c5fd, #60a5fa);
-      color: #fff;
-      font-size: 1.4rem;
-    }
+    .die.disabled { opacity: 0.35; cursor: not-allowed; }
+    .die.putt { background: linear-gradient(135deg, #93c5fd, #60a5fa); color: #fff; font-size: 1.2rem; }
     @keyframes shake {
-      0%, 100% { transform: rotate(0) scale(1); }
-      20% { transform: rotate(-20deg) scale(1.15); }
-      40% { transform: rotate(20deg) scale(1.1); }
-      60% { transform: rotate(-15deg) scale(1.12); }
-      80% { transform: rotate(10deg) scale(1.08); }
+      0%,100% { transform: rotate(0) scale(1); }
+      25% { transform: rotate(-18deg) scale(1.12); }
+      50% { transform: rotate(18deg) scale(1.1); }
+      75% { transform: rotate(-12deg) scale(1.08); }
     }
-    .die-info {
-      font-size: 0.8rem;
-      color: var(--muted);
-      max-width: 160px;
-    }
+    .die-info { font-size: 0.78rem; color: var(--muted); max-width: 180px; line-height: 1.3; }
     .die-info strong { color: var(--text); }
 
-    /* === AIM CONTROLS === */
-    .aim-section {
-      width: 100%;
-      max-width: 560px;
-      margin-top: 6px;
-    }
-    .aim-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      max-width: 210px;
-      margin: 0 auto;
-    }
+    /* === CANVAS === */
+    .game-area { width: 100%; max-width: 560px; position: relative; margin-top: 4px; }
+    canvas { display: block; width: 100%; height: auto; border-radius: 12px; background: var(--rough); touch-action: none; }
+
+    /* === AIM === */
+    .aim-section { width: 100%; max-width: 560px; margin-top: 4px; }
+    .aim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 200px; margin: 0 auto; }
     .aim-btn {
-      aspect-ratio: 1;
-      border: 1px solid var(--btn-border);
-      background: var(--panel);
-      color: var(--text);
-      border-radius: 12px;
-      font-size: 1.3rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.1s, transform 0.1s;
+      aspect-ratio: 1; border: 1px solid var(--btn-border); background: var(--panel); color: var(--text);
+      border-radius: 10px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .aim-btn:active { transform: scale(0.95); }
-    .aim-btn.selected {
-      background: #1e40af;
-      border-color: #3b82f6;
-    }
-    .aim-btn.putt {
-      background: #1e3a5f;
-      border-color: #1e40af;
-      font-size: 0.7rem;
-      font-weight: 700;
-    }
-    .aim-btn.putt.selected {
-      background: #2563eb;
-      border-color: #60a5fa;
-    }
-    .aim-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .aim-btn.selected { background: #1e40af; border-color: #3b82f6; }
+    .aim-btn.putt { background: #1e3a5f; border-color: #1e40af; font-size: 0.65rem; font-weight: 700; }
+    .aim-btn.putt.selected { background: #2563eb; border-color: #60a5fa; }
+    .aim-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-    /* === ACTION BUTTONS === */
-    .actions {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 6px;
-      max-width: 560px;
-      margin-top: 6px;
-    }
-    .btn {
-      border: 1px solid var(--btn-border);
-      background: var(--btn);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 14px 10px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
-    .btn-primary { background: #15803d; border-color: #16a34a; }
-    .btn-mulligan { background: #78350f; border-color: #92400e; font-size: 0.8rem; }
+    /* === ACTIONS === */
+    .actions { display: grid; grid-template-columns: 2fr 1fr; gap: 6px; max-width: 560px; margin-top: 4px; }
 
-    /* === MESSAGE === */
-    .msg {
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--muted);
-      min-height: 1.2em;
-      margin-top: 4px;
-      padding: 0 12px;
-    }
+    .msg { text-align: center; font-size: 0.82rem; color: var(--muted); min-height: 1.1em; margin-top: 2px; }
     .msg.success { color: var(--accent); }
     .msg.warn { color: var(--sand); }
     .msg.error { color: var(--danger); }
 
+    /* === STATS === */
+    .stats { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
+    .stat { background: var(--panel); border: 1px solid var(--btn-border); border-radius: 10px; padding: 4px 2px; text-align: center; }
+    .stat-label { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-val { font-size: 1.05rem; font-weight: 800; }
+
     /* === SCORECARD === */
-    .scorecard-toggle {
-      width: 100%;
-      max-width: 560px;
-      margin-top: 8px;
-    }
-    details {
-      background: var(--panel);
-      border: 1px solid var(--btn-border);
-      border-radius: 12px;
-      padding: 8px 12px;
-    }
-    summary {
-      cursor: pointer;
-      font-weight: 700;
-      color: var(--muted);
-      list-style: none;
-    }
+    .sc-toggle { width: 100%; max-width: 560px; margin-top: 6px; }
+    details { background: var(--panel); border: 1px solid var(--btn-border); border-radius: 10px; padding: 6px 10px; }
+    summary { cursor: pointer; font-weight: 700; color: var(--muted); list-style: none; font-size: 0.85rem; }
     summary::-webkit-details-marker { display: none; }
-    .scorecard { margin-top: 6px; overflow-x: auto; }
-    table {
-      border-collapse: collapse;
-      font-size: 0.7rem;
-      white-space: nowrap;
-    }
-    th, td {
-      border: 1px solid var(--btn-border);
-      padding: 3px 5px;
-      text-align: center;
-      min-width: 24px;
-    }
+    .sc-table { margin-top: 4px; overflow-x: auto; }
+    table { border-collapse: collapse; font-size: 0.68rem; white-space: nowrap; }
+    th, td { border: 1px solid var(--btn-border); padding: 2px 4px; text-align: center; min-width: 22px; }
     th { background: var(--panel2); color: var(--muted); }
-    .pname { text-align: left; font-weight: 700; }
 
-    /* === OVERLAYS === */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.88);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 20px;
-    }
-    .overlay.hidden { display: none; }
-    .overlay-card {
-      background: var(--panel);
-      border: 1px solid var(--btn-border);
-      border-radius: 20px;
-      padding: 24px;
-      max-width: 420px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    .overlay-card h1 { font-size: 1.6rem; margin: 0 0 6px; }
-    .overlay-card h1 span { color: var(--accent); }
-    .overlay-card h2 { font-size: 1.1rem; margin: 16px 0 8px; }
-    .overlay-card p {
-      font-size: 0.88rem;
-      color: var(--muted);
-      line-height: 1.5;
-      margin: 6px 0;
-    }
-    .overlay-card ul {
-      padding-left: 1.2rem;
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-    .overlay-card .btn { width: 100%; margin-top: 12px; padding: 16px; font-size: 1.1rem; }
-
-    .legend {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 3px 12px;
-      margin: 8px 0;
-      font-size: 0.78rem;
-    }
+    /* === TERRAIN LEGEND === */
+    .legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px 12px; margin: 8px 0; font-size: 0.78rem; }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
 
-    /* === PLAYER SETUP === */
-    .player-count-row {
-      display: flex;
-      gap: 6px;
-      margin: 12px 0;
-    }
-    .pc-btn {
-      flex: 1;
-      padding: 14px 0;
-      border-radius: 12px;
-      border: 1px solid var(--btn-border);
-      background: var(--btn);
-      color: var(--text);
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .pc-btn.active { background: #15803d; border-color: #16a34a; }
-
-    .player-name-input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--btn-border);
-      border-radius: 10px;
-      color: var(--text);
-      padding: 10px 12px;
-      font-size: 0.95rem;
-      margin-bottom: 6px;
-      border-left: 4px solid var(--pc, var(--accent));
-    }
-
-    /* === PASS DEVICE SCREEN === */
-    .pass-card { text-align: center; }
-    .pass-card h1 { font-size: 1.3rem; }
-    .pass-player-name {
-      font-size: 2rem;
-      font-weight: 900;
-      margin: 12px 0 4px;
-      color: var(--pc, var(--accent));
-    }
-    .pass-hole-info { font-size: 0.9rem; color: var(--muted); margin-bottom: 8px; }
-    .pass-scores {
-      text-align: left;
-      margin: 12px 0;
-    }
-    .pass-score-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      font-size: 0.85rem;
-    }
-    .pass-score-row .pn { font-weight: 700; }
-
-    /* === LEADERBOARD === */
-    .leaderboard { margin: 12px 0; }
-    .lb-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 12px;
-      border-radius: 10px;
-      margin-bottom: 4px;
-      background: var(--bg);
-      border-left: 4px solid var(--pc, var(--accent));
-    }
-    .lb-rank { font-size: 1.2rem; font-weight: 900; color: var(--muted); margin-right: 8px; }
-    .lb-name { font-weight: 700; }
-    .lb-score { font-weight: 800; font-size: 1.1rem; }
-
-    footer { margin-top: 8px; text-align: center; color: #4a6b3a; font-size: 0.68rem; }
+    footer { margin-top: 6px; text-align: center; color: #4a6b3a; font-size: 0.65rem; }
   </style>
 </head>
 <body>
 
-  <!-- === SETUP OVERLAY === -->
-  <div class="overlay" id="setupOverlay">
-    <div class="overlay-card">
-      <h1>Pocket <span>Golf</span></h1>
-      <p>Solo or multiplayer roll-and-write golf. Roll the die, aim your shot, navigate the terrain, reach the hole in as few strokes as possible.</p>
+<!-- ========================================= -->
+<!-- LOBBY / CLUBHOUSE OVERLAY                 -->
+<!-- ========================================= -->
+<div class="overlay" id="lobbyOverlay">
+  <div class="overlay-card">
+    <h1>Pocket <span>Golf</span></h1>
+    <p id="lobbySubtitle">Real-time multiplayer golf. Create a clubhouse and share the code with your friends.</p>
 
-      <h2>How many players?</h2>
-      <div class="player-count-row" id="playerCountRow">
-        <button class="pc-btn active" data-count="1">1</button>
-        <button class="pc-btn" data-count="2">2</button>
-        <button class="pc-btn" data-count="3">3</button>
-        <button class="pc-btn" data-count="4">4</button>
+    <!-- Main menu -->
+    <div id="menuView">
+      <div class="clubhouse-options">
+        <button class="btn btn-primary" id="createBtn" style="font-size:1.15rem;padding:18px">🏌️ Create Clubhouse</button>
+        <button class="btn btn-blue" id="joinBtn" style="font-size:1.15rem;padding:18px">🔗 Join with Code</button>
       </div>
 
-      <div id="playerNamesDiv"></div>
+      <details style="margin-top:12px">
+        <summary>How to Play</summary>
+        <div class="legend" style="margin-top:8px">
+          <div class="legend-item"><div class="legend-swatch" style="background:#3a7a28"></div>Fairway: ×2</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#4a6b2a"></div>Rough: normal</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#d4a84b"></div>Sand: ÷2</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#2563a8"></div>Water: +1</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#1a3d10"></div>Trees: block</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#52b040"></div>Green: putt</div>
+        </div>
+        <ul>
+          <li><strong>Roll the die</strong> (1–6) for shot distance</li>
+          <li><strong>Fairway: ×2</strong> your roll — bomb it down the middle</li>
+          <li><strong>Sand: ÷2</strong> your roll (min 1) — stuck in the bunker</li>
+          <li><strong>Rough:</strong> roll as-is</li>
+          <li><strong>Water:</strong> +1 penalty stroke, ball goes back</li>
+          <li><strong>Trees:</strong> shot blocked, ball stays put</li>
+          <li><strong>Green:</strong> putt = exactly 1 space</li>
+          <li><strong>Aim:</strong> 8 directions, tap grid or arrows</li>
+          <li><strong>Mulligans:</strong> 6 per round</li>
+        </ul>
+      </details>
+    </div>
 
-      <h2>Terrain</h2>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:#3a7a28"></div>Fairway +1</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#4a6b2a"></div>Rough</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#d4a84b"></div>Sand −1</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#2563a8"></div>Water +1</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#1a3d10"></div>Trees block</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Hole</div>
-      </div>
+    <!-- Create view -->
+    <div id="createView" class="hidden">
+      <input class="code-input" type="text" id="createName" placeholder="Your name" maxlength="12" value="">
+      <button class="btn btn-primary" id="doCreateBtn">Create & Get Code</button>
+      <button class="btn" id="backFromCreateBtn" style="margin-top:6px">← Back</button>
+    </div>
 
-      <ul>
-        <li><strong>Aim:</strong> Tap a direction or tap the grid</li>
-        <li><strong>Die:</strong> Tap the die or Swing button to roll</li>
-        <li><strong>Putt:</strong> Move exactly 1 space</li>
-        <li><strong>Water:</strong> +1 stroke, ball returns</li>
-        <li><strong>Trees:</strong> Shot blocked</li>
-        <li><strong>Mulligans:</strong> 6 per round per player</li>
-      </ul>
+    <!-- Waiting room -->
+    <div id="waitView" class="hidden">
+      <p style="text-align:center;color:var(--muted)">Share this code:</p>
+      <div class="room-code-display" id="roomCode">------</div>
+      <p style="text-align:center;font-size:0.8rem">Players in the clubhouse:</p>
+      <div id="waitPlayerList"></div>
+      <button class="btn btn-primary" id="startMultiBtn" style="margin-top:12px">Start Round</button>
+      <button class="btn btn-amber" id="leaveWaitBtn" style="margin-top:6px">Leave</button>
+    </div>
 
-      <button class="btn btn-primary" id="startGameBtn">Start Round</button>
+    <!-- Join view -->
+    <div id="joinView" class="hidden">
+      <input class="code-input" type="text" id="joinName" placeholder="Your name" maxlength="12" value="">
+      <input class="code-input" type="text" id="joinCode" placeholder="ABC123" maxlength="6" style="text-transform:uppercase">
+      <button class="btn btn-primary" id="doJoinBtn">Join Clubhouse</button>
+      <button class="btn" id="backFromJoinBtn" style="margin-top:6px">← Back</button>
     </div>
   </div>
+</div>
 
-  <!-- === PASS DEVICE OVERLAY === -->
-  <div class="overlay hidden" id="passOverlay">
-    <div class="overlay-card pass-card" id="passCard">
-    </div>
+<!-- ========================================= -->
+<!-- GAME UI                                   -->
+<!-- ========================================= -->
+<div class="header">
+  <div class="logo">Pocket <span>Golf</span></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <span class="conn-badge" id="connBadge">●</span>
+    <span class="hole-badge">Hole <strong id="holeNum">1</strong>/<span id="totalHoles">9</span></span>
   </div>
+</div>
 
-  <!-- === ROUND END OVERLAY === -->
-  <div class="overlay hidden" id="endOverlay">
-    <div class="overlay-card" id="endCard"></div>
+<div class="turn-banner" id="turnBanner">
+  <div class="turn-name" id="turnName">—</div>
+  <div class="turn-info" id="turnInfo">Waiting...</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-label">Par</div><div class="stat-val" id="parVal">3</div></div>
+  <div class="stat"><div class="stat-label">Strokes</div><div class="stat-val" id="strokeVal">0</div></div>
+  <div class="stat"><div class="stat-label">Mulligans</div><div class="stat-val" id="mulliganVal">6</div></div>
+  <div class="stat"><div class="stat-label">You</div><div class="stat-val" id="myScoreVal">E</div></div>
+</div>
+
+<div class="game-area">
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<div class="die-row">
+  <div class="die disabled" id="die">?</div>
+  <div class="die-info" id="dieInfo">Aim a direction, then<br><strong>tap the die!</strong></div>
+</div>
+
+<div class="aim-section">
+  <div class="aim-grid">
+    <button class="aim-btn" data-dir="7">↖</button>
+    <button class="aim-btn" data-dir="0">↑</button>
+    <button class="aim-btn" data-dir="1">↗</button>
+    <button class="aim-btn" data-dir="6">←</button>
+    <button class="aim-btn putt" data-dir="-1">PUTT</button>
+    <button class="aim-btn" data-dir="2">→</button>
+    <button class="aim-btn" data-dir="5">↙</button>
+    <button class="aim-btn" data-dir="4">↓</button>
+    <button class="aim-btn" data-dir="3">↘</button>
   </div>
+</div>
 
-  <!-- === HEADER === -->
-  <div class="header">
-    <div class="logo">Pocket <span>Golf</span></div>
-    <div class="hole-badge">Hole <strong id="holeNum">1</strong> / 9</div>
-  </div>
+<div class="actions">
+  <button class="btn btn-primary" id="swingBtn" disabled>Swing!</button>
+  <button class="btn btn-amber" id="mulliganBtn" disabled>Mulligan</button>
+</div>
 
-  <!-- === TURN BANNER === -->
-  <div class="turn-banner" id="turnBanner">
-    <div class="turn-name" id="turnName">Player 1</div>
-    <div class="turn-strokes" id="turnStrokes">Stroke 1 · Par 3</div>
-  </div>
+<div class="msg" id="msg"></div>
 
-  <!-- === STATS === -->
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Par</div><div class="stat-val" id="parVal">3</div></div>
-    <div class="stat"><div class="stat-label">Your Strokes</div><div class="stat-val" id="strokeVal">0</div></div>
-    <div class="stat"><div class="stat-label">Mulligans</div><div class="stat-val" id="mulliganVal">6</div></div>
-  </div>
+<div class="sc-toggle">
+  <details>
+    <summary>Scorecard</summary>
+    <div class="sc-table"><table id="scoreTable"></table></div>
+  </details>
+</div>
 
-  <!-- === GAME CANVAS === -->
-  <div class="game-area">
-    <canvas id="gameCanvas"></canvas>
-  </div>
+<footer>jonmaestas.com · Pocket Golf</footer>
 
-  <!-- === DIE === -->
-  <div class="die-section">
-    <div class="die disabled" id="die" title="Tap to roll">?</div>
-    <div class="die-info" id="dieInfo">Aim a direction, then<br><strong>tap the die to roll!</strong></div>
-  </div>
+<script>
+// ====================================================================
+// GUN.JS P2P SETUP
+// ====================================================================
+const gun = Gun({
+  peers: [
+    "https://gun-manhattan.herokuapp.com/gun",
+    "https://peer.wallie.io/gun",
+    "https://gun-relay.alex00007.now.sh/gun",
+  ],
+  localStorage: false,
+});
 
-  <!-- === AIM CONTROLS === -->
-  <div class="aim-section">
-    <div class="aim-grid">
-      <button class="aim-btn" data-dir="7">↖</button>
-      <button class="aim-btn" data-dir="0">↑</button>
-      <button class="aim-btn" data-dir="1">↗</button>
-      <button class="aim-btn" data-dir="6">←</button>
-      <button class="aim-btn putt" data-dir="-1">PUTT</button>
-      <button class="aim-btn" data-dir="2">→</button>
-      <button class="aim-btn" data-dir="5">↙</button>
-      <button class="aim-btn" data-dir="4">↓</button>
-      <button class="aim-btn" data-dir="3">↘</button>
-    </div>
-  </div>
+// ====================================================================
+// CONSTANTS
+// ====================================================================
+const COLS = 15, ROWS = 20, NUM_HOLES = 9;
+let CELL = 0;
+const T = { FAIRWAY:0, ROUGH:1, SAND:2, WATER:3, TREE:4, GREEN:5 };
+const DIRS = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
+const DIR_NAMES = ["North","Northeast","East","Southeast","South","Southwest","West","Northwest"];
+const PCOLORS = ["#60a5fa","#f87171","#fbbf24","#c084fc"];
 
-  <!-- === ACTIONS === -->
-  <div class="actions">
-    <button class="btn btn-primary" id="swingBtn" disabled>Swing!</button>
-    <button class="btn btn-mulligan" id="mulliganBtn" disabled>Mulligan</button>
-  </div>
+// ====================================================================
+// GAME STATE
+// ====================================================================
+let myId = "p" + Math.random().toString(36).substr(2, 6);
+let myName = "You";
+let roomCode = null;
+let gameNode = null;
+let isHost = false;
 
-  <!-- === MESSAGE === -->
-  <div class="msg" id="msg"></div>
+let players = {};         // {id: {name, color, mulligans, ready, scores:{holeN:strokes}}}
+let playerOrder = [];     // [id, id, ...] turn order
+let playerBalls = {};     // {id: {x,y,safeX,safeY,strokes,done}} per-hole ball state
 
-  <!-- === SCORECARD === -->
-  <div class="scorecard-toggle">
-    <details>
-      <summary>Scorecard</summary>
-      <div class="scorecard">
-        <table id="scoreTable"></table>
-      </div>
-    </details>
-  </div>
+let grid = [];
+let teeX=0, teeY=0, holeX=0, holeY=0, par=3;
+let currentHole = 1;
+let pars = new Array(NUM_HOLES).fill(3);
+let currentPlayerIdx = 0;  // index into playerOrder
+let aimDir = null;
+let animating = false;
+let ballAnimX = 0, ballAnimY = 0;
+let gameStarted = false;
 
-  <footer>jonmaestas.com · Pocket Golf</footer>
+// ====================================================================
+// CANVAS
+// ====================================================================
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const die = document.getElementById("die");
+const TCOLORS = { [T.FAIRWAY]:"#3a7a28",[T.ROUGH]:"#4a6b2a",[T.SAND]:"#d4a84b",[T.WATER]:"#2563a8",[T.TREE]:"#1a3d10",[T.GREEN]:"#52b040" };
 
-  <script>
-    // === CONSTANTS ===
-    const COLS = 15;
-    const ROWS = 20;
-    const NUM_HOLES = 9;
-    let CELL = 0;
+function resizeCanvas() {
+  const maxW = Math.min(560, window.innerWidth - 24);
+  CELL = Math.floor(maxW / COLS);
+  canvas.width = COLS * CELL;
+  canvas.height = ROWS * CELL;
+  draw();
+}
 
-    const T = { FAIRWAY: 0, ROUGH: 1, SAND: 2, WATER: 3, TREE: 4, GREEN: 5 };
-    const DIRS = [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
-    const DIR_NAMES = ["North","Northeast","East","Southeast","South","Southwest","West","Northwest"];
-    const PLAYER_COLORS = ["#60a5fa", "#f87171", "#fbbf24", "#c084fc"];
-    const PLAYER_DOTS = ["🔵","🔴","🟡","🟣"];
+// ====================================================================
+// HOLE GENERATION (host only)
+// ====================================================================
+function generateHole(holeNum) {
+  grid = [];
+  for (let y = 0; y < ROWS; y++) {
+    const row = [];
+    for (let x = 0; x < COLS; x++) row.push(T.ROUGH);
+    grid.push(row);
+  }
 
-    // === GAME STATE ===
-    let grid = [];
-    let teeX = 0, teeY = 0, holeX = 0, holeY = 0;
-    let par = 3;
-    let currentHole = 1;
-    let pars = [];
+  teeX = Math.floor(COLS/2); teeY = ROWS - 2;
+  holeX = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(Math.random()*7)-3)));
+  holeY = 1 + Math.floor(Math.random()*2);
+  const difficulty = 1 + Math.floor(holeNum/4);
 
-    // Player state
-    let numPlayers = 1;
-    let players = []; // [{name, mulligans, balls:[{x,y,safeX,safeY,strokes,done}], totalScore}]
-    let currentPlayer = 0;
-    let aimDir = null;
-    let animating = false;
-    let ballAnimX = 0, ballAnimY = 0;
-
-    // === CANVAS ===
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    function resizeCanvas() {
-      const maxW = Math.min(560, window.innerWidth - 24);
-      CELL = Math.floor(maxW / COLS);
-      canvas.width = COLS * CELL;
-      canvas.height = ROWS * CELL;
-      draw();
+  // Fairway corridor
+  let cx = teeX, cy = teeY, fw = 2;
+  while (cy > holeY+1 || cx !== holeX) {
+    for (let oy=-fw; oy<=fw; oy++) for (let ox=-fw; ox<=fw; ox++) {
+      const tx=cx+ox, ty=cy+oy;
+      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=fw && grid[ty][tx]===T.ROUGH && Math.random()>0.15)
+        grid[ty][tx] = T.FAIRWAY;
     }
+    const dx=holeX-cx, dy=holeY-cy;
+    if (Math.abs(dy)>0 && (Math.random()>0.35 || cx===holeX)) cy += Math.sign(dy);
+    if (Math.abs(dx)>0 && Math.random()>0.4) cx += Math.sign(dx);
+    if (cx===holeX && cy===holeY) break;
+  }
 
-    const TERRAIN_COLORS = {
-      [T.FAIRWAY]: "#3a7a28",
-      [T.ROUGH]: "#4a6b2a",
-      [T.SAND]: "#d4a84b",
-      [T.WATER]: "#2563a8",
-      [T.TREE]: "#1a3d10",
-      [T.GREEN]: "#52b040",
-    };
+  // Green
+  for (let oy=-2; oy<=2; oy++) for (let ox=-2; ox<=2; ox++) {
+    const tx=holeX+ox, ty=holeY+oy;
+    if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=3) grid[ty][tx] = T.GREEN;
+  }
 
-    // === HOLE GENERATION ===
-    function generateHole(holeNum) {
-      grid = [];
-      for (let y = 0; y < ROWS; y++) {
-        const row = [];
-        for (let x = 0; x < COLS; x++) row.push(T.ROUGH);
-        grid.push(row);
-      }
+  // Tee box
+  for (let oy=-1; oy<=1; oy++) for (let ox=-1; ox<=1; ox++) {
+    const tx=teeX+ox, ty=teeY+oy;
+    if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS) grid[ty][tx] = T.FAIRWAY;
+  }
 
-      teeX = Math.floor(COLS / 2);
-      teeY = ROWS - 2;
-      holeX = Math.max(2, Math.min(COLS - 3, Math.floor(COLS / 2) + (Math.floor(Math.random() * 7) - 3)));
-      holeY = 1 + Math.floor(Math.random() * 2);
+  // Hazards
+  const numWater = Math.floor(Math.random()*(difficulty+1));
+  const numSand = 2 + Math.floor(Math.random()*(difficulty+1));
+  const numTrees = 3 + difficulty*2;
 
-      const difficulty = 1 + Math.floor(holeNum / 4);
-
-      // Fairway corridor
-      let cx = teeX, cy = teeY;
-      const fw = 2;
-      while (cy > holeY + 1 || cx !== holeX) {
-        for (let oy = -fw; oy <= fw; oy++) {
-          for (let ox = -fw; ox <= fw; ox++) {
-            const tx = cx + ox, ty = cy + oy;
-            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
-              if (Math.abs(ox) + Math.abs(oy) <= fw && grid[ty][tx] === T.ROUGH) {
-                if (Math.random() > 0.15) grid[ty][tx] = T.FAIRWAY;
-              }
-            }
-          }
-        }
-        const dx = holeX - cx, dy = holeY - cy;
-        if (Math.abs(dy) > 0 && (Math.random() > 0.35 || cx === holeX)) cy += Math.sign(dy);
-        if (Math.abs(dx) > 0 && Math.random() > 0.4) cx += Math.sign(dx);
-        if (cx === holeX && cy === holeY) break;
-      }
-
-      // Green
-      for (let oy = -2; oy <= 2; oy++) {
-        for (let ox = -2; ox <= 2; ox++) {
-          const tx = holeX + ox, ty = holeY + oy;
-          if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
-            if (Math.abs(ox) + Math.abs(oy) <= 3) grid[ty][tx] = T.GREEN;
-          }
-        }
-      }
-
-      // Tee box
-      for (let oy = -1; oy <= 1; oy++) {
-        for (let ox = -1; ox <= 1; ox++) {
-          const tx = teeX + ox, ty = teeY + oy;
-          if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) grid[ty][tx] = T.FAIRWAY;
-        }
-      }
-
-      // Hazards
-      const numWater = Math.floor(Math.random() * (difficulty + 1));
-      const numSand = 2 + Math.floor(Math.random() * (difficulty + 1));
-      const numTrees = 3 + difficulty * 2;
-
-      for (let i = 0; i < numWater; i++) {
-        let wx, wy, att = 0;
-        do {
-          wx = 1 + Math.floor(Math.random() * (COLS - 2));
-          wy = 3 + Math.floor(Math.random() * (ROWS - 6));
-          att++;
-        } while ((Math.abs(wx - teeX) < 2 && Math.abs(wy - teeY) < 2) && att < 20);
-        const ws = 1 + Math.floor(Math.random() * 2);
-        for (let oy = -ws; oy <= ws; oy++) {
-          for (let ox = -ws; ox <= ws; ox++) {
-            const tx = wx + ox, ty = wy + oy;
-            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
-              if (Math.abs(ox) + Math.abs(oy) <= ws && grid[ty][tx] !== T.GREEN) {
-                if (!(Math.abs(tx - teeX) <= 1 && Math.abs(ty - teeY) <= 1) &&
-                    !(Math.abs(tx - holeX) <= 2 && Math.abs(ty - holeY) <= 2)) {
-                  grid[ty][tx] = T.WATER;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      for (let i = 0; i < numSand; i++) {
-        const sx = 1 + Math.floor(Math.random() * (COLS - 2));
-        const sy = 3 + Math.floor(Math.random() * (ROWS - 6));
-        const ss = 1 + Math.floor(Math.random() * 2);
-        for (let oy = -ss; oy <= ss; oy++) {
-          for (let ox = -ss; ox <= ss; ox++) {
-            const tx = sx + ox, ty = sy + oy;
-            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
-              if (Math.abs(ox) + Math.abs(oy) <= ss && grid[ty][tx] !== T.WATER && grid[ty][tx] !== T.GREEN) {
-                grid[ty][tx] = T.SAND;
-              }
-            }
-          }
-        }
-      }
-
-      for (let i = 0; i < numTrees; i++) {
-        const tx = Math.floor(Math.random() * COLS);
-        const ty = 2 + Math.floor(Math.random() * (ROWS - 4));
-        if (grid[ty][tx] !== T.GREEN && !(Math.abs(tx - teeX) <= 1 && Math.abs(ty - teeY) <= 1)) {
-          grid[ty][tx] = T.TREE;
-        }
-      }
-
-      // Par
-      const dist = Math.abs(teeX - holeX) + Math.abs(teeY - holeY);
-      par = Math.max(2, Math.round(dist / 6) + 1);
-      pars[currentHole - 1] = par;
-
-      // Reset all player balls for this hole
-      for (let p = 0; p < numPlayers; p++) {
-        players[p].balls[currentHole - 1] = {
-          x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false
-        };
-      }
-      currentPlayer = 0;
-      aimDir = null;
-      updateUI();
-      draw();
+  for (let i=0; i<numWater; i++) {
+    let wx,wy,att=0;
+    do { wx=1+Math.floor(Math.random()*(COLS-2)); wy=3+Math.floor(Math.random()*(ROWS-6)); att++; }
+    while ((Math.abs(wx-teeX)<2&&Math.abs(wy-teeY)<2) && att<20);
+    const ws=1+Math.floor(Math.random()*2);
+    for (let oy=-ws; oy<=ws; oy++) for (let ox=-ws; ox<=ws; ox++) {
+      const tx=wx+ox, ty=wy+oy;
+      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=ws && grid[ty][tx]!==T.GREEN &&
+          !(Math.abs(tx-teeX)<=1&&Math.abs(ty-teeY)<=1) && !(Math.abs(tx-holeX)<=2&&Math.abs(ty-holeY)<=2))
+        grid[ty][tx] = T.WATER;
     }
+  }
 
-    // === DRAWING ===
-    function draw() {
-      if (!canvas.width) return;
+  for (let i=0; i<numSand; i++) {
+    const sx=1+Math.floor(Math.random()*(COLS-2)), sy=3+Math.floor(Math.random()*(ROWS-6));
+    const ss=1+Math.floor(Math.random()*2);
+    for (let oy=-ss; oy<=ss; oy++) for (let ox=-ss; ox<=ss; ox++) {
+      const tx=sx+ox, ty=sy+oy;
+      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=ss && grid[ty][tx]!==T.WATER && grid[ty][tx]!==T.GREEN)
+        grid[ty][tx] = T.SAND;
+    }
+  }
 
-      // Terrain
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          ctx.fillStyle = TERRAIN_COLORS[grid[y][x]] || "#4a6b2a";
-          ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+  for (let i=0; i<numTrees; i++) {
+    const tx=Math.floor(Math.random()*COLS), ty=2+Math.floor(Math.random()*(ROWS-4));
+    if (grid[ty][tx]!==T.GREEN && !(Math.abs(tx-teeX)<=1&&Math.abs(ty-teeY)<=1)) grid[ty][tx] = T.TREE;
+  }
 
-          if (grid[y][x] === T.TREE) {
-            ctx.fillStyle = "#0d2008";
-            ctx.beginPath();
-            ctx.arc(x * CELL + CELL / 2, y * CELL + CELL / 2, CELL * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          if (grid[y][x] === T.WATER) {
-            ctx.fillStyle = "rgba(255,255,255,0.1)";
-            ctx.fillRect(x * CELL + 2, y * CELL + CELL * 0.4, CELL - 4, 1);
-          }
-        }
-      }
+  const dist = Math.abs(teeX-holeX)+Math.abs(teeY-holeY);
+  par = Math.max(2, Math.round(dist/6)+1);
+  pars[currentHole-1] = par;
+}
 
-      // Grid lines
-      ctx.strokeStyle = "rgba(0,0,0,0.08)";
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= COLS; x++) {
-        ctx.beginPath();
-        ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, ROWS * CELL); ctx.stroke();
-      }
-      for (let y = 0; y <= ROWS; y++) {
-        ctx.beginPath();
-        ctx.moveTo(0, y * CELL); ctx.lineTo(COLS * CELL, y * CELL); ctx.stroke();
-      }
+// ====================================================================
+// SYNC: Host broadcasts hole data; all clients receive
+// ====================================================================
+function hostBroadcastHole() {
+  if (!gameNode || !isHost) return;
 
-      // Hole
-      ctx.fillStyle = "#000";
+  // Flatten grid to string for sync
+  let gridStr = "";
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) gridStr += grid[y][x];
+
+  gameNode.get("hole").get(currentHole).put({
+    grid: gridStr,
+    teeX: teeX, teeY: teeY, holeX: holeX, holeY: holeY, par: par,
+    pars: pars.join(","),
+  });
+}
+
+function receiveHole(data) {
+  if (!data || !data.grid) return;
+  grid = [];
+  for (let y=0; y<ROWS; y++) {
+    const row = [];
+    for (let x=0; x<COLS; x++) {
+      row.push(parseInt(data.grid[y*COLS+x]));
+    }
+    grid.push(row);
+  }
+  teeX = data.teeX; teeY = data.teeY;
+  holeX = data.holeX; holeY = data.holeY;
+  par = data.par;
+  if (data.pars) pars = data.pars.split(",").map(Number);
+
+  // Reset balls for all players
+  for (const pid of playerOrder) {
+    playerBalls[pid] = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
+  }
+  currentPlayerIdx = 0;
+  aimDir = null;
+  draw();
+  updateUI();
+}
+
+// ====================================================================
+// SYNC: Ball positions & turn
+// ====================================================================
+function syncBallUpdate() {
+  if (!gameNode) return;
+  const pid = playerOrder[currentPlayerIdx];
+  const ball = playerBalls[pid];
+  if (!ball) return;
+  gameNode.get("balls").get(currentHole + "_" + pid).put({
+    x: ball.x, y: ball.y, safeX: ball.safeX, safeY: ball.safeY,
+    strokes: ball.strokes, done: ball.done ? 1 : 0,
+  });
+}
+
+function syncTurn() {
+  if (!gameNode || !isHost) return;
+  gameNode.get("state").put({
+    currentHole: currentHole,
+    currentPlayerIdx: currentPlayerIdx,
+    timestamp: Date.now(),
+  });
+}
+
+function syncScore(pid, hole, score) {
+  if (!gameNode) return;
+  gameNode.get("scores").get(pid + "_" + hole).put(score);
+}
+
+// ====================================================================
+// DRAWING
+// ====================================================================
+function draw() {
+  if (!canvas.width || grid.length === 0) return;
+
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) {
+    ctx.fillStyle = TCOLORS[grid[y][x]] || "#4a6b2a";
+    ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+    if (grid[y][x]===T.TREE) {
+      ctx.fillStyle = "#0d2008";
       ctx.beginPath();
-      ctx.arc(holeX * CELL + CELL / 2, holeY * CELL + CELL / 2, CELL * 0.32, 0, Math.PI * 2);
+      ctx.arc(x*CELL+CELL/2, y*CELL+CELL/2, CELL*0.3, 0, Math.PI*2);
       ctx.fill();
-      ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 1.5;
+    }
+    if (grid[y][x]===T.WATER) {
+      ctx.fillStyle = "rgba(255,255,255,0.1)";
+      ctx.fillRect(x*CELL+2, y*CELL+CELL*0.4, CELL-4, 1);
+    }
+  }
+
+  ctx.strokeStyle = "rgba(0,0,0,0.08)"; ctx.lineWidth = 1;
+  for (let x=0; x<=COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,ROWS*CELL); ctx.stroke(); }
+  for (let y=0; y<=ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(COLS*CELL,y*CELL); ctx.stroke(); }
+
+  // Hole
+  ctx.fillStyle = "#000";
+  ctx.beginPath(); ctx.arc(holeX*CELL+CELL/2, holeY*CELL+CELL/2, CELL*0.32, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(holeX*CELL+CELL/2, holeY*CELL+CELL/2); ctx.lineTo(holeX*CELL+CELL/2, holeY*CELL); ctx.stroke();
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath();
+  ctx.moveTo(holeX*CELL+CELL/2, holeY*CELL);
+  ctx.lineTo(holeX*CELL+CELL/2+CELL*0.4, holeY*CELL+CELL*0.15);
+  ctx.lineTo(holeX*CELL+CELL/2, holeY*CELL+CELL*0.3);
+  ctx.fill();
+
+  // Tee
+  ctx.fillStyle = "rgba(251,191,36,0.4)";
+  ctx.font = `${CELL*0.35}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("TEE", teeX*CELL+CELL/2, teeY*CELL+CELL/2);
+
+  // Balls
+  for (let i=0; i<playerOrder.length; i++) {
+    const pid = playerOrder[i];
+    const ball = playerBalls[pid];
+    if (!ball || ball.done) continue;
+
+    const isCurrent = (i === currentPlayerIdx && !animating);
+    const bx = (i === currentPlayerIdx && animating) ? ballAnimX : ball.x;
+    const by = (i === currentPlayerIdx && animating) ? ballAnimY : ball.y;
+    const r = isCurrent ? CELL*0.32 : CELL*0.24;
+    const ci = i % 4;
+
+    ctx.fillStyle = PCOLORS[ci];
+    ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r, 0, Math.PI*2); ctx.fill();
+
+    if (isCurrent) {
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+      const pulse = (Math.sin(Date.now()/300)+1)/2;
+      ctx.strokeStyle = `rgba(255,255,255,${0.3*(1-pulse)})`;
+      ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r+4+pulse*6, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.fillStyle = "#fff";
+    ctx.font = `bold ${CELL*0.3}px sans-serif`;
+    ctx.fillText(String(i+1), bx*CELL+CELL/2, by*CELL+CELL/2);
+  }
+
+  // Aim preview
+  if (aimDir !== null && aimDir >= 0 && !animating && isMyTurn()) {
+    const pid = playerOrder[currentPlayerIdx];
+    const ball = playerBalls[pid];
+    if (ball) {
+      const [dx,dy] = DIRS[aimDir];
+      ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 2; ctx.setLineDash([4,4]);
       ctx.beginPath();
-      ctx.moveTo(holeX * CELL + CELL / 2, holeY * CELL + CELL / 2);
-      ctx.lineTo(holeX * CELL + CELL / 2, holeY * CELL);
-      ctx.stroke();
-      ctx.fillStyle = "#ef4444";
-      ctx.beginPath();
-      ctx.moveTo(holeX * CELL + CELL / 2, holeY * CELL);
-      ctx.lineTo(holeX * CELL + CELL / 2 + CELL * 0.4, holeY * CELL + CELL * 0.15);
-      ctx.lineTo(holeX * CELL + CELL / 2, holeY * CELL + CELL * 0.3);
-      ctx.fill();
-
-      // Tee marker
-      ctx.fillStyle = "rgba(251,191,36,0.5)";
-      ctx.font = `${CELL * 0.4}px sans-serif`;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("TEE", teeX * CELL + CELL / 2, teeY * CELL + CELL / 2);
-
-      // All player balls
-      for (let p = 0; p < numPlayers; p++) {
-        const ball = players[p].balls[currentHole - 1];
-        if (!ball || ball.done) continue;
-
-        const isCurrent = (p === currentPlayer && !animating);
-        const bx = (p === currentPlayer && animating) ? ballAnimX : ball.x;
-        const by = (p === currentPlayer && animating) ? ballAnimY : ball.y;
-
-        // Draw ball
-        const r = isCurrent ? CELL * 0.32 : CELL * 0.24;
-        ctx.fillStyle = PLAYER_COLORS[p];
-        ctx.beginPath();
-        ctx.arc(bx * CELL + CELL / 2, by * CELL + CELL / 2, r, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (isCurrent) {
-          ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-          ctx.stroke();
-          // Pulse ring
-          const pulse = (Math.sin(Date.now() / 300) + 1) / 2;
-          ctx.strokeStyle = `rgba(255,255,255,${0.3 * (1 - pulse)})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(bx * CELL + CELL / 2, by * CELL + CELL / 2, r + 4 + pulse * 6, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-
-        // Player number on ball
-        ctx.fillStyle = "#fff";
-        ctx.font = `bold ${CELL * 0.35}px sans-serif`;
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(String(p + 1), bx * CELL + CELL / 2, by * CELL + CELL / 2);
-      }
-
-      // Aim preview
-      if (aimDir !== null && aimDir >= 0 && !animating) {
-        const ball = players[currentPlayer].balls[currentHole - 1];
-        const [dx, dy] = DIRS[aimDir];
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(ball.x * CELL + CELL / 2, ball.y * CELL + CELL / 2);
-        ctx.lineTo((ball.x + dx * 6) * CELL + CELL / 2, (ball.y + dy * 6) * CELL + CELL / 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
+      ctx.moveTo(ball.x*CELL+CELL/2, ball.y*CELL+CELL/2);
+      ctx.lineTo((ball.x+dx*6)*CELL+CELL/2, (ball.y+dy*6)*CELL+CELL/2);
+      ctx.stroke(); ctx.setLineDash([]);
     }
+  }
+}
 
-    // Animation loop for pulse
-    function animLoop() {
-      if (!animating) draw();
-      requestAnimationFrame(animLoop);
-    }
+function animLoop() { if (!animating) draw(); requestAnimationFrame(animLoop); }
 
-    // === GAME LOGIC ===
-    function getCurrentBall() {
-      return players[currentPlayer].balls[currentHole - 1];
-    }
+// ====================================================================
+// TURN MANAGEMENT
+// ====================================================================
+function isMyTurn() {
+  return playerOrder[currentPlayerIdx] === myId;
+}
 
-    function setAim(dir) {
-      if (animating) return;
-      const ball = getCurrentBall();
-      if (ball.strokes === 0 && dir === -1) return;
+function getCurrentBall() { return playerBalls[playerOrder[currentPlayerIdx]]; }
 
-      aimDir = dir;
-      document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
-      const btn = document.querySelector(`.aim-btn[data-dir="${dir}"]`);
-      if (btn) btn.classList.add("selected");
+function advanceTurn() {
+  // Check if all players done with this hole
+  const allDone = playerOrder.every(pid => playerBalls[pid] && playerBalls[pid].done);
+  if (allDone) { holeComplete(); return; }
 
-      document.getElementById("die").classList.remove("disabled");
-      document.getElementById("dieInfo").innerHTML = dir === -1
-        ? `<strong>Putt — 1 space</strong><br>Tap the die!`
-        : `Aim: <strong>${DIR_NAMES[dir]}</strong><br>Tap the die!`;
-      document.getElementById("swingBtn").disabled = false;
-      draw();
-    }
-
-    function rollAndShoot() {
-      if (aimDir === null || animating) return;
-      doSwing();
-    }
-
-    function doSwing() {
-      const isPutt = (aimDir === -1);
-      let roll;
-      if (isPutt) {
-        roll = 1;
-      } else {
-        roll = 1 + Math.floor(Math.random() * 6);
-      }
-
-      // Animate die
-      const die = document.getElementById("die");
-      die.classList.add("rolling");
-      document.getElementById("swingBtn").disabled = true;
-      let rc = 0;
-      const ri = setInterval(() => {
-        die.textContent = 1 + Math.floor(Math.random() * 6);
-        rc++;
-        if (rc >= 7) {
-          clearInterval(ri);
-          die.classList.remove("rolling");
-          die.textContent = isPutt ? "P" : roll;
-          processShot(roll, isPutt);
-        }
-      }, 55);
-    }
-
-    function processShot(roll, isPutt) {
-      const ball = getCurrentBall();
-      const [dx, dy] = isPutt ? [0, 0] : DIRS[aimDir];
-      let dist = isPutt ? 1 : roll;
-
-      const startTerrain = grid[ball.y][ball.x];
-      if (!isPutt) {
-        if (startTerrain === T.FAIRWAY) {
-          dist += 1;
-          showMsg("Fairway boost! +1", "success");
-        } else if (startTerrain === T.SAND) {
-          dist = Math.max(1, dist - 1);
-          showMsg("Sand! −1 distance", "warn");
-        }
-      }
-
-      let newX = ball.x, newY = ball.y;
-      let hitTree = false, landedInWater = false;
-
-      for (let step = 0; step < dist; step++) {
-        const testX = newX + dx, testY = newY + dy;
-        if (testX < 0 || testX >= COLS || testY < 0 || testY >= ROWS) break;
-        if (grid[testY][testX] === T.TREE) { hitTree = true; break; }
-        newX = testX; newY = testY;
-        if (newX === holeX && newY === holeY) break;
-      }
-
-      ball.strokes++;
-
-      if (grid[newY] && grid[newY][newX] === T.WATER) landedInWater = true;
-
-      animateBall(ball.x, ball.y, newX, newY, () => {
-        ball.x = newX; ball.y = newY;
-
-        if (ball.x === holeX && ball.y === holeY) {
-          ball.done = true;
-          ball.safeX = holeX; ball.safeY = holeY;
-          showMsg(getScoreName(ball.strokes, par) + "!", "success");
-          afterShot();
-          return;
-        }
-
-        if (landedInWater) {
-          ball.strokes++;
-          showMsg("Splash! +1 penalty", "error");
-          ball.x = ball.safeX; ball.y = ball.safeY;
-        } else if (hitTree) {
-          showMsg("Tree blocked your shot!", "warn");
-        } else {
-          if (grid[ball.y][ball.x] !== T.WATER && grid[ball.y][ball.x] !== T.TREE) {
-            ball.safeX = ball.x; ball.safeY = ball.y;
-          }
-        }
-
-        afterShot();
-      });
-    }
-
-    function afterShot() {
+  // Find next player who hasn't finished
+  for (let i=1; i<=playerOrder.length; i++) {
+    const idx = (currentPlayerIdx + i) % playerOrder.length;
+    const ball = playerBalls[playerOrder[idx]];
+    if (ball && !ball.done) {
+      currentPlayerIdx = idx;
+      if (isHost) syncTurn();
       aimDir = null;
-      document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
-      document.getElementById("swingBtn").disabled = true;
-      document.getElementById("mulliganBtn").disabled = (players[currentPlayer].mulligans <= 0);
-      die.classList.add("disabled");
-      die.textContent = "?";
-      document.getElementById("dieInfo").innerHTML = "Aim a direction, then<br><strong>tap the die to roll!</strong>";
-
       updateUI();
       draw();
+      return;
+    }
+  }
+}
 
-      // Check if all players done with this hole
-      const allDone = players.every(p => p.balls[currentHole - 1] && p.balls[currentHole - 1].done);
-      if (allDone) {
-        setTimeout(() => holeComplete(), 800);
-        return;
+function holeComplete() {
+  // Record scores
+  for (const pid of playerOrder) {
+    const ball = playerBalls[pid];
+    if (ball && ball.done) {
+      if (!players[pid].scores) players[pid].scores = {};
+      players[pid].scores[currentHole] = ball.strokes;
+      if (isHost || pid === myId) syncScore(pid, currentHole, ball.strokes);
+    }
+  }
+  updateScorecard();
+
+  if (currentHole >= NUM_HOLES) {
+    showRoundEnd();
+  } else {
+    currentHole++;
+    if (isHost) {
+      generateHole(currentHole);
+      hostBroadcastHole();
+      // Reset balls
+      for (const pid of playerOrder) {
+        playerBalls[pid] = { x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:false };
       }
-
-      // Pass to next player (in multiplayer)
-      if (numPlayers > 1) {
-        setTimeout(() => passToDevice(), 600);
-      }
-    }
-
-    function passToDevice() {
-      // Find next player who hasn't finished this hole
-      let next = currentPlayer;
-      for (let i = 0; i < numPlayers; i++) {
-        next = (next + 1) % numPlayers;
-        const ball = players[next].balls[currentHole - 1];
-        if (ball && !ball.done) {
-          currentPlayer = next;
-          showPassOverlay();
-          return;
-        }
-      }
-    }
-
-    function showPassOverlay() {
-      const p = players[currentPlayer];
-      const card = document.getElementById("passCard");
-      card.className = "overlay-card pass-card p" + currentPlayer;
-      card.style.setProperty("--pc", PLAYER_COLORS[currentPlayer]);
-
-      let scoresHtml = "";
-      for (let i = 0; i < numPlayers; i++) {
-        const ball = players[i].balls[currentHole - 1];
-        const s = ball ? (ball.done ? ball.strokes : ball.strokes + " (playing)") : "–";
-        scoresHtml += `<div class="pass-score-row" style="border-left:3px solid ${PLAYER_COLORS[i]}">
-          <span class="pn">${players[i].name}</span>
-          <span>${s}</span>
-        </div>`;
-      }
-
-      card.innerHTML = `
-        <p style="font-size:0.85rem;color:var(--muted)">Pass the phone to</p>
-        <div class="pass-player-name">${p.name}</div>
-        <div class="pass-hole-info">Hole ${currentHole} · Par ${par} · Stroke ${(p.balls[currentHole-1]?.strokes || 0) + 1}</div>
-        <div class="pass-scores">${scoresHtml}</div>
-        <button class="btn btn-primary" onclick="dismissPass()" style="background:${PLAYER_COLORS[currentPlayer]};border-color:${PLAYER_COLORS[currentPlayer]}">My Turn</button>
-      `;
-      document.getElementById("passOverlay").classList.remove("hidden");
-    }
-
-    function dismissPass() {
-      document.getElementById("passOverlay").classList.add("hidden");
-      updateUI();
-      draw();
-    }
-    window.dismissPass = dismissPass;
-
-    function animateBall(fromX, fromY, toX, toY, callback) {
-      animating = true;
-      const duration = 400;
-      const start = performance.now();
-
-      function frame(t) {
-        const elapsed = t - start;
-        const progress = Math.min(1, elapsed / duration);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        ballAnimX = fromX + (toX - fromX) * eased;
-        ballAnimY = fromY + (toY - fromY) * eased;
-        const arc = Math.sin(progress * Math.PI) * 0.5;
-        draw();
-        ctx.fillStyle = PLAYER_COLORS[currentPlayer];
-        ctx.beginPath();
-        ctx.arc(ballAnimX * CELL + CELL / 2, (ballAnimY - arc) * CELL + CELL / 2, CELL * 0.32, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#fff";
-        ctx.font = `bold ${CELL * 0.35}px sans-serif`;
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.fillText(String(currentPlayer + 1), ballAnimX * CELL + CELL / 2, (ballAnimY - arc) * CELL + CELL / 2);
-
-        if (progress < 1) requestAnimationFrame(frame);
-        else { animating = false; callback(); }
-      }
-      requestAnimationFrame(frame);
-    }
-
-    function holeComplete() {
-      // Record scores
-      for (let p = 0; p < numPlayers; p++) {
-        const ball = players[p].balls[currentHole - 1];
-        if (ball && ball.done) {
-          if (!players[p].scores) players[p].scores = [];
-          players[p].scores[currentHole - 1] = ball.strokes;
-        }
-      }
-      updateScorecard();
-
-      if (currentHole >= NUM_HOLES) {
-        showRoundEnd();
-      } else {
-        currentHole++;
-        generateHole(currentHole);
-        if (numPlayers > 1) {
-          currentPlayer = 0;
-          showPassOverlay();
-        }
-      }
-    }
-
-    function showRoundEnd() {
-      const card = document.getElementById("endCard");
-      // Sort players by total
-      const ranked = players.map((p, i) => ({
-        name: p.name, idx: i,
-        total: (p.scores || []).reduce((a, b) => a + (b || 0), 0)
-      })).sort((a, b) => a.total - b.total);
-
-      let html = `<h1>Round Complete! 🏆</h1>`;
-      html += `<div class="leaderboard">`;
-      ranked.forEach((p, rank) => {
-        html += `<div class="lb-row p${p.idx}" style="--pc:${PLAYER_COLORS[p.idx]}">
-          <div style="display:flex;align-items:center">
-            <span class="lb-rank">${rank + 1}</span>
-            <span class="lb-name">${p.name}</span>
-          </div>
-          <span class="lb-score">${p.total}</span>
-        </div>`;
-      });
-      html += `</div>`;
-
-      const totalPar = pars.reduce((a, b) => a + b, 0);
-      html += `<p>Course par: ${totalPar}</p>`;
-      html += `<button class="btn btn-primary" onclick="newRound()">New Round</button>`;
-      card.innerHTML = html;
-      document.getElementById("endOverlay").classList.remove("hidden");
-    }
-
-    function newRound() {
-      document.getElementById("endOverlay").classList.add("hidden");
-      currentHole = 1;
-      pars = new Array(NUM_HOLES).fill(3);
-      for (let p = 0; p < numPlayers; p++) {
-        players[p].mulligans = 6;
-        players[p].balls = new Array(NUM_HOLES).fill(null);
-        players[p].scores = [];
-      }
-      currentPlayer = 0;
-      generateHole(1);
-      if (numPlayers > 1) showPassOverlay();
-    }
-    window.newRound = newRound;
-
-    function getScoreName(strokes, par) {
-      const d = strokes - par;
-      if (strokes === 1) return "Hole in one!";
-      if (d <= -3) return "Albatross!";
-      if (d === -2) return "Eagle!";
-      if (d === -1) return "Birdie!";
-      if (d === 0) return "Par!";
-      if (d === 1) return "Bogey";
-      if (d === 2) return "Double bogey";
-      return "+" + d;
-    }
-
-    function useMulligan() {
-      const p = players[currentPlayer];
-      if (p.mulligans <= 0) return;
-      const ball = getCurrentBall();
-
-      p.mulligans--;
-      ball.strokes = Math.max(0, ball.strokes - 1);
-      ball.x = ball.safeX; ball.y = ball.safeY;
-      aimDir = null;
-      document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
-      document.getElementById("swingBtn").disabled = true;
-      document.getElementById("mulliganBtn").disabled = (p.mulligans <= 0);
-      die.classList.add("disabled");
-      die.textContent = "?";
-      showMsg("Mulligan used — re-aim", "");
-      updateUI();
-      draw();
-    }
-
-    // === UI ===
-    function showMsg(text, type) {
-      const el = document.getElementById("msg");
-      el.textContent = text;
-      el.className = "msg " + (type || "");
-    }
-
-    function updateUI() {
-      document.getElementById("holeNum").textContent = currentHole;
-      document.getElementById("parVal").textContent = par;
-
-      const p = players[currentPlayer];
-      const ball = p && p.balls[currentHole - 1];
-      const strokes = ball ? ball.strokes : 0;
-
-      document.getElementById("strokeVal").textContent = strokes;
-      document.getElementById("mulliganVal").textContent = p ? p.mulligans : 6;
-
-      // Turn banner
-      const banner = document.getElementById("turnBanner");
-      banner.className = "turn-banner p" + currentPlayer;
-      banner.style.setProperty("--pc", PLAYER_COLORS[currentPlayer]);
-      document.getElementById("turnName").textContent = p ? p.name : "";
-      document.getElementById("turnStrokes").textContent = `Stroke ${strokes + 1} · Par ${par}`;
-    }
-
-    function updateScorecard() {
-      let html = "<table><tr><th>#</th>";
-      for (let i = 1; i <= NUM_HOLES; i++) html += `<th>${i}</th>`;
-      html += "<th>Tot</th></tr>";
-
-      // Par row
-      html += "<tr><th>Par</th>";
-      let pt = 0;
-      for (let i = 0; i < NUM_HOLES; i++) { html += `<td>${pars[i] || 3}</td>`; pt += pars[i] || 3; }
-      html += `<td>${pt}</td></tr>`;
-
-      // Player rows
-      for (let p = 0; p < numPlayers; p++) {
-        html += `<tr style="color:${PLAYER_COLORS[p]}"><td class="pname">${players[p].name.substring(0,6)}</td>`;
-        let total = 0;
-        for (let h = 0; h < NUM_HOLES; h++) {
-          const s = players[p].scores && players[p].scores[h];
-          if (s) { html += `<td>${s}</td>`; total += s; }
-          else { html += `<td>–</td>`; }
-        }
-        html += `<td>${total || "–"}</td></tr>`;
-      }
-      html += "</table>";
-      document.getElementById("scoreTable").innerHTML = html;
-    }
-
-    // === CANVAS TAP TO AIM ===
-    canvas.addEventListener("click", (e) => {
-      if (animating) return;
-      const rect = canvas.getBoundingClientRect();
-      const scale = canvas.width / rect.width;
-      const x = (e.clientX - rect.left) * scale;
-      const y = (e.clientY - rect.top) * scale;
-      const cx = Math.floor(x / CELL);
-      const cy = Math.floor(y / CELL);
-      const ball = getCurrentBall();
-      const dx = cx - ball.x, dy = cy - ball.y;
-      if (dx === 0 && dy === 0) return;
-      const deg = Math.atan2(dy, dx) * 180 / Math.PI;
-      let md;
-      if (deg >= -22.5 && deg < 22.5) md = 2;
-      else if (deg >= 22.5 && deg < 67.5) md = 3;
-      else if (deg >= 67.5 && deg < 112.5) md = 4;
-      else if (deg >= 112.5 && deg < 157.5) md = 5;
-      else if (deg >= 157.5 || deg < -157.5) md = 6;
-      else if (deg >= -157.5 && deg < -112.5) md = 7;
-      else if (deg >= -112.5 && deg < -67.5) md = 0;
-      else md = 1;
-      setAim(md);
-    });
-
-    // === BUTTONS ===
-    document.querySelectorAll(".aim-btn").forEach(btn => {
-      btn.addEventListener("click", () => setAim(parseInt(btn.dataset.dir, 10)));
-    });
-
-    const die = document.getElementById("die");
-    die.addEventListener("click", rollAndShoot);
-    document.getElementById("swingBtn").addEventListener("click", rollAndShoot);
-    document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
-
-    // === PLAYER SETUP ===
-    document.querySelectorAll(".pc-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".pc-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        numPlayers = parseInt(btn.dataset.count, 10);
-        renderNameInputs();
-      });
-    });
-
-    function renderNameInputs() {
-      const div = document.getElementById("playerNamesDiv");
-      let html = "";
-      for (let i = 0; i < numPlayers; i++) {
-        const defaultName = numPlayers === 1 ? "You" : `Player ${i + 1}`;
-        html += `<input class="player-name-input p${i}" type="text" placeholder="${defaultName}" maxlength="12" data-pidx="${i}" style="--pc:${PLAYER_COLORS[i]}">`;
-      }
-      div.innerHTML = html;
-    }
-
-    document.getElementById("startGameBtn").addEventListener("click", () => {
-      numPlayers = parseInt(document.querySelector(".pc-btn.active").dataset.count, 10);
-      players = [];
-      const inputs = document.querySelectorAll(".player-name-input");
-      for (let i = 0; i < numPlayers; i++) {
-        const name = (inputs[i] && inputs[i].value.trim()) || (numPlayers === 1 ? "You" : `Player ${i + 1}`);
-        players.push({
-          name: name,
-          mulligans: 6,
-          balls: new Array(NUM_HOLES).fill(null),
-          scores: [],
+      currentPlayerIdx = 0;
+      syncTurn();
+      // Broadcast all ball positions
+      for (const pid of playerOrder) {
+        gameNode.get("balls").get(currentHole+"_"+pid).put({
+          x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:0
         });
       }
-      document.getElementById("setupOverlay").classList.add("hidden");
-      pars = new Array(NUM_HOLES).fill(3);
-      generateHole(1);
-      updateScorecard();
-      if (numPlayers > 1) {
-        showPassOverlay();
-      }
-    });
+    }
+    updateUI();
+    draw();
+  }
+}
 
-    // === INIT ===
-    renderNameInputs();
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+// ====================================================================
+// GAMEPLAY
+// ====================================================================
+function setAim(dir) {
+  if (animating || !isMyTurn()) return;
+  const ball = getCurrentBall();
+  if (!ball || ball.strokes === 0 && dir === -1) return;
+  aimDir = dir;
+  document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+  document.querySelector(`.aim-btn[data-dir="${dir}"]`)?.classList.add("selected");
+  die.classList.remove("disabled");
+  document.getElementById("dieInfo").innerHTML = dir===-1
+    ? `<strong>Putt — 1 space</strong>`
+    : `Aiming ${DIR_NAMES[dir]}<br><strong>Tap die to roll!</strong>`;
+  document.getElementById("swingBtn").disabled = false;
+  draw();
+}
+
+function doSwing() {
+  if (aimDir===null || animating || !isMyTurn()) return;
+  const isPutt = (aimDir === -1);
+  let roll = isPutt ? 1 : (1 + Math.floor(Math.random()*6));
+
+  die.classList.add("rolling");
+  document.getElementById("swingBtn").disabled = true;
+  let rc = 0;
+  const ri = setInterval(() => {
+    die.textContent = 1 + Math.floor(Math.random()*6);
+    if (++rc >= 7) {
+      clearInterval(ri);
+      die.classList.remove("rolling");
+      die.textContent = isPutt ? "P" : roll;
+      processShot(roll, isPutt);
+    }
+  }, 55);
+}
+
+function processShot(roll, isPutt) {
+  const ball = getCurrentBall();
+  const [dx,dy] = isPutt ? [0,0] : DIRS[aimDir];
+  let dist = isPutt ? 1 : roll;
+
+  // TERRAIN MODIFIERS (the real rules)
+  const terrain = grid[ball.y][ball.x];
+  let modifierText = "";
+  if (!isPutt) {
+    if (terrain === T.FAIRWAY) {
+      dist = dist * 2;
+      modifierText = "Fairway! Distance ×2";
+    } else if (terrain === T.SAND) {
+      dist = Math.max(1, Math.floor(dist / 2));
+      modifierText = "Sand! Distance ÷2";
+    }
+  }
+
+  let newX = ball.x, newY = ball.y;
+  let hitTree = false, landedInWater = false;
+
+  for (let step=0; step<dist; step++) {
+    const tx = newX+dx, ty = newY+dy;
+    if (tx<0||tx>=COLS||ty<0||ty>=ROWS) break;
+    if (grid[ty][tx] === T.TREE) { hitTree = true; break; }
+    newX = tx; newY = ty;
+    if (newX===holeX && newY===holeY) break;
+  }
+
+  ball.strokes++;
+  if (grid[newY] && grid[newY][newX] === T.WATER) landedInWater = true;
+
+  animateBall(ball.x, ball.y, newX, newY, () => {
+    ball.x = newX; ball.y = newY;
+
+    if (ball.x===holeX && ball.y===holeY) {
+      ball.done = true; ball.safeX=holeX; ball.safeY=holeY;
+      showMsg(scoreName(ball.strokes, par) + "!", "success");
+    } else if (landedInWater) {
+      ball.strokes++;
+      showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 penalty", "error");
+      ball.x = ball.safeX; ball.y = ball.safeY;
+    } else if (hitTree) {
+      showMsg((modifierText ? modifierText + " · " : "") + "Tree blocked!", "warn");
+    } else {
+      if (grid[ball.y][ball.x] !== T.WATER && grid[ball.y][ball.x] !== T.TREE) {
+        ball.safeX = ball.x; ball.safeY = ball.y;
+      }
+      let msg = modifierText;
+      if (!msg) {
+        const t = grid[ball.y][ball.x];
+        if (t===T.GREEN) msg = "On the green! Putt it.";
+        else if (t===T.FAIRWAY) msg = "Nice fairway lie. ×2 next shot.";
+        else if (t===T.SAND) msg = "In the bunker. ÷2 next shot.";
+        else msg = "In the rough.";
+      }
+      showMsg(msg, modifierText ? "success" : "");
+    }
+
+    syncBallUpdate();
+    aimDir = null;
+    document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("swingBtn").disabled = true;
+    die.classList.add("disabled"); die.textContent = "?";
+    document.getElementById("dieInfo").innerHTML = isMyTurn() ? "Aim, then<br><strong>tap die!</strong>" : "Waiting for turn...";
+    document.getElementById("mulliganBtn").disabled = (!isMyTurn() || players[myId].mulligans <= 0);
+    updateUI(); draw();
+
+    setTimeout(() => advanceTurn(), 1000);
+  });
+}
+
+function animateBall(fx, fy, tx, ty, cb) {
+  animating = true;
+  const dur = 450, start = performance.now();
+  function frame(t) {
+    const p = Math.min(1, (t-start)/dur);
+    const e = 1-Math.pow(1-p,3);
+    ballAnimX = fx+(tx-fx)*e; ballAnimY = fy+(ty-fy)*e;
+    const arc = Math.sin(p*Math.PI)*0.5;
+    draw();
+    const ci = currentPlayerIdx % 4;
+    ctx.fillStyle = PCOLORS[ci];
+    ctx.beginPath(); ctx.arc(ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2, CELL*0.32, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle="#fff"; ctx.font=`bold ${CELL*0.3}px sans-serif`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(String(currentPlayerIdx+1), ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2);
+    if (p<1) requestAnimationFrame(frame);
+    else { animating=false; cb(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+function useMulligan() {
+  if (!isMyTurn() || players[myId].mulligans <= 0) return;
+  const ball = getCurrentBall();
+  players[myId].mulligans--;
+  ball.strokes = Math.max(0, ball.strokes-1);
+  ball.x = ball.safeX; ball.y = ball.safeY;
+  aimDir = null;
+  document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+  document.getElementById("swingBtn").disabled = true;
+  die.classList.add("disabled"); die.textContent = "?";
+  document.getElementById("mulliganBtn").disabled = (players[myId].mulligans <= 0);
+  // Sync mulligan count
+  gameNode.get("mulligans").get(myId).put(players[myId].mulligans);
+  syncBallUpdate();
+  showMsg("Mulligan used", "");
+  updateUI(); draw();
+}
+
+function scoreName(s, p) {
+  const d = s-p;
+  if (s===1) return "Hole in one!";
+  if (d<=-3) return "Albatross!";
+  if (d===-2) return "Eagle!";
+  if (d===-1) return "Birdie!";
+  if (d===0) return "Par!";
+  if (d===1) return "Bogey";
+  if (d===2) return "Double bogey";
+  return "+"+d;
+}
+
+// ====================================================================
+// UI
+// ====================================================================
+function showMsg(t, type) {
+  const el = document.getElementById("msg");
+  el.textContent = t; el.className = "msg " + (type||"");
+}
+
+function updateUI() {
+  document.getElementById("holeNum").textContent = currentHole;
+  document.getElementById("totalHoles").textContent = NUM_HOLES;
+  document.getElementById("parVal").textContent = par;
+
+  const myBall = playerBalls[myId];
+  const myStrokes = myBall ? myBall.strokes : 0;
+  document.getElementById("strokeVal").textContent = isMyTurn() ? myStrokes : "—";
+  document.getElementById("mulliganVal").textContent = players[myId] ? players[myId].mulligans : 0;
+
+  // My total score
+  let myTotal = 0, playedPar = 0;
+  if (players[myId] && players[myId].scores) {
+    for (const h in players[myId].scores) {
+      myTotal += players[myId].scores[h];
+      playedPar += pars[parseInt(h)-1] || 3;
+    }
+  }
+  const diff = myTotal - playedPar;
+  document.getElementById("myScoreVal").textContent = (myTotal===0) ? "E" : (diff===0 ? "E" : (diff>0?"+"+diff:diff));
+
+  // Turn banner
+  const banner = document.getElementById("turnBanner");
+  const cpId = playerOrder[currentPlayerIdx];
+  const cp = players[cpId];
+  if (cp) {
+    const ci = currentPlayerIdx % 4;
+    banner.className = "turn-banner";
+    banner.style.setProperty("--pc", PCOLORS[ci]);
+    document.getElementById("turnName").textContent = cp.name + (cpId===myId ? " (You)" : "");
+    const ball = playerBalls[cpId];
+    document.getElementById("turnInfo").textContent = `Stroke ${ball ? ball.strokes+1 : 1} · Par ${par}`;
+  }
+
+  // Enable/disable controls
+  const myTurn = isMyTurn();
+  document.querySelectorAll(".aim-btn").forEach(b => { b.disabled = !myTurn || animating; });
+  document.getElementById("mulliganBtn").disabled = (!myTurn || (players[myId]&&players[myId].mulligans<=0));
+}
+
+function updateScorecard() {
+  let html = "<table><tr><th>#</th>";
+  for (let i=1; i<=NUM_HOLES; i++) html += `<th>${i}</th>`;
+  html += "<th>Tot</th></tr><tr><th>Par</th>";
+  let pt=0;
+  for (let i=0; i<NUM_HOLES; i++) { html += `<td>${pars[i]||3}</td>`; pt+=pars[i]||3; }
+  html += `<td>${pt}</td></tr>`;
+
+  for (let i=0; i<playerOrder.length; i++) {
+    const pid = playerOrder[i];
+    const p = players[pid];
+    if (!p) continue;
+    const ci = i%4;
+    html += `<tr style="color:${PCOLORS[ci]}"><td>${p.name.substring(0,5)}</td>`;
+    let total=0;
+    for (let h=1; h<=NUM_HOLES; h++) {
+      const s = p.scores && p.scores[h];
+      if (s) { html+=`<td>${s}</td>`; total+=s; } else html+=`<td>–</td>`;
+    }
+    html += `<td>${total||"–"}</td></tr>`;
+  }
+  html += "</table>";
+  document.getElementById("scoreTable").innerHTML = html;
+}
+
+// ====================================================================
+// CANVAS TAP
+// ====================================================================
+canvas.addEventListener("click", (e) => {
+  if (animating || !isMyTurn()) return;
+  const rect = canvas.getBoundingClientRect();
+  const scale = canvas.width / rect.width;
+  const x = (e.clientX-rect.left)*scale, y = (e.clientY-rect.top)*scale;
+  const cx = Math.floor(x/CELL), cy = Math.floor(y/CELL);
+  const ball = getCurrentBall();
+  const dx = cx-ball.x, dy = cy-ball.y;
+  if (dx===0 && dy===0) return;
+  const deg = Math.atan2(dy,dx)*180/Math.PI;
+  let md;
+  if (deg>=-22.5&&deg<22.5) md=2; else if(deg>=22.5&&deg<67.5) md=3;
+  else if(deg>=67.5&&deg<112.5) md=4; else if(deg>=112.5&&deg<157.5) md=5;
+  else if(deg>=157.5||deg<-157.5) md=6; else if(deg>=-157.5&&deg<-112.5) md=7;
+  else if(deg>=-112.5&&deg<-67.5) md=0; else md=1;
+  setAim(md);
+});
+
+document.querySelectorAll(".aim-btn").forEach(btn => {
+  btn.addEventListener("click", () => setAim(parseInt(btn.dataset.dir,10)));
+});
+die.addEventListener("click", doSwing);
+document.getElementById("swingBtn").addEventListener("click", doSwing);
+document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
+
+// ====================================================================
+// LOBBY / CLUBHOUSE LOGIC
+// ====================================================================
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i=0; i<6; i++) code += chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+document.getElementById("createBtn").addEventListener("click", () => {
+  document.getElementById("menuView").classList.add("hidden");
+  document.getElementById("createView").classList.remove("hidden");
+  document.getElementById("createName").focus();
+});
+
+document.getElementById("joinBtn").addEventListener("click", () => {
+  document.getElementById("menuView").classList.add("hidden");
+  document.getElementById("joinView").classList.remove("hidden");
+  document.getElementById("joinName").focus();
+});
+
+document.getElementById("backFromCreateBtn").addEventListener("click", () => {
+  document.getElementById("createView").classList.add("hidden");
+  document.getElementById("menuView").classList.remove("hidden");
+});
+
+document.getElementById("backFromJoinBtn").addEventListener("click", () => {
+  document.getElementById("joinView").classList.add("hidden");
+  document.getElementById("menuView").classList.remove("hidden");
+});
+
+// CREATE
+document.getElementById("doCreateBtn").addEventListener("click", () => {
+  myName = document.getElementById("createName").value.trim() || "Host";
+  roomCode = generateCode();
+  isHost = true;
+
+  gameNode = gun.get("pocketgolf/" + roomCode);
+
+  // Register self
+  players = {};
+  playerOrder = [myId];
+  players[myId] = { name: myName, mulligans: 6, scores: {}, ready: true };
+
+  gameNode.get("players").get(myId).put(JSON.stringify(players[myId]));
+  gameNode.get("playerOrder").set(myId);
+  gameNode.get("host").put(myId);
+
+  // Listen for players joining
+  gameNode.get("playerOrder").map().on((id, key) => {
+    if (!id) return;
+    if (!playerOrder.includes(id)) {
+      playerOrder.push(id);
+      gameNode.get("players").get(id).once((data) => {
+        if (data) {
+          try { players[id] = JSON.parse(data); } catch(_) { players[id] = {name:"Player",mulligans:6,scores:{}}; }
+        }
+        updateWaitList();
+        updateScorecard();
+      });
+    }
+  });
+
+  gameNode.get("players").map().on((data, key) => {
+    if (data && key !== myId) {
+      try { players[key] = JSON.parse(data); } catch(_) {}
+      if (!playerOrder.includes(key)) playerOrder.push(key);
+      updateWaitList();
+      updateScorecard();
+    }
+  });
+
+  showWaitRoom();
+});
+
+// JOIN
+document.getElementById("doJoinBtn").addEventListener("click", () => {
+  myName = document.getElementById("joinName").value.trim() || "Player";
+  roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
+  if (roomCode.length < 4) { alert("Enter a valid code"); return; }
+  isHost = false;
+
+  gameNode = gun.get("pocketgolf/" + roomCode);
+  players = {};
+  playerOrder = [];
+  players[myId] = { name: myName, mulligans: 6, scores: {}, ready: true };
+
+  // Register self with the room
+  gameNode.get("players").get(myId).put(JSON.stringify(players[myId]));
+  gameNode.get("playerOrder").set(myId);
+
+  // Listen for existing players
+  gameNode.get("players").map().on((data, key) => {
+    if (data) {
+      try { players[key] = JSON.parse(data); } catch(_) {}
+      if (!playerOrder.includes(key)) playerOrder.push(key);
+    }
+  });
+
+  gameNode.get("playerOrder").map().on((id) => {
+    if (id && !playerOrder.includes(id)) playerOrder.push(id);
+  });
+
+  // Listen for game state from host
+  gameNode.get("state").on((data) => {
+    if (!data) return;
+    const prevHole = currentHole;
+    currentHole = data.currentHole || 1;
+    currentPlayerIdx = data.currentPlayerIdx || 0;
+    if (currentHole !== prevHole) {
+      // New hole — wait for hole data
+    }
+    updateUI(); draw();
+  });
+
+  // Listen for hole data
+  gameNode.get("hole").map().on((data, key) => {
+    if (!data) return;
+    const hNum = parseInt(key);
+    if (hNum === currentHole) {
+      receiveHole(data);
+    }
+  });
+
+  // Listen for ball updates
+  gameNode.get("balls").map().on((data, key) => {
+    if (!data) return;
+    const parts = key.split("_");
+    const hNum = parseInt(parts[0]);
+    const pid = parts.slice(1).join("_");
+    if (hNum === currentHole && pid !== myId) {
+      if (!playerBalls[pid]) playerBalls[pid] = {};
+      playerBalls[pid] = {
+        x: data.x, y: data.y, safeX: data.safeX, safeY: data.safeY,
+        strokes: data.strokes, done: data.done === 1,
+      };
+      draw();
+    }
+  });
+
+  // Listen for scores
+  gameNode.get("scores").map().on((data, key) => {
+    if (!data) return;
+    const parts = key.split("_");
+    const pid = parts[0];
+    const hole = parseInt(parts[1]);
+    if (!players[pid]) players[pid] = {name:"Player",mulligans:6,scores:{}};
+    if (!players[pid].scores) players[pid].scores = {};
+    players[pid].scores[hole] = data;
     updateScorecard();
-    animLoop();
-  </script>
+  });
+
+  // Listen for mulligan updates
+  gameNode.get("mulligans").map().on((data, key) => {
+    if (players[key]) {
+      players[key].mulligans = data;
+      updateUI();
+    }
+  });
+
+  // Connection indicator
+  document.getElementById("connBadge").textContent = "●";
+  document.getElementById("connBadge").classList.add("connected");
+
+  // Enter game
+  document.getElementById("lobbyOverlay").classList.add("hidden");
+  resizeCanvas();
+  updateScorecard();
+
+  showMsg("Joined! Waiting for host...", "");
+});
+
+function showWaitRoom() {
+  document.getElementById("createView").classList.add("hidden");
+  document.getElementById("menuView").classList.add("hidden");
+  document.getElementById("waitView").classList.remove("hidden");
+  document.getElementById("roomCode").textContent = roomCode;
+
+  document.getElementById("connBadge").textContent = "●";
+  document.getElementById("connBadge").classList.add("connected");
+
+  updateWaitList();
+}
+
+function updateWaitList() {
+  const div = document.getElementById("waitPlayerList");
+  let html = "";
+  for (let i=0; i<playerOrder.length; i++) {
+    const pid = playerOrder[i];
+    const p = players[pid];
+    if (!p) continue;
+    const ci = i % 4;
+    html += `<div class="player-list-item">
+      <div class="player-dot" style="background:${PCOLORS[ci]}"></div>
+      <span>${p.name}${pid===myId?" (You)":""}${pid===playerOrder[0]?" 🏌️":""}</span>
+    </div>`;
+  }
+  div.innerHTML = html;
+
+  const startBtn = document.getElementById("startMultiBtn");
+  startBtn.disabled = playerOrder.length < 1;
+  startBtn.textContent = playerOrder.length === 1 ? "Play Solo" : `Start ${playerOrder.length}-Player Round`;
+}
+
+document.getElementById("startMultiBtn").addEventListener("click", () => {
+  if (!isHost) return;
+  document.getElementById("waitView").classList.add("hidden");
+  document.getElementById("lobbyOverlay").classList.add("hidden");
+
+  gameStarted = true;
+  currentHole = 1;
+  pars = new Array(NUM_HOLES).fill(3);
+
+  // Generate first hole
+  generateHole(1);
+  hostBroadcastHole();
+
+  // Init balls
+  playerBalls = {};
+  for (const pid of playerOrder) {
+    playerBalls[pid] = { x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:false };
+    gameNode.get("balls").get(currentHole+"_"+pid).put({
+      x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:0
+    });
+  }
+  currentPlayerIdx = 0;
+  syncTurn();
+
+  resizeCanvas();
+  updateUI();
+  updateScorecard();
+  draw();
+  showMsg("Round started! " + players[playerOrder[0]].name + " goes first", "success");
+});
+
+document.getElementById("leaveWaitBtn").addEventListener("click", () => {
+  location.reload();
+});
+
+// ====================================================================
+// ROUND END
+// ====================================================================
+function showRoundEnd() {
+  const ranked = playerOrder.map((pid, i) => ({
+    name: players[pid]?.name || "Player",
+    idx: i,
+    total: Object.values(players[pid]?.scores || {}).reduce((a,b)=>a+b, 0),
+  })).sort((a,b) => a.total - b.total);
+
+  let html = `<h1>Round Complete! 🏆</h1>`;
+  html += `<div style="margin:12px 0">`;
+  ranked.forEach((p, rank) => {
+    const ci = p.idx % 4;
+    const medal = rank===0?"🥇":rank===1?"🥈":rank===2?"🥉":"";
+    html += `<div class="player-list-item" style="border-left:4px solid ${PCOLORS[ci]};padding:12px;margin-bottom:6px">
+      <span style="font-size:1.2rem">${medal}</span>
+      <span style="flex:1;font-weight:700">${p.name}</span>
+      <span style="font-size:1.3rem;font-weight:900">${p.total}</span>
+    </div>`;
+  });
+  html += `</div>`;
+  const totalPar = pars.reduce((a,b)=>a+b,0);
+  html += `<p>Course par: ${totalPar}</p>`;
+  html += `<button class="btn btn-primary" onclick="location.reload()">New Game</button>`;
+
+  const overlay = document.getElementById("lobbyOverlay");
+  overlay.querySelector(".overlay-card").innerHTML = html;
+  overlay.classList.remove("hidden");
+}
+
+// ====================================================================
+// HOST: Listen for ball updates from non-host players
+// ====================================================================
+if (isHost) {
+  // This runs after creation; set up listeners
+}
+
+// Set up ball sync listener for host
+function setupHostBallListener() {
+  if (!gameNode) return;
+  gameNode.get("balls").map().on((data, key) => {
+    if (!data || !isHost) return;
+    const parts = key.split("_");
+    const hNum = parseInt(parts[0]);
+    const pid = parts.slice(1).join("_");
+    if (hNum === currentHole && pid !== myId) {
+      if (!playerBalls[pid]) playerBalls[pid] = {};
+      // Only update if data changed
+      const existing = playerBalls[pid];
+      if (!existing || existing.x !== data.x || existing.y !== data.y || existing.strokes !== data.strokes) {
+        playerBalls[pid] = {
+          x: data.x, y: data.y, safeX: data.safeX, safeY: data.safeY,
+          strokes: data.strokes, done: data.done === 1,
+        };
+        draw();
+        updateUI();
+      }
+    }
+  });
+
+  // Also listen for scores from others
+  gameNode.get("scores").map().on((data, key) => {
+    if (!data) return;
+    const parts = key.split("_");
+    const pid = parts[0];
+    const hole = parseInt(parts[1]);
+    if (players[pid]) {
+      if (!players[pid].scores) players[pid].scores = {};
+      players[pid].scores[hole] = data;
+      updateScorecard();
+    }
+  });
+
+  // Listen for mulligans
+  gameNode.get("mulligans").map().on((data, key) => {
+    if (players[key]) {
+      players[key].mulligans = data;
+      updateUI();
+    }
+  });
+}
+
+// Patch: call setupHostBallListener after create
+const origDoCreate = document.getElementById("doCreateBtn").onclick;
+document.getElementById("doCreateBtn").addEventListener("click", () => {
+  setTimeout(setupHostBallListener, 500);
+}, { once: true });
+
+// ====================================================================
+// INIT
+// ====================================================================
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+animLoop();
+updateScorecard();
+</script>
 </body>
 </html>
