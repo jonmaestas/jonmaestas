@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0a1a0a" />
+  <meta name="description" content="Pocket Golf — solo roll-and-write golf game. Roll the die, pick your direction, navigate terrain to the hole in as few strokes as possible." />
+  <title>Pocket Golf — Solo Golf Game</title>
+  <style>
+    :root {
+      --bg: #0a1a0a;
+      --panel: #13261a;
+      --panel2: #1a3326;
+      --text: #e8f5e9;
+      --muted: #81a893;
+      --fairway: #2d5a1e;
+      --fairway-light: #3a7a28;
+      --rough: #4a6b2a;
+      --sand: #d4a84b;
+      --water: #2563a8;
+      --tree: #1a3d10;
+      --tee: #fbbf24;
+      --hole: #1a1a1a;
+      --ball: #ffffff;
+      --accent: #4ade80;
+      --btn: #1e3a1e;
+      --btn-border: #2d5a2d;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: max(8px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* === HEADER === */
+    .header {
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .logo span { color: var(--accent); }
+    .hole-badge {
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .hole-badge strong { color: var(--text); }
+
+    /* === STATS BAR === */
+    .stats {
+      width: 100%;
+      max-width: 560px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 12px;
+      padding: 8px 4px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-val.under { color: var(--accent); }
+    .stat-val.over { color: var(--danger); }
+
+    /* === GAME AREA === */
+    .game-area {
+      width: 100%;
+      max-width: 560px;
+      position: relative;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background: var(--rough);
+      touch-action: none;
+    }
+
+    /* === AIM CONTROLS === */
+    .aim-section {
+      width: 100%;
+      max-width: 560px;
+      margin-top: 10px;
+    }
+
+    .aim-label {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .aim-label strong { color: var(--text); }
+
+    .aim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      max-width: 240px;
+      margin: 0 auto 8px;
+    }
+    .aim-btn {
+      aspect-ratio: 1;
+      border: 1px solid var(--btn-border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 14px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s, transform 0.1s;
+    }
+    .aim-btn:active { transform: scale(0.95); }
+    .aim-btn.selected {
+      background: #1e40af;
+      border-color: #3b82f6;
+    }
+    .aim-btn.putt {
+      background: #1e3a5f;
+      border-color: #1e40af;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .aim-btn.putt.selected {
+      background: #2563eb;
+      border-color: #60a5fa;
+    }
+    .aim-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* === ACTION BUTTONS === */
+    .actions {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 8px;
+      max-width: 560px;
+      margin-top: 8px;
+    }
+    .btn {
+      border: 1px solid var(--btn-border);
+      background: var(--btn);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 16px 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-primary {
+      background: #15803d;
+      border-color: #16a34a;
+    }
+    .btn-mulligan {
+      background: #78350f;
+      border-color: #92400e;
+      font-size: 0.85rem;
+    }
+    .btn-next {
+      background: #1e40af;
+      border-color: #2563eb;
+      font-size: 0.85rem;
+    }
+
+    /* === MESSAGE === */
+    .msg {
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.4em;
+      margin-top: 6px;
+      padding: 0 12px;
+    }
+    .msg.success { color: var(--accent); }
+    .msg.warn { color: var(--sand); }
+    .msg.error { color: var(--danger); }
+
+    /* === DICE === */
+    .dice-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .die {
+      width: 56px; height: 56px;
+      background: #f8fafc;
+      color: #1a1a1a;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .die.rolling { animation: shake 0.4s ease; }
+    @keyframes shake {
+      0%, 100% { transform: rotate(0) scale(1); }
+      25% { transform: rotate(-15deg) scale(1.1); }
+      75% { transform: rotate(15deg) scale(1.1); }
+    }
+    .die-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* === SCORECARD === */
+    .scorecard-toggle {
+      width: 100%;
+      max-width: 560px;
+      margin-top: 10px;
+    }
+    details {
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--muted);
+      list-style: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+
+    .scorecard {
+      margin-top: 8px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+    }
+    th, td {
+      border: 1px solid var(--btn-border);
+      padding: 4px 6px;
+      text-align: center;
+      min-width: 28px;
+    }
+    th { background: var(--panel2); color: var(--muted); }
+    td.score-eagle { color: var(--accent); font-weight: 800; }
+    td.score-birdie { color: #93c5fd; font-weight: 700; }
+    td.score-bogey { color: var(--sand); }
+    td.score-double { color: var(--danger); }
+
+    /* === INTRO OVERLAY === */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay-card {
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 400px;
+      width: 100%;
+    }
+    .overlay-card h1 {
+      font-size: 1.6rem;
+      margin: 0 0 8px;
+    }
+    .overlay-card h1 span { color: var(--accent); }
+    .overlay-card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 6px 0;
+    }
+    .overlay-card ul {
+      padding-left: 1.2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .overlay-card .start-btn {
+      width: 100%;
+      margin-top: 16px;
+      background: #15803d;
+      border-color: #16a34a;
+      padding: 18px;
+      font-size: 1.2rem;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px 12px;
+      margin: 8px 0;
+      font-size: 0.8rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    footer {
+      margin-top: 12px;
+      text-align: center;
+      color: #4a6b3a;
+      font-size: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- INTRO OVERLAY -->
+  <div class="overlay" id="introOverlay">
+    <div class="overlay-card">
+      <h1>Pocket <span>Golf</span></h1>
+      <p>Solo roll-and-write golf. Roll the die, aim your shot, navigate the terrain, and reach the hole in as few strokes as possible.</p>
+
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#3a7a28"></div>Fairway (+1)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#4a6b2a"></div>Rough (normal)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#d4a84b"></div>Sand (−1)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#2563a8"></div>Water (penalty)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#1a3d10"></div>Trees (block)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#1a1a1a"></div>Hole</div>
+      </div>
+
+      <ul>
+        <li><strong>Aim:</strong> Tap a direction or tap the grid to aim that way</li>
+        <li><strong>Swing:</strong> Roll the die for distance (1–6). Fairway = +1, Sand = −1</li>
+        <li><strong>Putt:</strong> Move exactly 1 space — use near the hole</li>
+        <li><strong>Water:</strong> +1 penalty stroke, ball returns to last spot</li>
+        <li><strong>Trees:</strong> Shot blocked — ball stays put</li>
+        <li><strong>Mulligans:</strong> 6 per round. Re-roll any shot</li>
+        <li><strong>Tee shots:</strong> Re-rolls are free (no mulligan used)</li>
+      </ul>
+
+      <button class="btn btn-primary start-btn" id="startBtn">Play Round</button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">Pocket <span>Golf</span></div>
+    <div class="hole-badge">Hole <strong id="holeNum">1</strong> / 18</div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Par</div><div class="stat-val" id="parVal">3</div></div>
+    <div class="stat"><div class="stat-label">Strokes</div><div class="stat-val" id="strokeVal">0</div></div>
+    <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="totalVal">E</div></div>
+    <div class="stat"><div class="stat-label">Mulligans</div><div class="stat-val" id="mulliganVal">6</div></div>
+  </div>
+
+  <!-- GAME CANVAS -->
+  <div class="game-area">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+
+  <!-- DICE -->
+  <div class="dice-display">
+    <div class="die" id="die">–</div>
+    <div class="die-label" id="dieLabel">Tap a direction to aim</div>
+  </div>
+
+  <!-- AIM CONTROLS -->
+  <div class="aim-section">
+    <div class="aim-label">Aim: <strong id="aimDir">—</strong></div>
+    <div class="aim-grid">
+      <button class="aim-btn" data-dir="7">↖</button>
+      <button class="aim-btn" data-dir="0">↑</button>
+      <button class="aim-btn" data-dir="1">↗</button>
+      <button class="aim-btn" data-dir="6">←</button>
+      <button class="aim-btn putt" data-dir="-1">PUTT</button>
+      <button class="aim-btn" data-dir="2">→</button>
+      <button class="aim-btn" data-dir="5">↙</button>
+      <button class="aim-btn" data-dir="4">↓</button>
+      <button class="aim-btn" data-dir="3">↘</button>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn btn-primary" id="swingBtn" disabled>Swing!</button>
+    <button class="btn btn-mulligan" id="mulliganBtn" disabled>Mulligan</button>
+    <button class="btn btn-next" id="nextHoleBtn" disabled>Next Hole</button>
+  </div>
+
+  <!-- MESSAGE -->
+  <div class="msg" id="msg"></div>
+
+  <!-- SCORECARD -->
+  <div class="scorecard-toggle">
+    <details>
+      <summary>Scorecard</summary>
+      <div class="scorecard">
+        <table id="scoreTable"></table>
+      </div>
+    </details>
+  </div>
+
+  <footer>jonmaestas.com · Pocket Golf</footer>
+
+  <script>
+    // === CONSTANTS ===
+    const COLS = 15;
+    const ROWS = 22;
+    let CELL = 0;
+
+    // Terrain types
+    const T = {
+      FAIRWAY: 0,
+      ROUGH: 1,
+      SAND: 2,
+      WATER: 3,
+      TREE: 4,
+      GREEN: 5,
+    };
+
+    // 8 directions: 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW
+    const DIRS = [
+      [0, -1],   // N
+      [1, -1],   // NE
+      [1, 0],    // E
+      [1, 1],    // SE
+      [0, 1],    // S
+      [-1, 1],   // SW
+      [-1, 0],   // W
+      [-1, -1],  // NW
+    ];
+
+    const DIR_NAMES = ["North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest"];
+
+    // === GAME STATE ===
+    let grid = [];
+    let ballX = 0, ballY = 0;
+    let lastSafeX = 0, lastSafeY = 0;
+    let holeX = 0, holeY = 0;
+    let teeX = 0, teeY = 0;
+    let strokes = 0;
+    let par = 3;
+    let currentHole = 1;
+    let mulligans = 6;
+    let aimDir = null; // -1 = putt, 0-7 = direction
+    let lastRoll = 0;
+    let lastRollWasTee = false;
+    let holeScores = []; // strokes per hole, -1 = not played
+    let pars = [];
+    let animating = false;
+    let ballAnimX = 0, ballAnimY = 0;
+    let gameStarted = false;
+    let roundOver = false;
+
+    // === CANVAS ===
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      const maxW = Math.min(560, window.innerWidth - 24);
+      CELL = Math.floor(maxW / COLS);
+      canvas.width = COLS * CELL;
+      canvas.height = ROWS * CELL;
+      draw();
+    }
+
+    // === COLORS ===
+    const TERRAIN_COLORS = {
+      [T.FAIRWAY]: "#3a7a28",
+      [T.ROUGH]: "#4a6b2a",
+      [T.SAND]: "#d4a84b",
+      [T.WATER]: "#2563a8",
+      [T.TREE]: "#1a3d10",
+      [T.GREEN]: "#52b040",
+    };
+
+    // === HOLE GENERATION ===
+    function generateHole(holeNum) {
+      grid = [];
+      for (let y = 0; y < ROWS; y++) {
+        const row = [];
+        for (let x = 0; x < COLS; x++) {
+          row.push(T.ROUGH);
+        }
+        grid.push(row);
+      }
+
+      // Tee at bottom center
+      teeX = Math.floor(COLS / 2);
+      teeY = ROWS - 2;
+
+      // Hole at top area, offset randomly
+      holeX = Math.max(2, Math.min(COLS - 3, Math.floor(COLS / 2) + (Math.floor(Math.random() * 7) - 3)));
+      holeY = 1 + Math.floor(Math.random() * 2);
+
+      // Difficulty scales with hole number
+      const difficulty = 1 + Math.floor(holeNum / 6);
+
+      // Carve a fairway corridor from tee to hole (rough path)
+      let cx = teeX, cy = teeY;
+      const fairwayWidth = 2 + Math.floor(Math.random() * 2);
+
+      while (cy > holeY + 1 || cx !== holeX) {
+        // Move toward hole
+        const dx = holeX - cx;
+        const dy = holeY - cy;
+
+        // Carve fairway around current position
+        for (let oy = -fairwayWidth; oy <= fairwayWidth; oy++) {
+          for (let ox = -fairwayWidth; ox <= fairwayWidth; ox++) {
+            const tx = cx + ox, ty = cy + oy;
+            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+              const dist = Math.abs(ox) + Math.abs(oy);
+              if (dist <= fairwayWidth && grid[ty][tx] === T.ROUGH) {
+                if (Math.random() > 0.15) grid[ty][tx] = T.FAIRWAY;
+              }
+            }
+          }
+        }
+
+        // Step toward hole (prefer vertical)
+        if (Math.abs(dy) > 0 && (Math.random() > 0.35 || cx === holeX)) {
+          cy += Math.sign(dy);
+        }
+        if (Math.abs(dx) > 0 && Math.random() > 0.4) {
+          cx += Math.sign(dx);
+        }
+        if (cx === holeX && cy === holeY) break;
+      }
+
+      // Green around hole
+      for (let oy = -2; oy <= 2; oy++) {
+        for (let ox = -2; ox <= 2; ox++) {
+          const tx = holeX + ox, ty = holeY + oy;
+          if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+            if (Math.abs(ox) + Math.abs(oy) <= 3) grid[ty][tx] = T.GREEN;
+          }
+        }
+      }
+
+      // Tee box
+      for (let oy = -1; oy <= 1; oy++) {
+        for (let ox = -1; ox <= 1; ox++) {
+          const tx = teeX + ox, ty = teeY + oy;
+          if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+            grid[ty][tx] = T.FAIRWAY;
+          }
+        }
+      }
+
+      // Add hazards based on difficulty
+      const numWater = 1 + Math.floor(Math.random() * difficulty);
+      const numSand = 2 + Math.floor(Math.random() * (difficulty + 1));
+      const numTrees = 3 + difficulty * 2;
+
+      // Water hazards (clusters)
+      for (let i = 0; i < numWater; i++) {
+        let wx, wy;
+        let attempts = 0;
+        do {
+          wx = 1 + Math.floor(Math.random() * (COLS - 2));
+          wy = 3 + Math.floor(Math.random() * (ROWS - 6));
+          attempts++;
+        } while ((Math.abs(wx - teeX) < 2 && Math.abs(wy - teeY) < 2) && attempts < 20);
+
+        const wsize = 1 + Math.floor(Math.random() * 2);
+        for (let oy = -wsize; oy <= wsize; oy++) {
+          for (let ox = -wsize; ox <= wsize; ox++) {
+            const tx = wx + ox, ty = wy + oy;
+            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+              if (Math.abs(ox) + Math.abs(oy) <= wsize && grid[ty][tx] !== T.GREEN) {
+                // Don't put water right on tee or hole
+                if (!(Math.abs(tx - teeX) <= 1 && Math.abs(ty - teeY) <= 1) &&
+                    !(Math.abs(tx - holeX) <= 2 && Math.abs(ty - holeY) <= 2)) {
+                  grid[ty][tx] = T.WATER;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Sand traps
+      for (let i = 0; i < numSand; i++) {
+        const sx = 1 + Math.floor(Math.random() * (COLS - 2));
+        const sy = 3 + Math.floor(Math.random() * (ROWS - 6));
+        const ssize = 1 + Math.floor(Math.random() * 2);
+        for (let oy = -ssize; oy <= ssize; oy++) {
+          for (let ox = -ssize; ox <= ssize; ox++) {
+            const tx = sx + ox, ty = sy + oy;
+            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+              if (Math.abs(ox) + Math.abs(oy) <= ssize && grid[ty][tx] !== T.WATER && grid[ty][tx] !== T.GREEN) {
+                grid[ty][tx] = T.SAND;
+              }
+            }
+          }
+        }
+      }
+
+      // Trees
+      for (let i = 0; i < numTrees; i++) {
+        const tx = Math.floor(Math.random() * COLS);
+        const ty = 2 + Math.floor(Math.random() * (ROWS - 4));
+        if (grid[ty][tx] !== T.GREEN && !(Math.abs(tx - teeX) <= 1 && Math.abs(ty - teeY) <= 1)) {
+          grid[ty][tx] = T.TREE;
+        }
+      }
+
+      // Calculate par based on distance
+      const dist = Math.abs(teeX - holeX) + Math.abs(teeY - holeY);
+      par = Math.max(2, Math.round(dist / 7) + 1);
+      if (holeNum <= 3) par = Math.min(par, 3);
+
+      // Set ball to tee
+      ballX = teeX;
+      ballY = teeY;
+      lastSafeX = teeX;
+      lastSafeY = teeY;
+      strokes = 0;
+      aimDir = null;
+      lastRoll = 0;
+
+      updateUI();
+      draw();
+    }
+
+    // === DRAWING ===
+    function draw() {
+      if (!canvas.width) return;
+
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          const terrain = grid[y][x];
+          ctx.fillStyle = TERRAIN_COLORS[terrain] || "#4a6b2a";
+          ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+
+          // Texture for trees
+          if (terrain === T.TREE) {
+            ctx.fillStyle = "#0d2008";
+            const cx = x * CELL + CELL / 2;
+            const cy = y * CELL + CELL / 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, CELL * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Water ripple
+          if (terrain === T.WATER) {
+            ctx.fillStyle = "rgba(255,255,255,0.1)";
+            ctx.fillRect(x * CELL + 2, y * CELL + CELL * 0.4, CELL - 4, 1);
+          }
+        }
+      }
+
+      // Grid lines (subtle)
+      ctx.strokeStyle = "rgba(0,0,0,0.08)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= COLS; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x * CELL, 0);
+        ctx.lineTo(x * CELL, ROWS * CELL);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= ROWS; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * CELL);
+        ctx.lineTo(COLS * CELL, y * CELL);
+        ctx.stroke();
+      }
+
+      // Hole
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.arc(holeX * CELL + CELL / 2, holeY * CELL + CELL / 2, CELL * 0.32, 0, Math.PI * 2);
+      ctx.fill();
+      // Flag
+      ctx.strokeStyle = "#ef4444";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(holeX * CELL + CELL / 2, holeY * CELL + CELL / 2);
+      ctx.lineTo(holeX * CELL + CELL / 2, holeY * CELL);
+      ctx.stroke();
+      ctx.fillStyle = "#ef4444";
+      ctx.beginPath();
+      ctx.moveTo(holeX * CELL + CELL / 2, holeY * CELL);
+      ctx.lineTo(holeX * CELL + CELL / 2 + CELL * 0.4, holeY * CELL + CELL * 0.15);
+      ctx.lineTo(holeX * CELL + CELL / 2, holeY * CELL + CELL * 0.3);
+      ctx.fill();
+
+      // Tee marker
+      ctx.fillStyle = "#fbbf24";
+      ctx.font = `${CELL * 0.5}px sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("T", teeX * CELL + CELL / 2, teeY * CELL + CELL / 2);
+
+      // Aim preview line
+      if (aimDir !== null && aimDir >= 0 && !animating) {
+        const [dx, dy] = DIRS[aimDir];
+        ctx.strokeStyle = "rgba(255,255,255,0.4)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(ballX * CELL + CELL / 2, ballY * CELL + CELL / 2);
+        ctx.lineTo((ballX + dx * 6) * CELL + CELL / 2, (ballY + dy * 6) * CELL + CELL / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Ball
+      const bx = animating ? ballAnimX : ballX;
+      const by = animating ? ballAnimY : ballY;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(bx * CELL + CELL / 2, by * CELL + CELL / 2, CELL * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // === AIM SELECTION ===
+    function setAim(dir) {
+      if (animating) return;
+      if (strokes === 0 && dir === -1) return; // can't putt off the tee
+
+      aimDir = dir;
+      document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+      const btn = document.querySelector(`.aim-btn[data-dir="${dir}"]`);
+      if (btn) btn.classList.add("selected");
+
+      document.getElementById("aimDir").textContent = dir === -1 ? "Putt (1 space)" : DIR_NAMES[dir];
+      document.getElementById("swingBtn").disabled = false;
+      draw();
+    }
+
+    // === SWING ===
+    function swing() {
+      if (aimDir === null || animating) return;
+
+      const isPutt = (aimDir === -1);
+      let roll;
+
+      if (isPutt) {
+        roll = 1;
+      } else {
+        roll = 1 + Math.floor(Math.random() * 6);
+      }
+
+      lastRoll = roll;
+      lastRollWasTee = (strokes === 0);
+
+      // Animate die
+      const die = document.getElementById("die");
+      die.classList.add("rolling");
+      let rollCount = 0;
+      const rollInterval = setInterval(() => {
+        die.textContent = 1 + Math.floor(Math.random() * 6);
+        rollCount++;
+        if (rollCount >= 6) {
+          clearInterval(rollInterval);
+          die.classList.remove("rolling");
+          die.textContent = isPutt ? "P" : roll;
+          processShot(roll, isPutt);
+        }
+      }, 60);
+    }
+
+    function processShot(roll, isPutt) {
+      const [dx, dy] = isPutt ? [0, 0] : DIRS[aimDir];
+      let dist = isPutt ? 1 : roll;
+
+      // Terrain modifier at current position
+      const startTerrain = grid[ballY][ballX];
+      if (!isPutt) {
+        if (startTerrain === T.FAIRWAY) {
+          dist += 1;
+          showMsg("Fairway boost! +1", "success");
+        } else if (startTerrain === T.SAND) {
+          dist = Math.max(1, dist - 1);
+          showMsg("Sand! −1 distance", "warn");
+        }
+      }
+
+      // Move ball
+      let newX = ballX;
+      let newY = ballY;
+      let hitTree = false;
+      let landedInWater = false;
+
+      for (let step = 0; step < dist; step++) {
+        const testX = newX + dx;
+        const testY = newY + dy;
+
+        if (testX < 0 || testX >= COLS || testY < 0 || testY >= ROWS) break;
+
+        const terrain = grid[testY][testX];
+
+        // Trees block
+        if (terrain === T.TREE) {
+          // Only fairway start can punch through trees, but still stops at tree
+          hitTree = true;
+          break;
+        }
+
+        newX = testX;
+        newY = testY;
+
+        // Check if we reached the hole
+        if (newX === holeX && newY === holeY) {
+          break;
+        }
+      }
+
+      strokes++;
+
+      // Check water landing
+      if (grid[newY] && grid[newY][newX] === T.WATER) {
+        landedInWater = true;
+      }
+
+      // Animate ball movement
+      animateBall(ballX, ballY, newX, newY, () => {
+        ballX = newX;
+        ballY = newY;
+
+        if (ballX === holeX && ballY === holeY) {
+          holeComplete();
+          return;
+        }
+
+        if (landedInWater) {
+          strokes++; // penalty
+          showMsg("Splash! +1 penalty stroke", "error");
+          ballX = lastSafeX;
+          ballY = lastSafeY;
+          draw();
+        } else if (hitTree) {
+          showMsg("Tree blocked your shot!", "warn");
+        } else {
+          // Save last safe position (not water, not tree)
+          if (grid[ballY][ballX] !== T.WATER && grid[ballY][ballX] !== T.TREE) {
+            lastSafeX = ballX;
+            lastSafeY = ballY;
+          }
+          const terrain = grid[ballY][ballX];
+          let msg = "";
+          if (!hitTree && !landedInWater) {
+            if (terrain === T.GREEN) msg = "On the green! Putt it in.";
+            else if (terrain === T.FAIRWAY) msg = "Nice lie on the fairway.";
+            else if (terrain === T.SAND) msg = "In the bunker.";
+            else if (terrain === T.ROUGH) msg = "In the rough.";
+          }
+          if (msg) showMsg(msg, "");
+        }
+
+        // Reset aim
+        aimDir = null;
+        document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+        document.getElementById("aimDir").textContent = "—";
+        document.getElementById("swingBtn").disabled = true;
+        document.getElementById("mulliganBtn").disabled = (mulligans <= 0 || lastRollWasTee);
+        updateUI();
+        draw();
+      });
+    }
+
+    function animateBall(fromX, fromY, toX, toY, callback) {
+      animating = true;
+      const duration = 400;
+      const start = performance.now();
+
+      function frame(t) {
+        const elapsed = t - start;
+        const progress = Math.min(1, elapsed / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        ballAnimX = fromX + (toX - fromX) * eased;
+        ballAnimY = fromY + (toY - fromY) * eased;
+
+        // Arc effect
+        const arcHeight = 0.5;
+        const arc = Math.sin(progress * Math.PI) * arcHeight;
+
+        draw();
+
+        // Draw ball at animated position with arc
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(ballAnimX * CELL + CELL / 2, (ballAnimY - arc) * CELL + CELL / 2, CELL * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (progress < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          animating = false;
+          callback();
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    function holeComplete() {
+      showMsg(getScoreName(strokes, par) + "! Tap Next Hole", "success");
+      document.getElementById("swingBtn").disabled = true;
+      document.getElementById("mulliganBtn").disabled = true;
+      document.getElementById("nextHoleBtn").disabled = false;
+
+      holeScores[currentHole - 1] = strokes;
+      updateScorecard();
+      updateUI();
+
+      if (currentHole >= 18) {
+        roundOver = true;
+        const total = holeScores.reduce((a, b) => a + (b > 0 ? b : 0), 0);
+        const totalPar = pars.reduce((a, b) => a + b, 0);
+        const diff = total - totalPar;
+        showMsg(`Round complete! ${total} strokes (${diff > 0 ? "+" : ""}${diff})`, "success");
+        document.getElementById("nextHoleBtn").textContent = "New Round";
+      }
+
+      draw();
+    }
+
+    function getScoreName(strokes, par) {
+      const diff = strokes - par;
+      if (strokes === 1) return "Hole in one!";
+      if (diff <= -3) return "Albatross!";
+      if (diff === -2) return "Eagle!";
+      if (diff === -1) return "Birdie!";
+      if (diff === 0) return "Par!";
+      if (diff === 1) return "Bogey";
+      if (diff === 2) return "Double bogey";
+      return "+" + diff;
+    }
+
+    // === MULLIGAN ===
+    function useMulligan() {
+      if (mulligans <= 0) return;
+      if (lastRollWasTee) {
+        // Free tee re-roll — just re-roll
+        showMsg("Free tee re-roll!", "success");
+        // Undo the last stroke
+        strokes = Math.max(0, strokes - 1);
+        ballX = teeX;
+        ballY = teeY;
+        lastSafeX = teeX;
+        lastSafeY = teeY;
+        aimDir = null;
+        document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+        document.getElementById("aimDir").textContent = "—";
+        document.getElementById("swingBtn").disabled = true;
+        document.getElementById("mulliganBtn").disabled = true;
+        updateUI();
+        draw();
+        return;
+      }
+
+      mulligans--;
+      strokes = Math.max(0, strokes - 1);
+      ballX = lastSafeX;
+      ballY = lastSafeY;
+      aimDir = null;
+      document.querySelectorAll(".aim-btn").forEach(b => b.classList.remove("selected"));
+      document.getElementById("aimDir").textContent = "—";
+      document.getElementById("swingBtn").disabled = true;
+      document.getElementById("mulliganBtn").disabled = (mulligans <= 0);
+      showMsg("Mulligan used — re-aim and swing", "");
+      updateUI();
+      draw();
+    }
+
+    // === UI UPDATES ===
+    function showMsg(text, type) {
+      const el = document.getElementById("msg");
+      el.textContent = text;
+      el.className = "msg " + (type || "");
+    }
+
+    function updateUI() {
+      document.getElementById("holeNum").textContent = currentHole;
+      document.getElementById("parVal").textContent = par;
+      document.getElementById("strokeVal").textContent = strokes;
+      document.getElementById("mulliganVal").textContent = mulligans;
+
+      // Total relative to par
+      let total = 0;
+      let playedPar = 0;
+      for (let i = 0; i < holeScores.length; i++) {
+        if (holeScores[i] > 0) {
+          total += holeScores[i];
+          playedPar += pars[i];
+        }
+      }
+      if (currentHole === 1 && strokes === 0) {
+        document.getElementById("totalVal").textContent = "E";
+      } else {
+        const diff = total - playedPar;
+        document.getElementById("totalVal").textContent = diff === 0 ? "E" : (diff > 0 ? "+" + diff : diff);
+        document.getElementById("totalVal").className = "stat-val " + (diff < 0 ? "under" : diff > 0 ? "over" : "");
+      }
+    }
+
+    function updateScorecard() {
+      let html = "<table><tr><th>Hole</th>";
+      for (let i = 1; i <= 18; i++) html += `<td>${i}</td>`;
+      html += "<td>Tot</td></tr>";
+
+      html += "<tr><th>Par</th>";
+      let parTotal = 0;
+      for (let i = 0; i < 18; i++) {
+        html += `<td>${pars[i]}</td>`;
+        parTotal += pars[i];
+      }
+      html += `<td>${parTotal}</td></tr>`;
+
+      html += "<tr><th>Score</th>";
+      let scoreTotal = 0;
+      for (let i = 0; i < 18; i++) {
+        const s = holeScores[i];
+        if (s > 0) {
+          const diff = s - pars[i];
+          let cls = "";
+          if (diff <= -2) cls = "score-eagle";
+          else if (diff === -1) cls = "score-birdie";
+          else if (diff === 1) cls = "score-bogey";
+          else if (diff >= 2) cls = "score-double";
+          html += `<td class="${cls}">${s}</td>`;
+          scoreTotal += s;
+        } else {
+          html += `<td>–</td>`;
+        }
+      }
+      html += `<td>${scoreTotal || "–"}</td></tr>`;
+      html += "</table>";
+
+      document.getElementById("scoreTable").innerHTML = html;
+    }
+
+    // === CANVAS TAP TO AIM ===
+    canvas.addEventListener("click", (e) => {
+      if (animating) return;
+      const rect = canvas.getBoundingClientRect();
+      const scale = canvas.width / rect.width;
+      const x = (e.clientX - rect.left) * scale;
+      const y = (e.clientY - rect.top) * scale;
+      const cx = Math.floor(x / CELL);
+      const cy = Math.floor(y / CELL);
+
+      // Determine direction from ball to tap
+      const dx = cx - ballX;
+      const dy = cy - ballY;
+      if (dx === 0 && dy === 0) return;
+
+      const angle = Math.atan2(dy, dx);
+      const dirIdx = Math.round(angle / (Math.PI / 4) + 8) % 8;
+
+      // Map to our direction system (0=N, 1=NE...).
+      // atan2 returns angle from positive x-axis. Our DIRS: 0=N(-y), 2=E(+x), 4=S(+y), 6=W(-x)
+      // atan2: 0 = East, PI/2 = South, PI/-PI = West, -PI/2 = North
+      // We need to map: East=2, SE=3, South=4, SW=5, West=6, NW=7, North=0, NE=1
+      let mappedDir;
+      const deg = angle * 180 / Math.PI;
+      if (deg >= -22.5 && deg < 22.5) mappedDir = 2;       // E
+      else if (deg >= 22.5 && deg < 67.5) mappedDir = 3;    // SE
+      else if (deg >= 67.5 && deg < 112.5) mappedDir = 4;   // S
+      else if (deg >= 112.5 && deg < 157.5) mappedDir = 5;  // SW
+      else if (deg >= 157.5 || deg < -157.5) mappedDir = 6; // W
+      else if (deg >= -157.5 && deg < -112.5) mappedDir = 7; // NW
+      else if (deg >= -112.5 && deg < -67.5) mappedDir = 0;  // N
+      else mappedDir = 1;                                     // NE
+
+      setAim(mappedDir);
+    });
+
+    // === BUTTON EVENTS ===
+    document.querySelectorAll(".aim-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const dir = parseInt(btn.dataset.dir, 10);
+        setAim(dir);
+      });
+    });
+
+    document.getElementById("swingBtn").addEventListener("click", swing);
+    document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
+
+    document.getElementById("nextHoleBtn").addEventListener("click", () => {
+      if (roundOver) {
+        // New round
+        currentHole = 1;
+        mulligans = 6;
+        holeScores = new Array(18).fill(-1);
+        pars = [];
+        roundOver = false;
+        document.getElementById("nextHoleBtn").textContent = "Next Hole";
+        document.getElementById("nextHoleBtn").disabled = true;
+        document.getElementById("die").textContent = "–";
+        document.getElementById("dieLabel").textContent = "Tap a direction to aim";
+        generateHole(1);
+        pars = [];
+        // Generate all pars
+        // Actually pars are generated per hole. Store current.
+        pars[0] = par;
+        updateScorecard();
+        return;
+      }
+
+      currentHole++;
+      document.getElementById("nextHoleBtn").disabled = true;
+      document.getElementById("swingBtn").disabled = true;
+      document.getElementById("mulliganBtn").disabled = true;
+      document.getElementById("die").textContent = "–";
+      document.getElementById("dieLabel").textContent = "Tap a direction to aim";
+      showMsg("", "");
+      generateHole(currentHole);
+      // Ensure pars array is filled
+      if (!pars[currentHole - 1]) pars[currentHole - 1] = par;
+      updateScorecard();
+    });
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      document.getElementById("introOverlay").classList.add("hidden");
+      gameStarted = true;
+      holeScores = new Array(18).fill(-1);
+      pars = new Array(18).fill(3);
+      generateHole(1);
+      pars[0] = par;
+      updateScorecard();
+    });
+
+    // === INIT ===
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // Pre-generate display
+    holeScores = new Array(18).fill(-1);
+    pars = new Array(18).fill(3);
+    // Draw placeholder
+    ctx.fillStyle = "#0a1a0a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    updateScorecard();
+  </script>
+</body>
+</html>
