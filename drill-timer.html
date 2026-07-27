@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="45s on / 15s rest soccer ball-mastery drill timer. Start Now skips rest when you're ready." />
+  <title>Soccer Drill Timer — 45s / 15s</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --text: #f3f6ff;
+      --muted: #9aa8c7;
+      --work: #22c55e;
+      --rest: #f59e0b;
+      --done: #38bdf8;
+      --danger: #ef4444;
+      --btn: #1e293b;
+      --btn-border: #334155;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+
+    .phase {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .phase.work { color: var(--work); }
+    .phase.rest { color: var(--rest); }
+    .phase.done { color: var(--done); }
+    .phase.ready { color: var(--muted); }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .exercise {
+      font-size: clamp(1.4rem, 6vw, 2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      max-width: 20ch;
+      min-height: 2.6em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(5.5rem, 28vw, 8rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      margin: 8px 0 4px;
+    }
+
+    .timer.work { color: var(--work); }
+    .timer.rest { color: var(--rest); }
+    .timer.done { color: var(--done); }
+    .timer.ready { color: var(--text); }
+
+    .next {
+      min-height: 3.2em;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.35;
+      max-width: 28ch;
+    }
+
+    .next strong {
+      color: var(--text);
+      display: block;
+      font-size: 1.1rem;
+      margin-top: 2px;
+    }
+
+    .progress-wrap {
+      width: min(420px, 100%);
+      height: 8px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+      transition: width 0.2s linear;
+    }
+
+    .progress-bar.rest {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: min(480px, 100%);
+      margin-top: 8px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--btn-border);
+      background: var(--btn);
+      color: var(--text);
+      border-radius: 16px;
+      padding: 18px 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:active { transform: scale(0.98); }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #startNow {
+      grid-column: 1 / -1;
+      background: #14532d;
+      border-color: #166534;
+      color: #dcfce7;
+      font-size: 1.2rem;
+      padding: 22px 14px;
+    }
+
+    #startNow:disabled {
+      background: var(--btn);
+      border-color: var(--btn-border);
+      color: var(--muted);
+    }
+
+    #primary {
+      background: #1d4ed8;
+      border-color: #2563eb;
+    }
+
+    #reset {
+      background: #7f1d1d;
+      border-color: #991b1b;
+    }
+
+    .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .list-toggle {
+      margin-top: 14px;
+      width: min(480px, 100%);
+    }
+
+    details {
+      background: var(--panel);
+      border: 1px solid var(--btn-border);
+      border-radius: 14px;
+      padding: 10px 14px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--muted);
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    ol {
+      margin: 10px 0 4px;
+      padding-left: 1.3rem;
+      text-align: left;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    ol li.current {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    ol li.done-item {
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+
+    footer {
+      margin-top: 12px;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
+    body.flash-work { background: #052e16; }
+    body.flash-rest { background: #451a03; }
+    body.flash-done { background: #0c4a6e; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="badge" id="countBadge">1 / 17</div>
+    <div class="badge phase ready" id="phaseBadge">Ready</div>
+  </div>
+
+  <main>
+    <div class="label" id="phaseLabel">Tap Start when ready</div>
+    <div class="exercise" id="exerciseName">Tick tocks/Foundations</div>
+    <div class="timer ready" id="timer">0:45</div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="next" id="nextBox">
+      Next up
+      <strong id="nextName">Triangles (Right Foot)</strong>
+    </div>
+  </main>
+
+  <div class="controls">
+    <button id="startNow" type="button" disabled>Start Now</button>
+    <button id="primary" type="button">Start</button>
+    <button id="reset" type="button">Reset</button>
+  </div>
+
+  <p class="hint">45s work · 15s rest · Start Now skips rest early</p>
+
+  <div class="list-toggle">
+    <details>
+      <summary>Full drill list</summary>
+      <ol id="drillList"></ol>
+    </details>
+  </div>
+
+  <footer>jonmaestas.com · ball mastery timer</footer>
+
+  <script>
+    const DRILLS = [
+      "Tick tocks/Foundations",
+      "Triangles (Right Foot)",
+      "Triangles (Left Foot)",
+      "Drag/Push (Laces)",
+      "Inside-Outside (both feet)",
+      "Toe Taps",
+      "Drag Push (Instep)",
+      "Double Taps",
+      "Squeeze & Push",
+      "Sole Rolls/Sole Touches",
+      "Slap",
+      "Body Triangles (Alternate feet)",
+      "Pull, Outside of Foot Push",
+      "Roll Stops",
+      "Inside/Outside (Right)",
+      "Inside/Outside (Left)",
+      "Brazilian Toe Touches"
+    ];
+
+    const WORK_SEC = 45;
+    const REST_SEC = 15;
+
+    const els = {
+      countBadge: document.getElementById("countBadge"),
+      phaseBadge: document.getElementById("phaseBadge"),
+      phaseLabel: document.getElementById("phaseLabel"),
+      exerciseName: document.getElementById("exerciseName"),
+      timer: document.getElementById("timer"),
+      progressBar: document.getElementById("progressBar"),
+      nextBox: document.getElementById("nextBox"),
+      nextName: document.getElementById("nextName"),
+      startNow: document.getElementById("startNow"),
+      primary: document.getElementById("primary"),
+      reset: document.getElementById("reset"),
+      drillList: document.getElementById("drillList"),
+    };
+
+    let index = 0;
+    let phase = "ready"; // ready | work | rest | done
+    let remaining = WORK_SEC;
+    let phaseTotal = WORK_SEC;
+    let running = false;
+    let rafId = null;
+    let endAt = 0;
+    let wakeLock = null;
+    let audioCtx = null;
+
+    function fmt(sec) {
+      const s = Math.max(0, Math.ceil(sec));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return m + ":" + String(r).padStart(2, "0");
+    }
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function beep(kind) {
+      try {
+        ensureAudio();
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+
+        if (kind === "work") {
+          o.frequency.setValueAtTime(880, now);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+          o.start(now);
+          o.stop(now + 0.2);
+        } else if (kind === "rest") {
+          o.frequency.setValueAtTime(523.25, now);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.18, now + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+          o.start(now);
+          o.stop(now + 0.28);
+        } else if (kind === "tick") {
+          o.type = "square";
+          o.frequency.setValueAtTime(660, now);
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.08, now + 0.005);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+          o.start(now);
+          o.stop(now + 0.09);
+        } else if (kind === "done") {
+          [523.25, 659.25, 783.99].forEach((f, i) => {
+            const o2 = audioCtx.createOscillator();
+            const g2 = audioCtx.createGain();
+            o2.connect(g2);
+            g2.connect(audioCtx.destination);
+            const t = now + i * 0.14;
+            o2.frequency.setValueAtTime(f, t);
+            g2.gain.setValueAtTime(0.0001, t);
+            g2.gain.exponentialRampToValueAtTime(0.18, t + 0.02);
+            g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+            o2.start(t);
+            o2.stop(t + 0.24);
+          });
+        }
+      } catch (_) {}
+
+      if (navigator.vibrate) {
+        if (kind === "work") navigator.vibrate([40, 40, 80]);
+        else if (kind === "rest") navigator.vibrate(60);
+        else if (kind === "done") navigator.vibrate([80, 40, 80, 40, 120]);
+        else if (kind === "tick") navigator.vibrate(20);
+      }
+    }
+
+    async function requestWakeLock() {
+      try {
+        if ("wakeLock" in navigator) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => { wakeLock = null; });
+        }
+      } catch (_) {}
+    }
+
+    async function releaseWakeLock() {
+      try {
+        if (wakeLock) await wakeLock.release();
+      } catch (_) {}
+      wakeLock = null;
+    }
+
+    function flash(kind) {
+      document.body.classList.remove("flash-work", "flash-rest", "flash-done");
+      const cls = kind === "work" ? "flash-work" : kind === "rest" ? "flash-rest" : kind === "done" ? "flash-done" : "";
+      if (!cls) return;
+      document.body.classList.add(cls);
+      setTimeout(() => document.body.classList.remove(cls), 280);
+    }
+
+    function renderList() {
+      els.drillList.innerHTML = DRILLS.map((name, i) => {
+        let cls = "";
+        if (phase === "done" || i < index) cls = "done-item";
+        else if (i === index) cls = "current";
+        return `<li class="${cls}">${name}</li>`;
+      }).join("");
+    }
+
+    function setPhaseClasses(p) {
+      els.timer.className = "timer " + p;
+      els.phaseBadge.className = "badge phase " + p;
+      els.progressBar.className = "progress-bar" + (p === "rest" ? " rest" : "");
+    }
+
+    function updateUI() {
+      const total = DRILLS.length;
+      els.countBadge.textContent = (phase === "done" ? total : index + 1) + " / " + total;
+      els.exerciseName.textContent = phase === "done" ? "Session complete" : DRILLS[index];
+      els.timer.textContent = fmt(remaining);
+
+      const pct = phaseTotal > 0 ? ((phaseTotal - remaining) / phaseTotal) * 100 : 100;
+      els.progressBar.style.width = Math.min(100, Math.max(0, pct)) + "%";
+
+      if (phase === "ready") {
+        els.phaseBadge.textContent = "Ready";
+        els.phaseLabel.textContent = "Tap Start when ready";
+        els.nextBox.style.visibility = index < total - 1 ? "visible" : "hidden";
+        els.nextName.textContent = index < total - 1 ? DRILLS[index + 1] : "—";
+        els.startNow.disabled = true;
+        els.primary.textContent = "Start";
+        els.primary.disabled = false;
+      } else if (phase === "work") {
+        els.phaseBadge.textContent = "Work";
+        els.phaseLabel.textContent = "Go!";
+        els.nextBox.style.visibility = index < total - 1 ? "visible" : "hidden";
+        els.nextName.textContent = index < total - 1 ? DRILLS[index + 1] : "Last drill";
+        els.startNow.disabled = true;
+        els.primary.textContent = running ? "Pause" : "Resume";
+        els.primary.disabled = false;
+      } else if (phase === "rest") {
+        els.phaseBadge.textContent = "Rest";
+        els.phaseLabel.textContent = "Rest — next move coming up";
+        els.exerciseName.textContent = "Rest";
+        els.nextBox.style.visibility = "visible";
+        els.nextName.textContent = DRILLS[index];
+        els.startNow.disabled = false;
+        els.primary.textContent = running ? "Pause" : "Resume";
+        els.primary.disabled = false;
+      } else if (phase === "done") {
+        els.phaseBadge.textContent = "Done";
+        els.phaseLabel.textContent = "Nice work";
+        els.nextBox.style.visibility = "hidden";
+        els.startNow.disabled = true;
+        els.primary.textContent = "Restart";
+        els.primary.disabled = false;
+        els.timer.textContent = "0:00";
+        els.progressBar.style.width = "100%";
+      }
+
+      setPhaseClasses(phase);
+      renderList();
+    }
+
+    function stopLoop() {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+
+    function enterWork(fromRestSkip) {
+      phase = "work";
+      phaseTotal = WORK_SEC;
+      remaining = WORK_SEC;
+      endAt = performance.now() + WORK_SEC * 1000;
+      beep("work");
+      flash("work");
+      updateUI();
+      if (!running) startLoop();
+    }
+
+    function enterRest() {
+      if (index >= DRILLS.length - 1) {
+        finishSession();
+        return;
+      }
+      index += 1;
+      phase = "rest";
+      phaseTotal = REST_SEC;
+      remaining = REST_SEC;
+      endAt = performance.now() + REST_SEC * 1000;
+      beep("rest");
+      flash("rest");
+      updateUI();
+    }
+
+    function finishSession() {
+      stopLoop();
+      phase = "done";
+      remaining = 0;
+      phaseTotal = 1;
+      releaseWakeLock();
+      beep("done");
+      flash("done");
+      updateUI();
+    }
+
+    function tick() {
+      if (!running) return;
+      const msLeft = endAt - performance.now();
+      const prevCeil = Math.ceil(remaining);
+      remaining = Math.max(0, msLeft / 1000);
+      const nextCeil = Math.ceil(remaining);
+
+      if (nextCeil !== prevCeil && nextCeil > 0 && nextCeil <= 3) {
+        beep("tick");
+      }
+
+      updateUI();
+
+      if (msLeft <= 0) {
+        if (phase === "work") {
+          enterRest();
+        } else if (phase === "rest") {
+          enterWork(false);
+        }
+      }
+
+      if (running) rafId = requestAnimationFrame(tick);
+    }
+
+    function startLoop() {
+      running = true;
+      requestWakeLock();
+      ensureAudio();
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function pause() {
+      if (!running) return;
+      remaining = Math.max(0, (endAt - performance.now()) / 1000);
+      stopLoop();
+      updateUI();
+    }
+
+    function resume() {
+      if (running || phase === "ready" || phase === "done") return;
+      endAt = performance.now() + remaining * 1000;
+      startLoop();
+      updateUI();
+    }
+
+    function startSession() {
+      ensureAudio();
+      index = 0;
+      enterWork(false);
+      if (!running) startLoop();
+    }
+
+    function resetAll() {
+      stopLoop();
+      index = 0;
+      phase = "ready";
+      remaining = WORK_SEC;
+      phaseTotal = WORK_SEC;
+      releaseWakeLock();
+      updateUI();
+    }
+
+    els.primary.addEventListener("click", () => {
+      ensureAudio();
+      if (phase === "ready") {
+        startSession();
+      } else if (phase === "done") {
+        resetAll();
+        startSession();
+      } else if (running) {
+        pause();
+      } else {
+        resume();
+      }
+    });
+
+    els.startNow.addEventListener("click", () => {
+      if (phase !== "rest") return;
+      ensureAudio();
+      // Keep current index (already advanced at start of rest). Skip remaining rest.
+      remaining = 0;
+      endAt = performance.now();
+      if (!running) {
+        enterWork(true);
+        startLoop();
+      } else {
+        // loop will flip on next frame; force immediately
+        enterWork(true);
+      }
+    });
+
+    els.reset.addEventListener("click", () => {
+      resetAll();
+    });
+
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible" && running) {
+        await requestWakeLock();
+      }
+    });
+
+    // Prevent iOS double-tap zoom on buttons
+    document.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("touchend", (e) => {
+        // let click fire; just reduce delay quirks
+      }, { passive: true });
+    });
+
+    resetAll();
+  </script>
+</body>
+</html>
