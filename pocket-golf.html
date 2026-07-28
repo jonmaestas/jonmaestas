@@ -5,32 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a1a0a" />
-  <meta name="description" content="Pocket Golf — real-time multiplayer roll-and-write golf. Create a clubhouse, share the code, play together." />
-  <title>Pocket Golf — Multiplayer Clubhouse</title>
+  <meta name="description" content="Pocket Golf — async multiplayer roll-and-write golf. Create a clubhouse, share the code, play when free." />
+  <title>Pocket Golf — Async Multiplayer</title>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
-      --bg: #0a1a0a;
-      --panel: #13261a;
-      --panel2: #1a3326;
-      --text: #e8f5e9;
-      --muted: #81a893;
-      --fairway: #3a7a28;
-      --rough: #4a6b2a;
-      --sand: #d4a84b;
-      --water: #2563a8;
-      --tree: #1a3d10;
-      --tee: #fbbf24;
-      --accent: #4ade80;
-      --btn: #1e3a1e;
-      --btn-border: #2d5a2d;
-      --danger: #ef4444;
+      --bg: #0a1a0a; --panel: #13261a; --panel2: #1a3326;
+      --text: #e8f5e9; --muted: #81a893;
+      --rough: #4a6b2a; --accent: #4ade80;
+      --btn: #1e3a1e; --btn-border: #2d5a2d; --danger: #ef4444;
     }
-    .p0 { --pc: #60a5fa; }
-    .p1 { --pc: #f87171; }
-    .p2 { --pc: #fbbf24; }
-    .p3 { --pc: #c084fc; }
-
+    .p0 { --pc: #60a5fa; } .p1 { --pc: #f87171; }
+    .p2 { --pc: #fbbf24; } .p3 { --pc: #c084fc; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
     body { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: max(8px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
@@ -44,7 +30,6 @@
     .overlay-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; margin: 6px 0; }
     .overlay-card ul { padding-left: 1.2rem; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
     .overlay-card .btn { width: 100%; margin-top: 8px; padding: 16px; font-size: 1.05rem; }
-
     .btn { border: 1px solid var(--btn-border); background: var(--btn); color: var(--text); border-radius: 14px; padding: 14px 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: transform 0.1s; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -66,59 +51,69 @@
     .conn-badge { background: var(--panel); border: 1px solid var(--btn-border); border-radius: 999px; padding: 4px 8px; font-size: 0.7rem; color: var(--muted); }
     .conn-badge.connected { color: var(--accent); border-color: var(--accent); }
 
-    .turn-banner { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--btn-border); border-left: 4px solid var(--pc, var(--accent)); border-radius: 10px; padding: 6px 12px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-    .turn-name { font-size: 1rem; font-weight: 800; color: var(--pc, var(--accent)); }
-    .turn-info { font-size: 0.78rem; color: var(--muted); }
+    .my-banner { width: 100%; max-width: 560px; background: var(--panel); border: 1px solid var(--btn-border); border-left: 4px solid var(--pc, var(--accent)); border-radius: 10px; padding: 6px 12px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .my-banner .name { font-size: 1rem; font-weight: 800; }
 
     .die-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; }
     .die { width: 68px; height: 68px; background: linear-gradient(135deg, #f8fafc, #e2e8f0); color: #1a1a1a; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 900; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.15s; border: 2px solid #cbd5e1; user-select: none; }
     .die:active { transform: scale(0.92); }
     .die.rolling { animation: shake 0.5s ease; }
     .die.disabled { opacity: 0.35; cursor: not-allowed; }
-    .die.putt { background: linear-gradient(135deg, #93c5fd, #60a5fa); color: #fff; font-size: 1.2rem; }
     @keyframes shake { 0%,100% { transform: rotate(0) scale(1); } 25% { transform: rotate(-18deg) scale(1.12); } 50% { transform: rotate(18deg) scale(1.1); } 75% { transform: rotate(-12deg) scale(1.08); } }
     .die-info { font-size: 0.78rem; color: var(--muted); max-width: 180px; line-height: 1.3; }
     .die-info strong { color: var(--text); }
 
     .game-area { width: 100%; max-width: 560px; position: relative; margin-top: 4px; }
     canvas { display: block; width: 100%; height: auto; border-radius: 12px; background: var(--rough); touch-action: none; cursor: crosshair; }
-
     .aim-hint { text-align: center; font-size: 0.8rem; color: var(--muted); margin: 4px 0 2px; }
-
-    .actions { display: grid; grid-template-columns: 2fr 1fr; gap: 6px; max-width: 560px; margin-top: 4px; }
-
+    .actions { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; max-width: 560px; margin-top: 4px; }
     .msg { text-align: center; font-size: 0.82rem; color: var(--muted); min-height: 1.1em; margin-top: 2px; }
-    .msg.success { color: var(--accent); }
-    .msg.warn { color: var(--sand); }
-    .msg.error { color: var(--danger); }
+    .msg.success { color: var(--accent); } .msg.warn { color: #d4a84b; } .msg.error { color: var(--danger); }
 
     .stats { width: 100%; max-width: 560px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
     .stat { background: var(--panel); border: 1px solid var(--btn-border); border-radius: 10px; padding: 4px 2px; text-align: center; }
     .stat-label { font-size: 0.58rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
     .stat-val { font-size: 1.05rem; font-weight: 800; }
 
-    .sc-toggle { width: 100%; max-width: 560px; margin-top: 6px; }
-    details { background: var(--panel); border: 1px solid var(--btn-border); border-radius: 10px; padding: 6px 10px; }
-    summary { cursor: pointer; font-weight: 700; color: var(--muted); list-style: none; font-size: 0.85rem; }
-    summary::-webkit-details-marker { display: none; }
-    .sc-table { margin-top: 4px; overflow-x: auto; }
-    table { border-collapse: collapse; font-size: 0.68rem; white-space: nowrap; }
-    th, td { border: 1px solid var(--btn-border); padding: 2px 4px; text-align: center; min-width: 22px; }
-    th { background: var(--panel2); color: var(--muted); }
-
     .legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px 12px; margin: 8px 0; font-size: 0.78rem; }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Scorecard screen */
+    .sc-fullscreen { width: 100%; max-width: 560px; margin-top: 4px; }
+    .sc-btn {
+      width: 100%; background: var(--panel); border: 1px solid var(--btn-border); border-radius: 12px;
+      padding: 12px; font-size: 0.95rem; font-weight: 700; color: var(--accent); cursor: pointer;
+      display: flex; justify-content: center; align-items: center; gap: 6px;
+    }
+    .sc-overlay-card { max-width: 500px; }
+    .sc-table-wrapper { overflow-x: auto; margin: 8px 0; }
+    .sc-table-full { border-collapse: collapse; font-size: 0.78rem; white-space: nowrap; width: 100%; }
+    .sc-table-full th, .sc-table-full td { border: 1px solid var(--btn-border); padding: 6px 8px; text-align: center; min-width: 30px; }
+    .sc-table-full th { background: var(--panel2); color: var(--muted); font-size: 0.72rem; }
+    .sc-table-full td.pname { text-align: left; font-weight: 700; min-width: 60px; }
+    .sc-table-full td.eagle { color: var(--accent); font-weight: 800; }
+    .sc-table-full td.birdie { color: #93c5fd; font-weight: 700; }
+    .sc-table-full td.bogey { color: #d4a84b; }
+    .sc-table-full td.dbogey { color: var(--danger); }
+    .sc-table-full td.playing { color: var(--muted); font-size: 0.7rem; }
+    .sc-table-full td.total { font-weight: 900; font-size: 0.9rem; }
+
+    .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: blink 1.5s infinite; margin-left: 4px; }
+    @keyframes blink { 50% { opacity: 0.3; } }
 
     footer { margin-top: 6px; text-align: center; color: #4a6b3a; font-size: 0.65rem; }
   </style>
 </head>
 <body>
 
+<!-- ========================== -->
+<!-- LOBBY OVERLAY              -->
+<!-- ========================== -->
 <div class="overlay" id="lobbyOverlay">
   <div class="overlay-card">
     <h1>Pocket <span>Golf</span></h1>
-    <p>Real-time multiplayer golf. Create a clubhouse, share the code, play together on any device.</p>
+    <p>Async multiplayer golf. Create a clubhouse, share the code. Everyone plays at their own pace — no waiting for turns.</p>
     <div id="menuView">
       <div class="clubhouse-options">
         <button class="btn btn-primary" id="createBtn" style="font-size:1.15rem;padding:18px">🏌️ Create Clubhouse</button>
@@ -135,25 +130,25 @@
           <div class="legend-item"><div class="legend-swatch" style="background:#52b040"></div>Green: putt</div>
         </div>
         <ul>
-          <li><strong>Tap anywhere on the grid</strong> to aim — full 360° control</li>
-          <li><strong>Roll the die</strong> (1–6) for shot distance</li>
-          <li><strong>Fairway: ×2</strong> your roll — bomb it</li>
-          <li><strong>Sand: ÷2</strong> your roll (min 1)</li>
-          <li><strong>Rough:</strong> roll as-is</li>
+          <li><strong>Tap the grid</strong> to aim — any direction, full 360°</li>
+          <li><strong>Tap the die</strong> to roll (1–6) for distance</li>
+          <li><strong>Fairway: ×2</strong> distance — bomb it</li>
+          <li><strong>Sand: ÷2</strong> distance (min 1)</li>
           <li><strong>Water:</strong> +1 penalty, ball goes back</li>
+          <li><strong>Out of bounds:</strong> +1 penalty, ball goes back</li>
           <li><strong>Trees:</strong> shot blocked</li>
-          <li><strong>Putt:</strong> 1 space toward the hole</li>
-          <li><strong>Mulligans:</strong> 6 per round</li>
+          <li><strong>On the green:</strong> auto-putt toward hole, roll determines distance</li>
+          <li><strong>Play whenever</strong> — async, no turn waiting</li>
         </ul>
       </details>
     </div>
     <div id="createView" class="hidden">
-      <input class="code-input" type="text" id="createName" placeholder="Your name" maxlength="12" value="">
+      <input class="code-input" type="text" id="createName" placeholder="Your name" maxlength="12">
       <button class="btn btn-primary" id="doCreateBtn">Create & Get Code</button>
       <button class="btn" id="backFromCreateBtn" style="margin-top:6px">← Back</button>
     </div>
     <div id="waitView" class="hidden">
-      <p style="text-align:center;color:var(--muted)">Share this code:</p>
+      <p style="text-align:center;color:var(--muted)">Share this code — friends can join anytime:</p>
       <div class="room-code-display" id="roomCode">------</div>
       <p style="text-align:center;font-size:0.8rem">Players in the clubhouse:</p>
       <div id="waitPlayerList"></div>
@@ -161,7 +156,7 @@
       <button class="btn btn-amber" id="leaveWaitBtn" style="margin-top:6px">Leave</button>
     </div>
     <div id="joinView" class="hidden">
-      <input class="code-input" type="text" id="joinName" placeholder="Your name" maxlength="12" value="">
+      <input class="code-input" type="text" id="joinName" placeholder="Your name" maxlength="12">
       <input class="code-input" type="text" id="joinCode" placeholder="ABC123" maxlength="6" style="text-transform:uppercase">
       <button class="btn btn-primary" id="doJoinBtn">Join Clubhouse</button>
       <button class="btn" id="backFromJoinBtn" style="margin-top:6px">← Back</button>
@@ -169,6 +164,30 @@
   </div>
 </div>
 
+<!-- ========================== -->
+<!-- SCORECARD OVERLAY          -->
+<!-- ========================== -->
+<div class="overlay hidden" id="scorecardOverlay">
+  <div class="overlay-card sc-overlay-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h1 style="font-size:1.3rem;margin:0">Scorecard</h1>
+      <span class="live-dot"></span><span style="font-size:0.75rem;color:var(--muted)">Live</span>
+    </div>
+    <div class="sc-table-wrapper" id="scorecardContent"></div>
+    <button class="btn" id="closeScorecardBtn" style="margin-top:8px">← Back to Game</button>
+  </div>
+</div>
+
+<!-- ========================== -->
+<!-- ROUND END OVERLAY          -->
+<!-- ========================== -->
+<div class="overlay hidden" id="endOverlay">
+  <div class="overlay-card" id="endCard"></div>
+</div>
+
+<!-- ========================== -->
+<!-- GAME UI                    -->
+<!-- ========================== -->
 <div class="header">
   <div class="logo">Pocket <span>Golf</span></div>
   <div style="display:flex;gap:6px;align-items:center">
@@ -177,20 +196,19 @@
   </div>
 </div>
 
-<div class="turn-banner" id="turnBanner">
-  <div class="turn-name" id="turnName">—</div>
-  <div class="turn-info" id="turnInfo">Waiting...</div>
+<div class="my-banner p0" id="myBanner">
+  <div class="name" id="myName">You</div>
+  <div style="font-size:0.78rem;color:var(--muted)" id="myStrokeInfo">Stroke 1</div>
 </div>
 
 <div class="stats">
   <div class="stat"><div class="stat-label">Par</div><div class="stat-val" id="parVal">3</div></div>
   <div class="stat"><div class="stat-label">Strokes</div><div class="stat-val" id="strokeVal">0</div></div>
   <div class="stat"><div class="stat-label">Mulligans</div><div class="stat-val" id="mulliganVal">6</div></div>
-  <div class="stat"><div class="stat-label">You</div><div class="stat-val" id="myScoreVal">E</div></div>
+  <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="myScoreVal">E</div></div>
 </div>
 
 <div class="game-area"><canvas id="gameCanvas"></canvas></div>
-
 <div class="aim-hint" id="aimHint">👆 Tap the grid to aim — any direction!</div>
 
 <div class="die-row">
@@ -201,12 +219,13 @@
 <div class="actions">
   <button class="btn btn-primary" id="swingBtn" disabled>Swing!</button>
   <button class="btn btn-amber" id="mulliganBtn" disabled>Mulligan</button>
+  <button class="btn btn-blue" id="nextHoleBtn" disabled>Next Hole</button>
 </div>
 
 <div class="msg" id="msg"></div>
 
-<div class="sc-toggle">
-  <details><summary>Scorecard</summary><div class="sc-table"><table id="scoreTable"></table></div></details>
+<div class="sc-fullscreen">
+  <button class="sc-btn" id="openScorecardBtn">📋 Scorecard</button>
 </div>
 
 <footer>jonmaestas.com · Pocket Golf</footer>
@@ -216,10 +235,7 @@
 // GUN.JS P2P
 // ====================================================================
 const gun = Gun({
-  peers: [
-    "https://gun-manhattan.herokuapp.com/gun",
-    "https://peer.wallie.io/gun",
-  ],
+  peers: ["https://gun-manhattan.herokuapp.com/gun", "https://peer.wallie.io/gun"],
   localStorage: false,
 });
 
@@ -241,18 +257,31 @@ let roomCode = null;
 let gameNode = null;
 let isHost = false;
 
-let players = {};
+// Player registry (all players in clubhouse)
+let players = {};        // {id: {name, color, ready}}
 let playerOrder = [];
-let playerBalls = {};
+let myColorIdx = 0;
 
+// Course data (all holes generated by host at creation)
+let allHoles = {};       // {1: {grid, teeX, teeY, holeX, holeY, par}, ...}
+
+// My game state (independent — async!)
+let myCurrentHole = 1;
+let myBall = { x:0, y:0, safeX:0, safeY:0, strokes:0, done:false };
+let myMulligans = 6;
+let myScores = {};       // {holeNum: strokes}
+
+// Current hole grid (loaded from allHoles)
 let grid = [];
 let teeX=0, teeY=0, holeX=0, holeY=0, par=3;
-let currentHole = 1;
-let pars = new Array(NUM_HOLES).fill(3);
-let currentPlayerIdx = 0;
-let aimTarget = null;  // {x, y} — the cell the player tapped
+
+// Aim
+let aimTarget = null;
 let animating = false;
 let ballAnimX = 0, ballAnimY = 0;
+
+// Other players' live positions (for display on grid)
+let otherBalls = {};     // {id: {hole, x, y, strokes, done}}
 
 // ====================================================================
 // CANVAS
@@ -270,71 +299,61 @@ function resizeCanvas() {
 }
 
 // ====================================================================
-// BRESENHAM LINE — trace a path between two grid cells
-// Returns array of {x, y} cells from start (exclusive) to end (inclusive)
+// BRESENHAM LINE
 // ====================================================================
 function linePath(x0, y0, x1, y1) {
   const points = [];
-  const dx = Math.abs(x1 - x0);
-  const dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1;
-  const sy = y0 < y1 ? 1 : -1;
-  let err = dx - dy;
-  let x = x0, y = y0;
-  let safety = 0;
-
+  const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+  const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+  let err = dx - dy, x = x0, y = y0, safety = 0;
   while (safety++ < 200) {
     if (x === x1 && y === y1) break;
     const e2 = 2 * err;
     if (e2 > -dy) { err -= dy; x += sx; }
     if (e2 < dx) { err += dx; y += sy; }
-    if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
-      points.push({ x, y });
-    } else {
-      // Mark that the path went off-grid (out of bounds)
-      points.push({ x: -1, y: -1, oob: true });
-      break;
-    }
+    if (x >= 0 && x < COLS && y >= 0 && y < ROWS) points.push({ x, y });
+    else { points.push({ x: -1, y: -1, oob: true }); break; }
   }
   return points;
 }
 
 // ====================================================================
-// HOLE GENERATION (host only)
+// HOLE GENERATION (host generates all 9 holes at creation)
 // ====================================================================
-function generateHole(holeNum) {
-  grid = [];
-  for (let y = 0; y < ROWS; y++) {
-    const row = [];
-    for (let x = 0; x < COLS; x++) row.push(T.ROUGH);
-    grid.push(row);
+function generateAllHoles() {
+  allHoles = {};
+  for (let h = 1; h <= NUM_HOLES; h++) {
+    allHoles[h] = generateHoleData(h);
   }
-  teeX = Math.floor(COLS/2); teeY = ROWS - 2;
-  holeX = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(Math.random()*7)-3)));
-  holeY = 1 + Math.floor(Math.random()*2);
+}
+
+function generateHoleData(holeNum) {
+  const g = [];
+  for (let y = 0; y < ROWS; y++) { const row = []; for (let x = 0; x < COLS; x++) row.push(T.ROUGH); g.push(row); }
+
+  const tx = Math.floor(COLS/2), ty = ROWS - 2;
+  const hx = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(Math.random()*7)-3)));
+  const hy = 1 + Math.floor(Math.random()*2);
   const difficulty = 1 + Math.floor(holeNum/4);
 
-  let cx = teeX, cy = teeY, fw = 2;
-  while (cy > holeY+1 || cx !== holeX) {
+  let cx = tx, cy = ty, fw = 2;
+  while (cy > hy+1 || cx !== hx) {
     for (let oy=-fw; oy<=fw; oy++) for (let ox=-fw; ox<=fw; ox++) {
-      const tx=cx+ox, ty=cy+oy;
-      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=fw && grid[ty][tx]===T.ROUGH && Math.random()>0.15)
-        grid[ty][tx] = T.FAIRWAY;
+      const px=cx+ox, py=cy+oy;
+      if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=fw && g[py][px]===T.ROUGH && Math.random()>0.15) g[py][px] = T.FAIRWAY;
     }
-    const dx=holeX-cx, dy=holeY-cy;
-    if (Math.abs(dy)>0 && (Math.random()>0.35 || cx===holeX)) cy += Math.sign(dy);
-    if (Math.abs(dx)>0 && Math.random()>0.4) cx += Math.sign(dx);
-    if (cx===holeX && cy===holeY) break;
+    const ddx=hx-cx, ddy=hy-cy;
+    if (Math.abs(ddy)>0 && (Math.random()>0.35 || cx===hx)) cy += Math.sign(ddy);
+    if (Math.abs(ddx)>0 && Math.random()>0.4) cx += Math.sign(ddx);
+    if (cx===hx && cy===hy) break;
   }
-
   for (let oy=-2; oy<=2; oy++) for (let ox=-2; ox<=2; ox++) {
-    const tx=holeX+ox, ty=holeY+oy;
-    if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=3) grid[ty][tx] = T.GREEN;
+    const px=hx+ox, py=hy+oy;
+    if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=3) g[py][px] = T.GREEN;
   }
-
   for (let oy=-1; oy<=1; oy++) for (let ox=-1; ox<=1; ox++) {
-    const tx=teeX+ox, ty=teeY+oy;
-    if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS) grid[ty][tx] = T.FAIRWAY;
+    const px=tx+ox, py=ty+oy;
+    if (px>=0&&px<COLS&&py>=0&&py<ROWS) g[py][px] = T.FAIRWAY;
   }
 
   const numWater = Math.floor(Math.random()*(difficulty+1));
@@ -344,78 +363,79 @@ function generateHole(holeNum) {
   for (let i=0; i<numWater; i++) {
     let wx,wy,att=0;
     do { wx=1+Math.floor(Math.random()*(COLS-2)); wy=3+Math.floor(Math.random()*(ROWS-6)); att++; }
-    while ((Math.abs(wx-teeX)<2&&Math.abs(wy-teeY)<2) && att<20);
+    while ((Math.abs(wx-tx)<2&&Math.abs(wy-ty)<2) && att<20);
     const ws=1+Math.floor(Math.random()*2);
     for (let oy=-ws; oy<=ws; oy++) for (let ox=-ws; ox<=ws; ox++) {
-      const tx=wx+ox, ty=wy+oy;
-      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=ws && grid[ty][tx]!==T.GREEN &&
-          !(Math.abs(tx-teeX)<=1&&Math.abs(ty-teeY)<=1) && !(Math.abs(tx-holeX)<=2&&Math.abs(ty-holeY)<=2))
-        grid[ty][tx] = T.WATER;
+      const px=wx+ox, py=wy+oy;
+      if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=ws && g[py][px]!==T.GREEN &&
+          !(Math.abs(px-tx)<=1&&Math.abs(py-ty)<=1) && !(Math.abs(px-hx)<=2&&Math.abs(py-hy)<=2)) g[py][px] = T.WATER;
     }
   }
   for (let i=0; i<numSand; i++) {
     const sx=1+Math.floor(Math.random()*(COLS-2)), sy=3+Math.floor(Math.random()*(ROWS-6));
     const ss=1+Math.floor(Math.random()*2);
     for (let oy=-ss; oy<=ss; oy++) for (let ox=-ss; ox<=ss; ox++) {
-      const tx=sx+ox, ty=sy+oy;
-      if (tx>=0&&tx<COLS&&ty>=0&&ty<ROWS && Math.abs(ox)+Math.abs(oy)<=ss && grid[ty][tx]!==T.WATER && grid[ty][tx]!==T.GREEN)
-        grid[ty][tx] = T.SAND;
+      const px=sx+ox, py=sy+oy;
+      if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=ss && g[py][px]!==T.WATER && g[py][px]!==T.GREEN) g[py][px] = T.SAND;
     }
   }
   for (let i=0; i<numTrees; i++) {
-    const tx=Math.floor(Math.random()*COLS), ty=2+Math.floor(Math.random()*(ROWS-4));
-    if (grid[ty][tx]!==T.GREEN && !(Math.abs(tx-teeX)<=1&&Math.abs(ty-teeY)<=1)) grid[ty][tx] = T.TREE;
+    const px=Math.floor(Math.random()*COLS), py=2+Math.floor(Math.random()*(ROWS-4));
+    if (g[py][px]!==T.GREEN && !(Math.abs(px-tx)<=1&&Math.abs(py-ty)<=1)) g[py][px] = T.TREE;
   }
 
-  const dist = Math.abs(teeX-holeX)+Math.abs(teeY-holeY);
-  par = Math.max(2, Math.round(dist/6)+1);
-  pars[currentHole-1] = par;
-}
+  const dist = Math.abs(tx-hx)+Math.abs(ty-hy);
+  const p = Math.max(2, Math.round(dist/6)+1);
 
-// ====================================================================
-// SYNC
-// ====================================================================
-function hostBroadcastHole() {
-  if (!gameNode || !isHost) return;
+  // Flatten grid to string
   let gridStr = "";
-  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) gridStr += grid[y][x];
-  gameNode.get("hole").get(currentHole).put({ grid: gridStr, teeX, teeY, holeX, holeY, par, pars: pars.join(",") });
+  for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) gridStr += g[y][x];
+
+  return { grid: gridStr, teeX: tx, teeY: ty, holeX: hx, holeY: hy, par: p };
 }
 
-function receiveHole(data) {
-  if (!data || !data.grid) return;
+// ====================================================================
+// LOAD HOLE (from allHoles into active grid)
+// ====================================================================
+function loadHole(holeNum) {
+  const data = allHoles[holeNum];
+  if (!data) return;
   grid = [];
   for (let y=0; y<ROWS; y++) {
     const row = [];
     for (let x=0; x<COLS; x++) row.push(parseInt(data.grid[y*COLS+x]));
     grid.push(row);
   }
-  teeX = data.teeX; teeY = data.teeY; holeX = data.holeX; holeY = data.holeY; par = data.par;
-  if (data.pars) pars = data.pars.split(",").map(Number);
-  for (const pid of playerOrder) {
-    playerBalls[pid] = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
-  }
-  currentPlayerIdx = 0;
+  teeX = data.teeX; teeY = data.teeY;
+  holeX = data.holeX; holeY = data.holeY;
+  par = data.par;
+
+  // Reset my ball to tee
+  myBall = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
   aimTarget = null;
-  draw(); updateUI();
+  document.getElementById("swingBtn").disabled = true;
+  document.getElementById("nextHoleBtn").disabled = true;
+  die.classList.add("disabled"); die.textContent = "?";
+  updateUI(); draw();
 }
 
-function syncBallUpdate() {
+// ====================================================================
+// SYNC — broadcast my ball position + score
+// ====================================================================
+function syncMyBall() {
   if (!gameNode) return;
-  const pid = playerOrder[currentPlayerIdx];
-  const ball = playerBalls[pid];
-  if (!ball) return;
-  gameNode.get("balls").get(currentHole + "_" + pid).put({ x: ball.x, y: ball.y, safeX: ball.safeX, safeY: ball.safeY, strokes: ball.strokes, done: ball.done ? 1 : 0 });
+  gameNode.get("balls").get(myId).put({
+    hole: myCurrentHole,
+    x: myBall.x, y: myBall.y,
+    safeX: myBall.safeX, safeY: myBall.safeY,
+    strokes: myBall.strokes, done: myBall.done ? 1 : 0,
+    ts: Date.now(),
+  });
 }
 
-function syncTurn() {
-  if (!gameNode || !isHost) return;
-  gameNode.get("state").put({ currentHole, currentPlayerIdx, timestamp: Date.now() });
-}
-
-function syncScore(pid, hole, score) {
+function syncMyScore(hole, score) {
   if (!gameNode) return;
-  gameNode.get("scores").get(pid + "_" + hole).put(score);
+  gameNode.get("scores").get(myId + "_" + hole).put(score);
 }
 
 // ====================================================================
@@ -424,19 +444,15 @@ function syncScore(pid, hole, score) {
 function draw() {
   if (!canvas.width || grid.length === 0) return;
 
+  // Terrain
   for (let y=0; y<ROWS; y++) for (let x=0; x<COLS; x++) {
     ctx.fillStyle = TCOLORS[grid[y][x]] || "#4a6b2a";
     ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
-    if (grid[y][x]===T.TREE) {
-      ctx.fillStyle = "#0d2008";
-      ctx.beginPath(); ctx.arc(x*CELL+CELL/2, y*CELL+CELL/2, CELL*0.3, 0, Math.PI*2); ctx.fill();
-    }
-    if (grid[y][x]===T.WATER) {
-      ctx.fillStyle = "rgba(255,255,255,0.1)";
-      ctx.fillRect(x*CELL+2, y*CELL+CELL*0.4, CELL-4, 1);
-    }
+    if (grid[y][x]===T.TREE) { ctx.fillStyle="#0d2008"; ctx.beginPath(); ctx.arc(x*CELL+CELL/2, y*CELL+CELL/2, CELL*0.3, 0, Math.PI*2); ctx.fill(); }
+    if (grid[y][x]===T.WATER) { ctx.fillStyle="rgba(255,255,255,0.1)"; ctx.fillRect(x*CELL+2, y*CELL+CELL*0.4, CELL-4, 1); }
   }
 
+  // Grid lines
   ctx.strokeStyle = "rgba(0,0,0,0.08)"; ctx.lineWidth = 1;
   for (let x=0; x<=COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,ROWS*CELL); ctx.stroke(); }
   for (let y=0; y<=ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(COLS*CELL,y*CELL); ctx.stroke(); }
@@ -454,138 +470,74 @@ function draw() {
   ctx.fill();
 
   // Tee
-  ctx.fillStyle = "rgba(251,191,36,0.4)";
-  ctx.font = `${CELL*0.35}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillStyle = "rgba(251,191,36,0.4)"; ctx.font = `${CELL*0.35}px sans-serif`; ctx.textAlign="center"; ctx.textBaseline="middle";
   ctx.fillText("TEE", teeX*CELL+CELL/2, teeY*CELL+CELL/2);
 
-  // Balls
-  for (let i=0; i<playerOrder.length; i++) {
-    const pid = playerOrder[i];
-    const ball = playerBalls[pid];
-    if (!ball || ball.done) continue;
-    const isCurrent = (i === currentPlayerIdx && !animating);
-    const bx = (i === currentPlayerIdx && animating) ? ballAnimX : ball.x;
-    const by = (i === currentPlayerIdx && animating) ? ballAnimY : ball.y;
-    const r = isCurrent ? CELL*0.32 : CELL*0.24;
-    const ci = i % 4;
-
+  // Other players' balls (only if on the same hole)
+  for (const pid in otherBalls) {
+    if (pid === myId) continue;
+    const ob = otherBalls[pid];
+    if (!ob || ob.hole !== myCurrentHole) continue;
+    const idx = playerOrder.indexOf(pid);
+    if (idx < 0) continue;
+    const ci = idx % 4;
     ctx.fillStyle = PCOLORS[ci];
-    ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r, 0, Math.PI*2); ctx.fill();
-
-    if (isCurrent) {
-      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
-      const pulse = (Math.sin(Date.now()/300)+1)/2;
-      ctx.strokeStyle = `rgba(255,255,255,${0.3*(1-pulse)})`;
-      ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r+4+pulse*6, 0, Math.PI*2); ctx.stroke();
-    }
-    ctx.fillStyle = "#fff"; ctx.font = `bold ${CELL*0.3}px sans-serif`;
-    ctx.fillText(String(i+1), bx*CELL+CELL/2, by*CELL+CELL/2);
+    ctx.beginPath(); ctx.arc(ob.x*CELL+CELL/2, ob.y*CELL+CELL/2, CELL*0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.font = `bold ${CELL*0.25}px sans-serif`;
+    ctx.fillText(String(idx+1), ob.x*CELL+CELL/2, ob.y*CELL+CELL/2);
   }
 
-  // Aim arrow — shows direction only (die determines distance)
-  if (aimTarget && !animating && isMyTurn()) {
-    const ball = getCurrentBall();
-    if (ball) {
-      const bx = ball.x * CELL + CELL / 2;
-      const by = ball.y * CELL + CELL / 2;
-      const angle = Math.atan2(aimTarget.y - ball.y, aimTarget.x - ball.x);
+  // My ball
+  if (!myBall.done || animating) {
+    const bx = animating ? ballAnimX : myBall.x;
+    const by = animating ? ballAnimY : myBall.y;
+    const r = CELL * 0.3;
+    ctx.fillStyle = PCOLORS[myColorIdx];
+    ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+    const pulse = (Math.sin(Date.now()/300)+1)/2;
+    ctx.strokeStyle = `rgba(255,255,255,${0.3*(1-pulse)})`;
+    ctx.beginPath(); ctx.arc(bx*CELL+CELL/2, by*CELL+CELL/2, r+4+pulse*6, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = "#fff"; ctx.font = `bold ${CELL*0.28}px sans-serif`;
+    ctx.fillText(String(myColorIdx+1), bx*CELL+CELL/2, by*CELL+CELL/2);
+  }
 
-      // Draw direction arrow (fixed length, shows direction not distance)
-      const arrowLen = CELL * 3.5;
-      const tipX = bx + Math.cos(angle) * arrowLen;
-      const tipY = by + Math.sin(angle) * arrowLen;
-
-      // Shaft
-      ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipX, tipY); ctx.stroke();
-
-      // Arrowhead
-      const headLen = CELL * 0.8;
-      ctx.fillStyle = "rgba(255,255,255,0.8)";
-      ctx.beginPath();
-      ctx.moveTo(tipX, tipY);
-      ctx.lineTo(tipX - Math.cos(angle - 0.5) * headLen, tipY - Math.sin(angle - 0.5) * headLen);
-      ctx.lineTo(tipX - Math.cos(angle + 0.5) * headLen, tipY - Math.sin(angle + 0.5) * headLen);
-      ctx.closePath(); ctx.fill();
-
-      // Faint dashed extension to tap point
-      ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
-      ctx.beginPath(); ctx.moveTo(tipX, tipY);
-      ctx.lineTo(aimTarget.x * CELL + CELL / 2, aimTarget.y * CELL + CELL / 2);
-      ctx.stroke(); ctx.setLineDash([]);
-    }
+  // Aim arrow
+  if (aimTarget && !animating) {
+    const bx = myBall.x * CELL + CELL / 2;
+    const by = myBall.y * CELL + CELL / 2;
+    const angle = Math.atan2(aimTarget.y - myBall.y, aimTarget.x - myBall.x);
+    const arrowLen = CELL * 3.5;
+    const tipX = bx + Math.cos(angle) * arrowLen;
+    const tipY = by + Math.sin(angle) * arrowLen;
+    ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipX, tipY); ctx.stroke();
+    const headLen = CELL * 0.8;
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - Math.cos(angle - 0.5) * headLen, tipY - Math.sin(angle - 0.5) * headLen);
+    ctx.lineTo(tipX - Math.cos(angle + 0.5) * headLen, tipY - Math.sin(angle + 0.5) * headLen);
+    ctx.closePath(); ctx.fill();
   }
 }
 
 function animLoop() { if (!animating) draw(); requestAnimationFrame(animLoop); }
 
 // ====================================================================
-// TURN LOGIC
-// ====================================================================
-function isMyTurn() { return playerOrder[currentPlayerIdx] === myId; }
-function getCurrentBall() { return playerBalls[playerOrder[currentPlayerIdx]]; }
-
-function advanceTurn() {
-  const allDone = playerOrder.every(pid => playerBalls[pid] && playerBalls[pid].done);
-  if (allDone) { holeComplete(); return; }
-  for (let i=1; i<=playerOrder.length; i++) {
-    const idx = (currentPlayerIdx + i) % playerOrder.length;
-    const ball = playerBalls[playerOrder[idx]];
-    if (ball && !ball.done) {
-      currentPlayerIdx = idx;
-      if (isHost) syncTurn();
-      aimTarget = null;
-      updateUI(); draw();
-      return;
-    }
-  }
-}
-
-function holeComplete() {
-  for (const pid of playerOrder) {
-    const ball = playerBalls[pid];
-    if (ball && ball.done) {
-      if (!players[pid].scores) players[pid].scores = {};
-      players[pid].scores[currentHole] = ball.strokes;
-      syncScore(pid, currentHole, ball.strokes);
-    }
-  }
-  updateScorecard();
-  if (currentHole >= NUM_HOLES) {
-    showRoundEnd();
-  } else {
-    currentHole++;
-    if (isHost) {
-      generateHole(currentHole);
-      hostBroadcastHole();
-      for (const pid of playerOrder) {
-        playerBalls[pid] = { x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:false };
-        gameNode.get("balls").get(currentHole+"_"+pid).put({ x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:0 });
-      }
-      currentPlayerIdx = 0;
-      syncTurn();
-    }
-    updateUI(); draw();
-  }
-}
-
-// ====================================================================
-// AIMING — tap any cell on the grid
+// AIM
 // ====================================================================
 function setAimTarget(tx, ty) {
-  if (animating || !isMyTurn()) return;
-  const ball = getCurrentBall();
-  if (!ball) return;
-  if (tx === ball.x && ty === ball.y) return;
+  if (animating) return;
+  if (tx === myBall.x && ty === myBall.y) return;
+  if (myBall.done) return;
 
-  // If on the green, auto-aim toward hole — don't let them aim freely
-  const distToHole = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
-  const onGreen = (grid[ball.y][ball.x] === T.GREEN);
+  const distToHole = Math.abs(myBall.x - holeX) + Math.abs(myBall.y - holeY);
+  const onGreen = (grid[myBall.y][myBall.x] === T.GREEN);
   if (onGreen && distToHole <= 4) {
-    // Auto-putt: target is the hole, player just rolls
     aimTarget = { x: holeX, y: holeY };
     document.getElementById("aimHint").textContent = "⛳ On the green — tap die to putt!";
-    document.getElementById("dieInfo").innerHTML = `<strong>PUTT</strong><br>Aiming at hole. Roll determines distance.`;
+    document.getElementById("dieInfo").innerHTML = `<strong>PUTT</strong><br>Roll determines distance.`;
   } else {
     aimTarget = { x: tx, y: ty };
     document.getElementById("dieInfo").innerHTML = `Direction set<br><strong>Tap die to roll!</strong>`;
@@ -600,14 +552,10 @@ function setAimTarget(tx, ty) {
 // SWING
 // ====================================================================
 function doSwing() {
-  if (!aimTarget || animating || !isMyTurn()) return;
-  const ball = getCurrentBall();
+  if (!aimTarget || animating || myBall.done) return;
 
-  // Check if putting (on green, within 4 of hole)
-  const distToHole = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
-  const isPutt = (grid[ball.y][ball.x] === T.GREEN && distToHole <= 4);
-
-  // Always roll the die — even on putts
+  const distToHole = Math.abs(myBall.x - holeX) + Math.abs(myBall.y - holeY);
+  const isPutt = (grid[myBall.y][myBall.x] === T.GREEN && distToHole <= 4);
   const roll = 1 + Math.floor(Math.random() * 6);
 
   die.classList.add("rolling");
@@ -625,124 +573,84 @@ function doSwing() {
 }
 
 function processShot(roll, isPutt) {
-  const ball = getCurrentBall();
   let dist = roll;
-
-  // Terrain modifier (full swings only, not putts)
-  const terrain = grid[ball.y][ball.x];
+  const terrain = grid[myBall.y][myBall.x];
   let modifierText = "";
   if (!isPutt) {
-    if (terrain === T.FAIRWAY) {
-      dist = dist * 2;
-      modifierText = "Fairway ×2!";
-    } else if (terrain === T.SAND) {
-      dist = Math.max(1, Math.floor(dist / 2));
-      modifierText = "Sand ÷2";
-    }
+    if (terrain === T.FAIRWAY) { dist = dist * 2; modifierText = "Fairway ×2!"; }
+    else if (terrain === T.SAND) { dist = Math.max(1, Math.floor(dist / 2)); modifierText = "Sand ÷2"; }
   }
 
-  // For putts: aim is auto-set to the hole in setAimTarget()
-  // For swings: aim is where the player tapped
-  const targetX = isPutt ? holeX : aimTarget.x;
-  const targetY = isPutt ? holeY : aimTarget.y;
-
-  // For putts, extend the path past the hole so overshoot works naturally
-  let fullTargetX = targetX, fullTargetY = targetY;
+  let fullTargetX = isPutt ? holeX : aimTarget.x;
+  let fullTargetY = isPutt ? holeY : aimTarget.y;
   if (isPutt) {
-    const dx = Math.sign(holeX - ball.x);
-    const dy = Math.sign(holeY - ball.y);
-    // Extend 6 cells past the hole in same direction
-    fullTargetX = Math.max(0, Math.min(COLS - 1, holeX + dx * 6));
-    fullTargetY = Math.max(0, Math.min(ROWS - 1, holeY + dy * 6));
+    const dx = Math.sign(holeX - myBall.x), dy = Math.sign(holeY - myBall.y);
+    fullTargetX = Math.max(0, Math.min(COLS-1, holeX + dx*6));
+    fullTargetY = Math.max(0, Math.min(ROWS-1, holeY + dy*6));
   }
 
-  const path = linePath(ball.x, ball.y, fullTargetX, fullTargetY);
+  const path = linePath(myBall.x, myBall.y, fullTargetX, fullTargetY);
 
-  // Walk the path for `dist` steps
-  let newX = ball.x, newY = ball.y;
+  let newX = myBall.x, newY = myBall.y;
   let hitTree = false, landedInWater = false, wentOOB = false;
   let stepsTaken = 0;
-  let passedHole = false;
 
   for (let i = 0; i < path.length && stepsTaken < dist; i++) {
     const pt = path[i];
-
-    // Out of bounds — ball stops at last valid cell, gets penalty
     if (pt.oob) { wentOOB = true; break; }
-
     const cellTerrain = grid[pt.y] && grid[pt.y][pt.x];
     if (cellTerrain === T.TREE) { hitTree = true; break; }
     newX = pt.x; newY = pt.y;
     stepsTaken++;
-
-    // Reached the hole exactly!
-    if (newX === holeX && newY === holeY) {
-      break;
-    }
+    if (newX === holeX && newY === holeY) break;
   }
 
-  // Check if ball landed exactly on the hole
-  const sankPutt = (newX === holeX && newY === holeY);
-
-  ball.strokes++;
-
-  // Check what we landed on
+  const sank = (newX === holeX && newY === holeY);
+  myBall.strokes++;
   const finalTerrain = grid[newY] && grid[newY][newX];
   if (finalTerrain === T.WATER) landedInWater = true;
 
-  // Animate
-  animateBall(ball.x, ball.y, newX, newY, () => {
-    ball.x = newX;
-    ball.y = newY;
+  animateBall(myBall.x, myBall.y, newX, newY, () => {
+    myBall.x = newX; myBall.y = newY;
 
-    if (ball.x === holeX && ball.y === holeY) {
-      ball.done = true;
-      ball.safeX = holeX; ball.safeY = holeY;
-      showMsg(scoreName(ball.strokes, par) + "!", "success");
+    if (sank) {
+      myBall.done = true;
+      showMsg(scoreName(myBall.strokes, par) + "!", "success");
+      document.getElementById("nextHoleBtn").disabled = (myCurrentHole >= NUM_HOLES);
     } else if (isPutt) {
-      // Putt didn't go in — either short or overshot
-      const ballDist = Math.abs(ball.x - holeX) + Math.abs(ball.y - holeY);
-      if (ballDist <= 1) {
-        showMsg("Lipped out! Try again — you're right there.", "warn");
-      } else {
-        showMsg("Missed the putt. " + ballDist + " away.", "warn");
-      }
-      ball.safeX = ball.x; ball.safeY = ball.y;
+      const ballDist = Math.abs(myBall.x - holeX) + Math.abs(myBall.y - holeY);
+      showMsg(ballDist <= 1 ? "Lipped out! So close." : "Missed putt. " + ballDist + " away.", "warn");
+      myBall.safeX = myBall.x; myBall.safeY = myBall.y;
     } else if (wentOOB) {
-      // Out of bounds — +1 penalty, ball returns to last safe spot
-      ball.strokes++;
+      myBall.strokes++;
       showMsg((modifierText ? modifierText + " · " : "") + "Out of bounds! +1 penalty", "error");
-      ball.x = ball.safeX; ball.y = ball.safeY;
+      myBall.x = myBall.safeX; myBall.y = myBall.safeY;
     } else if (landedInWater) {
-      ball.strokes++;
+      myBall.strokes++;
       showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 penalty", "error");
-      ball.x = ball.safeX; ball.y = ball.safeY;
+      myBall.x = myBall.safeX; myBall.y = myBall.safeY;
     } else if (hitTree) {
       showMsg((modifierText ? modifierText + " · " : "") + "Tree blocked!", "warn");
     } else {
-      if (finalTerrain !== T.WATER && finalTerrain !== T.TREE) {
-        ball.safeX = ball.x; ball.safeY = ball.y;
-      }
+      if (finalTerrain !== T.WATER && finalTerrain !== T.TREE) { myBall.safeX = myBall.x; myBall.safeY = myBall.y; }
       let msg = modifierText;
       if (!msg) {
-        if (finalTerrain === T.GREEN) msg = "On the green! Putt it in.";
-        else if (finalTerrain === T.FAIRWAY) msg = "Nice fairway lie. ×2 next shot.";
-        else if (finalTerrain === T.SAND) msg = "In the bunker. ÷2 next shot.";
+        if (finalTerrain === T.GREEN) msg = "On the green! Tap die to putt.";
+        else if (finalTerrain === T.FAIRWAY) msg = "Nice fairway lie. ×2 next.";
+        else if (finalTerrain === T.SAND) msg = "In the bunker. ÷2 next.";
         else msg = "In the rough.";
       }
       showMsg(msg, modifierText ? "success" : "");
     }
 
-    syncBallUpdate();
+    syncMyBall();
     aimTarget = null;
     document.getElementById("swingBtn").disabled = true;
     die.classList.add("disabled"); die.textContent = "?";
-    document.getElementById("dieInfo").innerHTML = isMyTurn() ? "Aim, then<br><strong>tap die!</strong>" : "Waiting for turn...";
+    document.getElementById("dieInfo").innerHTML = "Aim, then<br><strong>tap die!</strong>";
     document.getElementById("aimHint").textContent = "👆 Tap the grid to aim";
-    document.getElementById("mulliganBtn").disabled = (!isMyTurn() || players[myId].mulligans <= 0);
+    document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
     updateUI(); draw();
-
-    setTimeout(() => advanceTurn(), 1000);
   });
 }
 
@@ -752,16 +660,14 @@ function animateBall(fx, fy, tx, ty, cb) {
   function frame(t) {
     const p = Math.min(1, (t-start)/dur);
     const e = 1 - Math.pow(1-p, 3);
-    ballAnimX = fx + (tx-fx)*e;
-    ballAnimY = fy + (ty-fy)*e;
+    ballAnimX = fx + (tx-fx)*e; ballAnimY = fy + (ty-fy)*e;
     const arc = Math.sin(p*Math.PI) * 0.5;
     draw();
-    const ci = currentPlayerIdx % 4;
-    ctx.fillStyle = PCOLORS[ci];
-    ctx.beginPath(); ctx.arc(ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2, CELL*0.32, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#fff"; ctx.font = `bold ${CELL*0.3}px sans-serif`;
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(String(currentPlayerIdx+1), ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2);
+    ctx.fillStyle = PCOLORS[myColorIdx];
+    ctx.beginPath(); ctx.arc(ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2, CELL*0.3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = `bold ${CELL*0.28}px sans-serif`;
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText(String(myColorIdx+1), ballAnimX*CELL+CELL/2, (ballAnimY-arc)*CELL+CELL/2);
     if (p < 1) requestAnimationFrame(frame);
     else { animating = false; cb(); }
   }
@@ -769,17 +675,16 @@ function animateBall(fx, fy, tx, ty, cb) {
 }
 
 function useMulligan() {
-  if (!isMyTurn() || players[myId].mulligans <= 0) return;
-  const ball = getCurrentBall();
-  players[myId].mulligans--;
-  ball.strokes = Math.max(0, ball.strokes - 1);
-  ball.x = ball.safeX; ball.y = ball.safeY;
+  if (myMulligans <= 0 || myBall.done) return;
+  myMulligans--;
+  myBall.strokes = Math.max(0, myBall.strokes - 1);
+  myBall.x = myBall.safeX; myBall.y = myBall.safeY;
   aimTarget = null;
   document.getElementById("swingBtn").disabled = true;
   die.classList.add("disabled"); die.textContent = "?";
-  document.getElementById("mulliganBtn").disabled = (players[myId].mulligans <= 0);
-  gameNode.get("mulligans").get(myId).put(players[myId].mulligans);
-  syncBallUpdate();
+  document.getElementById("mulliganBtn").disabled = (myMulligans <= 0);
+  if (gameNode) gameNode.get("mulligans").get(myId).put(myMulligans);
+  syncMyBall();
   showMsg("Mulligan used", "");
   updateUI(); draw();
 }
@@ -797,6 +702,20 @@ function scoreName(s, p) {
 }
 
 // ====================================================================
+// NEXT HOLE (independent — async!)
+// ====================================================================
+function goToNextHole() {
+  if (myCurrentHole >= NUM_HOLES) { showRoundEnd(); return; }
+  myCurrentHole++;
+  loadHole(myCurrentHole);
+  syncMyBall();
+  showMsg("", "");
+  updateScorecard();
+}
+
+document.getElementById("nextHoleBtn").addEventListener("click", goToNextHole);
+
+// ====================================================================
 // UI
 // ====================================================================
 function showMsg(t, type) {
@@ -805,70 +724,79 @@ function showMsg(t, type) {
 }
 
 function updateUI() {
-  document.getElementById("holeNum").textContent = currentHole;
+  document.getElementById("holeNum").textContent = myCurrentHole;
   document.getElementById("totalHoles").textContent = NUM_HOLES;
   document.getElementById("parVal").textContent = par;
-
-  const myBall = playerBalls[myId];
-  document.getElementById("strokeVal").textContent = isMyTurn() ? (myBall ? myBall.strokes : 0) : "—";
-  document.getElementById("mulliganVal").textContent = players[myId] ? players[myId].mulligans : 0;
+  document.getElementById("strokeVal").textContent = myBall.strokes;
+  document.getElementById("mulliganVal").textContent = myMulligans;
 
   let myTotal = 0, playedPar = 0;
-  if (players[myId] && players[myId].scores) {
-    for (const h in players[myId].scores) {
-      myTotal += players[myId].scores[h];
-      playedPar += pars[parseInt(h)-1] || 3;
-    }
-  }
+  for (const h in myScores) { myTotal += myScores[h]; playedPar += (allHoles[h] ? allHoles[h].par : 3); }
   const diff = myTotal - playedPar;
   document.getElementById("myScoreVal").textContent = (myTotal === 0) ? "E" : (diff === 0 ? "E" : (diff > 0 ? "+"+diff : diff));
 
-  const banner = document.getElementById("turnBanner");
-  const cpId = playerOrder[currentPlayerIdx];
-  const cp = players[cpId];
-  if (cp) {
-    const ci = currentPlayerIdx % 4;
-    banner.className = "turn-banner";
-    banner.style.setProperty("--pc", PCOLORS[ci]);
-    document.getElementById("turnName").textContent = cp.name + (cpId === myId ? " (You)" : "");
-    const ball = playerBalls[cpId];
-    document.getElementById("turnInfo").textContent = `Stroke ${ball ? ball.strokes+1 : 1} · Par ${par}`;
-  }
+  const banner = document.getElementById("myBanner");
+  banner.className = "my-banner p" + myColorIdx;
+  banner.style.setProperty("--pc", PCOLORS[myColorIdx]);
+  document.getElementById("myName").textContent = myName;
+  document.getElementById("myStrokeInfo").textContent = `Stroke ${myBall.strokes + 1}${myBall.done ? " · Done!" : ""}`;
 
-  const myTurn = isMyTurn();
-  document.getElementById("mulliganBtn").disabled = (!myTurn || (players[myId] && players[myId].mulligans <= 0));
+  document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
 }
 
 function updateScorecard() {
-  let html = "<table><tr><th>#</th>";
-  for (let i=1; i<=NUM_HOLES; i++) html += `<th>${i}</th>`;
-  html += "<th>Tot</th></tr><tr><th>Par</th>";
-  let pt = 0;
-  for (let i=0; i<NUM_HOLES; i++) { html += `<td>${pars[i]||3}</td>`; pt += pars[i]||3; }
-  html += `<td>${pt}</td></tr>`;
+  const wrapper = document.getElementById("scorecardContent");
+  let html = `<table class="sc-table-full"><tr><th>Player</th>`;
+  for (let h = 1; h <= NUM_HOLES; h++) html += `<th>${h}</th>`;
+  html += `<th>Tot</th></tr>`;
 
-  for (let i=0; i<playerOrder.length; i++) {
+  // Par row
+  html += `<tr><td class="pname" style="color:var(--muted)">Par</td>`;
+  let pt = 0;
+  for (let h = 1; h <= NUM_HOLES; h++) { const p = allHoles[h] ? allHoles[h].par : 3; html += `<td>${p}</td>`; pt += p; }
+  html += `<td class="total">${pt}</td></tr>`;
+
+  // Player rows
+  for (let i = 0; i < playerOrder.length; i++) {
     const pid = playerOrder[i];
     const p = players[pid];
     if (!p) continue;
     const ci = i % 4;
-    html += `<tr style="color:${PCOLORS[ci]}"><td>${p.name.substring(0,5)}</td>`;
+    const isMe = (pid === myId);
+    const ballData = isMe ? myBall : otherBalls[pid];
+    const scoresData = isMe ? myScores : (p.scores || {});
+
+    html += `<tr style="color:${PCOLORS[ci]}"><td class="pname">${p.name}${isMe?" (You)":""}</td>`;
     let total = 0;
-    for (let h=1; h<=NUM_HOLES; h++) {
-      const s = p.scores && p.scores[h];
-      if (s) { html += `<td>${s}</td>`; total += s; } else html += `<td>–</td>`;
+    for (let h = 1; h <= NUM_HOLES; h++) {
+      const s = scoresData[h];
+      const holePar = allHoles[h] ? allHoles[h].par : 3;
+      if (s) {
+        const d = s - holePar;
+        let cls = "";
+        if (d <= -2) cls = "eagle"; else if (d === -1) cls = "birdie";
+        else if (d === 1) cls = "bogey"; else if (d >= 2) cls = "dbogey";
+        html += `<td class="${cls}">${s}</td>`;
+        total += s;
+      } else if (ballData && ballData.hole === h && !isMe) {
+        html += `<td class="playing">${ballData.strokes || 0}</td>`;
+      } else if (isMe && myCurrentHole === h && !myBall.done) {
+        html += `<td class="playing">${myBall.strokes}</td>`;
+      } else {
+        html += `<td>–</td>`;
+      }
     }
-    html += `<td>${total || "–"}</td></tr>`;
+    html += `<td class="total">${total || "–"}</td></tr>`;
   }
-  html += "</table>";
-  document.getElementById("scoreTable").innerHTML = html;
+  html += `</table>`;
+  wrapper.innerHTML = html;
 }
 
 // ====================================================================
-// CANVAS — tap to aim at any cell
+// CANVAS INPUT
 // ====================================================================
 canvas.addEventListener("click", (e) => {
-  if (animating || !isMyTurn()) return;
+  if (animating || myBall.done) return;
   const rect = canvas.getBoundingClientRect();
   const scale = canvas.width / rect.width;
   const cx = Math.floor(((e.clientX - rect.left) * scale) / CELL);
@@ -877,9 +805,8 @@ canvas.addEventListener("click", (e) => {
   setAimTarget(cx, cy);
 });
 
-// Touch support for mobile
 canvas.addEventListener("touchend", (e) => {
-  if (animating || !isMyTurn()) return;
+  if (animating || myBall.done) return;
   e.preventDefault();
   const touch = e.changedTouches[0];
   const rect = canvas.getBoundingClientRect();
@@ -893,6 +820,14 @@ canvas.addEventListener("touchend", (e) => {
 die.addEventListener("click", doSwing);
 document.getElementById("swingBtn").addEventListener("click", doSwing);
 document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
+
+document.getElementById("openScorecardBtn").addEventListener("click", () => {
+  updateScorecard();
+  document.getElementById("scorecardOverlay").classList.remove("hidden");
+});
+document.getElementById("closeScorecardBtn").addEventListener("click", () => {
+  document.getElementById("scorecardOverlay").classList.add("hidden");
+});
 
 // ====================================================================
 // LOBBY
@@ -909,41 +844,108 @@ document.getElementById("createBtn").addEventListener("click", () => {
   document.getElementById("createView").classList.remove("hidden");
   document.getElementById("createName").focus();
 });
-
 document.getElementById("joinBtn").addEventListener("click", () => {
   document.getElementById("menuView").classList.add("hidden");
   document.getElementById("joinView").classList.remove("hidden");
   document.getElementById("joinName").focus();
 });
-
 document.getElementById("backFromCreateBtn").addEventListener("click", () => {
   document.getElementById("createView").classList.add("hidden");
   document.getElementById("menuView").classList.remove("hidden");
 });
-
 document.getElementById("backFromJoinBtn").addEventListener("click", () => {
   document.getElementById("joinView").classList.add("hidden");
   document.getElementById("menuView").classList.remove("hidden");
 });
 
+// CREATE
 document.getElementById("doCreateBtn").addEventListener("click", () => {
   myName = document.getElementById("createName").value.trim() || "Host";
   roomCode = generateCode();
   isHost = true;
   gameNode = gun.get("pocketgolf/" + roomCode);
-  players = {};
-  playerOrder = [myId];
-  players[myId] = { name: myName, mulligans: 6, scores: {}, ready: true };
-  gameNode.get("players").get(myId).put(JSON.stringify(players[myId]));
-  gameNode.get("playerOrder").set(myId);
-  gameNode.get("host").put(myId);
 
+  players = {}; playerOrder = [myId];
+  players[myId] = { name: myName, ready: true };
+  myColorIdx = 0;
+
+  // Register self
+  gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
+  gameNode.get("playerOrder").set(myId);
+
+  // Generate all 9 holes upfront
+  generateAllHoles();
+  // Broadcast all holes
+  for (let h = 1; h <= NUM_HOLES; h++) {
+    gameNode.get("holes").get(h).put(JSON.stringify(allHoles[h]));
+  }
+  gameNode.get("meta").put({ numHoles: NUM_HOLES, created: Date.now() });
+
+  // Listen for other players
+  setupPlayerListeners();
+
+  showWaitRoom();
+});
+
+// JOIN
+document.getElementById("doJoinBtn").addEventListener("click", () => {
+  myName = document.getElementById("joinName").value.trim() || "Player";
+  roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
+  if (roomCode.length < 4) { alert("Enter a valid code"); return; }
+  isHost = false;
+  gameNode = gun.get("pocketgolf/" + roomCode);
+
+  players = {}; playerOrder = [];
+  players[myId] = { name: myName };
+
+  // Register self
+  gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
+  gameNode.get("playerOrder").set(myId);
+
+  // Listen for players
+  setupPlayerListeners();
+
+  // Receive all hole data from host
+  gameNode.get("holes").map().on((data, key) => {
+    if (!data) return;
+    try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
+    // If we have the current hole, load it
+    if (parseInt(key) === myCurrentHole && allHoles[myCurrentHole]) {
+      loadHole(myCurrentHole);
+    }
+  });
+
+  gameNode.get("meta").on((data) => {
+    if (data && data.numHoles) {
+      // already set
+    }
+  });
+
+  // Listen for other players' balls and scores
+  setupGameListeners();
+
+  document.getElementById("connBadge").textContent = "●";
+  document.getElementById("connBadge").classList.add("connected");
+  document.getElementById("lobbyOverlay").classList.add("hidden");
+
+  // Assign color based on join order
+  myColorIdx = playerOrder.length > 0 ? playerOrder.indexOf(myId) % 4 : 0;
+
+  resizeCanvas();
+  // Load hole 1 once we have data
+  if (allHoles[1]) loadHole(1);
+  updateScorecard();
+  showMsg("Joined! Play whenever.", "success");
+});
+
+function setupPlayerListeners() {
   gameNode.get("playerOrder").map().on((id) => {
     if (id && !playerOrder.includes(id)) {
       playerOrder.push(id);
       gameNode.get("players").get(id).once((data) => {
         if (data) { try { players[id] = JSON.parse(data); } catch(_) {} }
-        updateWaitList(); updateScorecard();
+        myColorIdx = playerOrder.indexOf(myId) % 4;
+        updateWaitList(); updateScorecard(); updateUI();
       });
     }
   });
@@ -951,74 +953,27 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
     if (data) {
       try { players[key] = JSON.parse(data); } catch(_) {}
       if (!playerOrder.includes(key)) playerOrder.push(key);
-      updateWaitList(); updateScorecard();
+      myColorIdx = playerOrder.indexOf(myId) % 4;
+      updateWaitList(); updateScorecard(); updateUI();
     }
   });
-
-  // Listen for ball/score/mulligan updates from clients
-  setupGameListeners();
-
-  showWaitRoom();
-});
-
-document.getElementById("doJoinBtn").addEventListener("click", () => {
-  myName = document.getElementById("joinName").value.trim() || "Player";
-  roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
-  if (roomCode.length < 4) { alert("Enter a valid code"); return; }
-  isHost = false;
-  gameNode = gun.get("pocketgolf/" + roomCode);
-  players = {};
-  playerOrder = [];
-  players[myId] = { name: myName, mulligans: 6, scores: {}, ready: true };
-
-  gameNode.get("players").get(myId).put(JSON.stringify(players[myId]));
-  gameNode.get("playerOrder").set(myId);
-
-  gameNode.get("players").map().on((data, key) => {
-    if (data) {
-      try { players[key] = JSON.parse(data); } catch(_) {}
-      if (!playerOrder.includes(key)) playerOrder.push(key);
-      updateScorecard();
-    }
-  });
-  gameNode.get("playerOrder").map().on((id) => {
-    if (id && !playerOrder.includes(id)) playerOrder.push(id);
-  });
-
-  gameNode.get("state").on((data) => {
-    if (!data) return;
-    currentHole = data.currentHole || 1;
-    currentPlayerIdx = data.currentPlayerIdx || 0;
-    updateUI(); draw();
-  });
-
-  gameNode.get("hole").map().on((data, key) => {
-    if (!data) return;
-    if (parseInt(key) === currentHole) receiveHole(data);
-  });
-
-  setupGameListeners();
-
-  document.getElementById("connBadge").textContent = "●";
-  document.getElementById("connBadge").classList.add("connected");
-  document.getElementById("lobbyOverlay").classList.add("hidden");
-  resizeCanvas();
-  updateScorecard();
-  showMsg("Joined! Waiting for host...", "");
-});
+}
 
 function setupGameListeners() {
+  // Other players' ball positions
   gameNode.get("balls").map().on((data, key) => {
-    if (!data) return;
-    const parts = key.split("_");
-    const hNum = parseInt(parts[0]);
-    const pid = parts.slice(1).join("_");
-    if (hNum === currentHole && pid !== myId) {
-      playerBalls[pid] = { x: data.x, y: data.y, safeX: data.safeX, safeY: data.safeY, strokes: data.strokes, done: data.done === 1 };
-      draw(); updateUI();
+    if (!data || key === myId) return;
+    otherBalls[key] = data;
+    if (players[key] && !players[key].name) {
+      gameNode.get("players").get(key).once((pdata) => {
+        if (pdata) try { players[key] = JSON.parse(pdata); } catch(_) {}
+      });
     }
+    if (!playerOrder.includes(key)) playerOrder.push(key);
+    draw(); updateScorecard();
   });
 
+  // Scores
   gameNode.get("scores").map().on((data, key) => {
     if (!data) return;
     const parts = key.split("_");
@@ -1031,8 +986,9 @@ function setupGameListeners() {
     }
   });
 
+  // Mulligans
   gameNode.get("mulligans").map().on((data, key) => {
-    if (players[key]) { players[key].mulligans = data; updateUI(); }
+    if (players[key] && key !== myId) players[key].mulligans = data;
   });
 }
 
@@ -1061,42 +1017,38 @@ function updateWaitList() {
   }
   div.innerHTML = html;
   const startBtn = document.getElementById("startMultiBtn");
-  startBtn.disabled = playerOrder.length < 1;
   startBtn.textContent = playerOrder.length === 1 ? "Play Solo" : `Start ${playerOrder.length}-Player Round`;
 }
 
 document.getElementById("startMultiBtn").addEventListener("click", () => {
-  if (!isHost) return;
   document.getElementById("waitView").classList.add("hidden");
   document.getElementById("lobbyOverlay").classList.add("hidden");
-  currentHole = 1;
-  pars = new Array(NUM_HOLES).fill(3);
-  generateHole(1);
-  hostBroadcastHole();
-  playerBalls = {};
-  for (const pid of playerOrder) {
-    playerBalls[pid] = { x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:false };
-    gameNode.get("balls").get(currentHole+"_"+pid).put({ x:teeX, y:teeY, safeX:teeX, safeY:teeY, strokes:0, done:0 });
-  }
-  currentPlayerIdx = 0;
-  syncTurn();
+  // Host already generated holes. Load hole 1.
+  loadHole(1);
   resizeCanvas();
-  updateUI();
-  updateScorecard();
-  draw();
-  showMsg("Round started! " + players[playerOrder[0]].name + " goes first", "success");
+  syncMyBall();
+  updateUI(); updateScorecard();
+  showMsg("Round started! Play at your own pace.", "success");
+  // Set up listeners for other players' balls/scores
+  setupGameListeners();
 });
 
 document.getElementById("leaveWaitBtn").addEventListener("click", () => location.reload());
 
+// ====================================================================
+// ROUND END
+// ====================================================================
 function showRoundEnd() {
   const ranked = playerOrder.map((pid, i) => ({
     name: players[pid]?.name || "Player",
     idx: i,
-    total: Object.values(players[pid]?.scores || {}).reduce((a,b)=>a+b, 0),
+    total: pid === myId
+      ? Object.values(myScores).reduce((a,b)=>a+b, 0)
+      : Object.values(players[pid]?.scores || {}).reduce((a,b)=>a+b, 0),
   })).sort((a,b) => a.total - b.total);
 
-  let html = `<h1>Round Complete! 🏆</h1><div style="margin:12px 0">`;
+  let html = `<h1>Round Complete! 🏆</h1>`;
+  html += `<div style="margin:12px 0">`;
   ranked.forEach((p, rank) => {
     const ci = p.idx % 4;
     const medal = rank===0?"🥇":rank===1?"🥈":rank===2?"🥉":"";
@@ -1107,17 +1059,48 @@ function showRoundEnd() {
     </div>`;
   });
   html += `</div>`;
-  html += `<p>Course par: ${pars.reduce((a,b)=>a+b,0)}</p>`;
+
+  // Also record my final score
+  myScores[myCurrentHole] = myBall.strokes;
+  syncMyScore(myCurrentHole, myBall.strokes);
+
+  let totalPar = 0;
+  for (let h = 1; h <= NUM_HOLES; h++) totalPar += allHoles[h] ? allHoles[h].par : 3;
+  html += `<p>Course par: ${totalPar}</p>`;
   html += `<button class="btn btn-primary" onclick="location.reload()">New Game</button>`;
-  const overlay = document.getElementById("lobbyOverlay");
-  overlay.querySelector(".overlay-card").innerHTML = html;
+  const overlay = document.getElementById("endOverlay");
+  document.getElementById("endCard").innerHTML = html;
   overlay.classList.remove("hidden");
 }
 
+// Patch: when ball is done, record score
+const origProcessShot = processShot;
+// Already handled in the sank branch — but let's also sync score when done
+// We'll hook into the done state via a check after each shot
+
+// ====================================================================
+// INIT
+// ====================================================================
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 animLoop();
 updateScorecard();
+
+// Hook: record score when ball is done
+const _origDraw = draw;
+// Simpler: just check in updateUI if done and score not recorded
+function checkScoreRecording() {
+  if (myBall.done && !myScores[myCurrentHole]) {
+    myScores[myCurrentHole] = myBall.strokes;
+    syncMyScore(myCurrentHole, myBall.strokes);
+    updateScorecard();
+  }
+}
+// Call after each shot animation completes
+const _origAnimateBall = animateBall;
+animateBall = function(fx, fy, tx, ty, cb) {
+  _origAnimateBall(fx, fy, tx, ty, () => { cb(); checkScoreRecording(); });
+};
 </script>
 </body>
 </html>
