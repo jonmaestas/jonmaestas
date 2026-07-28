@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How to Solve It — Pólya's Method, Wired Into My AI — Jon Maestas</title>
+  <link rel="stylesheet" href="../index.css?v=20251007">
+  <meta name="description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+  <meta name="author" content="Jon Maestas">
+
+  <!-- Open Graph / LinkedIn / Facebook -->
+  <meta property="og:title" content="How to Solve It — Pólya's Method, Wired Into My AI">
+  <meta property="og:description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html">
+  <meta property="og:site_name" content="Jon Maestas">
+  <meta property="article:published_time" content="2026-07-27">
+  <meta property="article:author" content="https://www.linkedin.com/in/jonmaestas/">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@jonmaestas">
+  <meta name="twitter:creator" content="@jonmaestas">
+  <meta name="twitter:title" content="How to Solve It — Pólya's Method, Wired Into My AI">
+  <meta name="twitter:description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "How to Solve It — Pólya's Method, Wired Into My AI",
+    "author": {"@type": "Person", "name": "Jon Maestas"},
+    "datePublished": "2026-07-27",
+    "url": "https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html"
+  }
+  </script>
+  <!-- CUSTOM_CSS_START -->
+  <style>
+    .fig {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+      overflow-x: auto;
+    }
+    .fig svg { display: block; margin: 0 auto; }
+    .steps {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem 1.5rem 1.5rem 2.5rem;
+      margin: 2rem 0;
+    }
+    .steps ol { margin: 0; padding-left: 0.5rem; }
+    .steps li { margin-bottom: 1rem; line-height: 1.55; }
+    .steps li:last-child { margin-bottom: 0; }
+    .steps li strong { display: block; margin-bottom: 0.1rem; }
+  </style>
+  <!-- CUSTOM_CSS_END -->
+</head>
+<body>
+  <main>
+    <p><a href="../index.html">← home</a></p>
+
+    <h1>How to Solve It — Pólya's Method, Wired Into My AI</h1>
+    <p style="opacity:0.6; font-size:0.9rem;">2026-07-27</p>
+
+    <!-- BODY_START -->
+    <p>A friend recommended a book to me. I bought it, started reading, and immediately wired it into my AI. Haven't looked back.</p>
+
+    <p>The book is <em>How to Solve It</em>, by George Pólya, published in 1945. It's about math. But the principles underneath are about everyday problem solving — and they work on machines just as well as they work on people.</p>
+
+    <p>My AI systems now have a framework for attacking problems and requests from me. Before, they'd jump straight to an answer. Now they take steps to understand the problem first. They assume less.</p>
+
+    <h2>The Four Steps</h2>
+
+    <p>Pólya broke problem solving into four steps. Not ten. Not a clever acronym. Four.</p>
+
+    <div class="fig">
+      <svg viewBox="0 0 720 235" style="width:100%; max-width:720px;" role="img" aria-label="Pólya's four-step problem-solving loop">
+        <defs>
+          <marker id="pa1" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="pa1l" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+            <polygon points="0 0, 9 3.5, 0 7" fill="#0891b2" />
+          </marker>
+        </defs>
+
+        <rect x="20" y="30" width="140" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="90" y="58" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#0f172a">1. UNDERSTAND</text>
+        <text x="90" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">the problem</text>
+
+        <path d="M 162 66 L 193 66" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#pa1)" />
+
+        <rect x="195" y="30" width="140" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="265" y="58" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#0f172a">2. DEVISE A PLAN</text>
+        <text x="265" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">connect data → unknown</text>
+
+        <path d="M 337 66 L 368 66" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#pa1)" />
+
+        <rect x="370" y="30" width="140" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="440" y="58" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#0f172a">3. CARRY OUT</text>
+        <text x="440" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">the plan</text>
+
+        <path d="M 512 66 L 543 66" stroke="#64748b" stroke-width="1.5" fill="none" marker-end="url(#pa1)" />
+
+        <rect x="545" y="30" width="140" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="615" y="58" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#0f172a">4. LOOK BACK</text>
+        <text x="615" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">audit the result</text>
+
+        <path d="M 615 102 L 615 165 Q 615 180 600 180 L 105 180 Q 90 180 90 165 L 90 102" stroke="#0891b2" stroke-width="1.5" fill="none" stroke-dasharray="6,4" marker-end="url(#pa1l)" />
+        <text x="352" y="202" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-style="italic" fill="#0891b2">loop back — use what you learned on the next problem</text>
+      </svg>
+    </div>
+
+    <p>Here's what each one means in practice:</p>
+
+    <div class="steps">
+      <ol>
+        <li><strong>Understand the problem.</strong> Isolate the unknown, the data, the conditions. What are you trying to solve? What do you know? What constrains you?</li>
+        <li><strong>Devise a plan.</strong> Find the connection between the data and the unknown. Find an analogous problem. Solve a simpler version. Work backward. Decompose it into smaller parts.</li>
+        <li><strong>Carry out the plan.</strong> Execute each step. Check correctness at each step. Can you prove it?</li>
+        <li><strong>Look back.</strong> Audit the result. Can you check it? Can you derive it differently? Can you use this for other problems?</li>
+      </ol>
+    </div>
+
+    <p>Step four is where most people — and most AI — stop. They get an answer and move on. Pólya says: stop and look at what you just did. That's where one-off work turns into a repeatable process.</p>
+
+    <h2>Every Agent Runs It</h2>
+
+    <p>Each of my agents runs Pólya's system end to end, with every request.</p>
+
+    <div class="fig">
+      <svg viewBox="0 0 720 280" style="width:100%; max-width:720px;" role="img" aria-label="Hermes, Pi, and Paseo each run the full four-step loop on every request">
+        <defs>
+          <marker id="pb1l" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#0891b2" />
+          </marker>
+        </defs>
+
+        <!-- Hermes -->
+        <rect x="15" y="20" width="220" height="250" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="125" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Hermes</text>
+        <text x="125" y="67" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">chief of staff</text>
+        <rect x="35" y="85" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="125" y="103" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">1 · Understand</text>
+        <rect x="35" y="120" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="125" y="138" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">2 · Plan</text>
+        <rect x="35" y="155" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="125" y="173" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">3 · Execute</text>
+        <rect x="35" y="190" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="125" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">4 · Look Back</text>
+        <path d="M 215 204 L 228 204 L 228 99 L 218 99" stroke="#0891b2" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#pb1l)" />
+        <text x="125" y="248" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#0891b2">repeats every request</text>
+
+        <!-- Pi -->
+        <rect x="250" y="20" width="220" height="250" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="360" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Pi</text>
+        <text x="360" y="67" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">coding agent</text>
+        <rect x="270" y="85" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="360" y="103" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">1 · Understand</text>
+        <rect x="270" y="120" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="360" y="138" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">2 · Plan</text>
+        <rect x="270" y="155" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="360" y="173" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">3 · Execute</text>
+        <rect x="270" y="190" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="360" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">4 · Look Back</text>
+        <path d="M 450 204 L 463 204 L 463 99 L 453 99" stroke="#0891b2" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#pb1l)" />
+        <text x="360" y="248" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#0891b2">repeats every request</text>
+
+        <!-- Paseo -->
+        <rect x="485" y="20" width="220" height="250" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" />
+        <text x="595" y="48" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Paseo</text>
+        <text x="595" y="67" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">autonomous daemon</text>
+        <rect x="505" y="85" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="595" y="103" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">1 · Understand</text>
+        <rect x="505" y="120" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="595" y="138" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">2 · Plan</text>
+        <rect x="505" y="155" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="595" y="173" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">3 · Execute</text>
+        <rect x="505" y="190" width="180" height="28" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="595" y="208" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" fill="#334155">4 · Look Back</text>
+        <path d="M 685 204 L 698 204 L 698 99 L 688 99" stroke="#0891b2" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#pb1l)" />
+        <text x="595" y="248" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#0891b2">repeats every request</text>
+      </svg>
+    </div>
+
+    <p><strong>Hermes</strong> is my chief of staff. Runs on my Mac, manages my life, builds things — this blog post, a drill timer, a game called Pocket Golf. The Pólya framework lives in its system prompt.</p>
+
+    <p><strong>Pi</strong> is my coding agent. Deterministic work. HTML generation, filling templates, making commits.</p>
+
+    <p><strong>Paseo</strong> is a local daemon. Autonomous workflows that run without me watching.</p>
+
+    <p>Different jobs. Same loop. Every time.</p>
+
+    <h2>The Agent Writing This Post Is Doing Step One</h2>
+
+    <p>Here's the part that still gets me.</p>
+
+    <p>The agent interviewing me to write this post is doing step one right now. It's asking me questions because its goal is to understand the problem first — not to fire off a guess and hope.</p>
+
+    <p>That's the whole shift. The framework forces the AI to slow down before it speeds up.</p>
+
+    <h2>What Changed</h2>
+
+    <p>The biggest surprise has been the efficiency and the quality of outputs.</p>
+
+    <p>The AI takes steps to understand the problem first. It assumes less. That alone changes what comes back.</p>
+
+    <p>I haven't done a side-by-side — same prompt, with and without the framework — to measure the gap. Might be interesting. I'll save that for another day.</p>
+    <!-- BODY_END -->
+
+    <p>— Jon</p>
+
+    <footer>
+      <small><em>Made by Jon</em></small>
+    </footer>
+  </main>
+</body>
+</html>

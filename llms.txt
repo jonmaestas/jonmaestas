@@ -16,6 +16,10 @@ He runs SmopLab LLC, building AI-powered sports coaching apps and local communit
 
 ## Blog Posts
 
+- [How to Solve It — Pólya's Method, Wired Into My AI](https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html)
+  Date: 2026-07-27
+  Summary: A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.
+
 - [Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence](https://jonmaestas.com/blog/2026-07-09-training-sessions.html)
   Date: 2026-07-09
   Summary: New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis.
