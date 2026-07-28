@@ -431,9 +431,9 @@ function generateHoleData(holeNum) {
 // ====================================================================
 // LOAD HOLE
 // ====================================================================
-function loadHole(holeNum) {
+function loadHole(holeNum, opts = {}) {
   const data = allHoles[holeNum];
-  if (!data) return;
+  if (!data) return false;
   grid = [];
   for (let y=0; y<ROWS; y++) {
     const row = [];
@@ -441,10 +441,21 @@ function loadHole(holeNum) {
     grid.push(row);
   }
   teeX = data.teeX; teeY = data.teeY; holeX = data.holeX; holeY = data.holeY; par = data.par;
-  myBall = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
-  document.getElementById("nextHoleBtn").disabled = true;
-  document.getElementById("mulliganBtn").disabled = (myMulligans <= 0);
+  if (!opts.keepBall) {
+    myBall = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
+  }
+  // Enable Next/Finish after hole is sunk
+  const nextBtn = document.getElementById("nextHoleBtn");
+  if (myBall.done) {
+    nextBtn.disabled = false;
+    nextBtn.textContent = (myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
+  } else {
+    nextBtn.disabled = true;
+    nextBtn.textContent = "Next Hole";
+  }
+  document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
   updateUI(); draw();
+  return true;
 }
 
 // ====================================================================
@@ -700,7 +711,9 @@ function processShot(angle, dist, isPutt) {
       myScores[myCurrentHole] = myBall.strokes;
       syncMyScore(myCurrentHole, myBall.strokes);
       showMsg(scoreName(myBall.strokes, par) + "!", "success");
-      document.getElementById("nextHoleBtn").disabled = (myCurrentHole >= NUM_HOLES);
+      const nextBtn = document.getElementById("nextHoleBtn");
+      nextBtn.disabled = false;
+      nextBtn.textContent = (myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
       saveGameState();
     } else if (isPutt) {
       const bd = Math.abs(myBall.x - holeX) + Math.abs(myBall.y - holeY);
@@ -879,12 +892,17 @@ function saveGameState() {
   const state = {
     code: roomCode,
     name: myName,
+    myId: myId,
+    isHost: isHost,
     currentHole: myCurrentHole,
     scores: myScores,
     mulligans: myMulligans,
     ballX: myBall.x, ballY: myBall.y,
+    ballSafeX: myBall.safeX, ballSafeY: myBall.safeY,
     ballStrokes: myBall.strokes,
     ballDone: myBall.done,
+    // Persist course locally so Resume works when Gun peers are down
+    holes: allHoles,
     timestamp: Date.now(),
   };
   if (existing >= 0) savedGames[existing] = state;
@@ -926,18 +944,34 @@ window.resumeGame = function(code) {
   const g = savedGames.find(g => g.code === code);
   if (!g) return;
   myName = g.name;
+  if (g.myId) myId = g.myId;
   roomCode = code;
-  myCurrentHole = g.currentHole;
+  isHost = !!g.isHost;
+  myCurrentHole = g.currentHole || 1;
   myScores = g.scores || {};
-  myMulligans = g.mulligans;
-  myBall = { x: g.ballX, y: g.ballY, safeX: g.ballX, safeY: g.ballY, strokes: g.ballStrokes, done: g.ballDone };
+  myMulligans = g.mulligans != null ? g.mulligans : 6;
+  myBall = {
+    x: g.ballX || 0, y: g.ballY || 0,
+    safeX: g.ballSafeX != null ? g.ballSafeX : (g.ballX || 0),
+    safeY: g.ballSafeY != null ? g.ballSafeY : (g.ballY || 0),
+    strokes: g.ballStrokes || 0,
+    done: !!g.ballDone
+  };
 
-  // Reconnect to Gun
+  // Local course first (works offline / when Gun peers are down)
+  players = {};
+  playerOrder = [myId];
+  players[myId] = { name: myName };
+  myColorIdx = 0;
+  if (g.holes && typeof g.holes === "object") {
+    allHoles = {};
+    for (const k of Object.keys(g.holes)) allHoles[parseInt(k)] = g.holes[k];
+  }
+
+  // Reconnect to Gun for multiplayer sync (optional)
   ensureGun();
   gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
-  isHost = false;
 
-  // Listen for everything
   if (gameNode) {
     gameNode.get("playerOrder").map().on((id) => { if (id && !playerOrder.includes(id)) { playerOrder.push(id); } });
     gameNode.get("players").map().on((data, key) => { if (data) { try { players[key] = JSON.parse(data); } catch(_) {} if (!playerOrder.includes(key)) playerOrder.push(key); myColorIdx = playerOrder.indexOf(myId) % 4; updateUI(); updateScorecard(); } });
@@ -946,34 +980,33 @@ window.resumeGame = function(code) {
     gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
     gameNode.get("playerOrder").set(myId);
 
-    // Load hole data
+    // Load hole data from peers if we don't have them locally
     gameNode.get("holes").map().on((data, key) => {
       if (!data) return;
       try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
-      if (parseInt(key) === myCurrentHole) loadHole(myCurrentHole);
+      if (parseInt(key) === myCurrentHole && grid.length === 0) loadHole(myCurrentHole, { keepBall: true });
     });
 
-    // Listen for balls/scores
-    gameNode.get("balls").map().on((data, key) => {
-      if (!data || key === myId) return;
-      otherBalls[key] = data;
-      draw(); updateScorecard();
-    });
-    gameNode.get("scores").map().on((data, key) => {
-      if (!data) return;
-      const parts = key.split("_");
-      const pid = parts[0]; const hole = parseInt(parts[1]);
-      if (players[pid]) { if (!players[pid].scores) players[pid].scores = {}; players[pid].scores[hole] = data; updateScorecard(); }
-    });
+    setupGameListeners();
+    setupTauntListener();
+    setupEndGameListener();
   }
 
-  document.getElementById("connBadge").textContent = "●";
-  document.getElementById("connBadge").classList.add("connected");
+  document.getElementById("connBadge").textContent = gameNode ? "●" : "○";
+  if (gameNode) document.getElementById("connBadge").classList.add("connected");
+  else document.getElementById("connBadge").classList.remove("connected");
   document.getElementById("lobbyOverlay").classList.add("hidden");
   resizeCanvas();
-  if (allHoles[myCurrentHole]) loadHole(myCurrentHole);
+  if (allHoles[myCurrentHole]) {
+    loadHole(myCurrentHole, { keepBall: true });
+  } else if (Object.keys(allHoles).length === 0) {
+    // Last resort: generate a fresh local course so the player isn't stuck on a blank grid
+    generateAllHoles();
+    loadHole(myCurrentHole, { keepBall: true });
+    showMsg("Course rebuilt locally (multiplayer sync offline)", "warn");
+  }
   updateUI(); updateScorecard();
-  showMsg("Resumed game " + code, "success");
+  if (grid.length > 0) showMsg("Resumed game " + code, "success");
 };
 
 window.deleteGame = function(code) {
@@ -1062,6 +1095,7 @@ document.getElementById("doJoinBtn").addEventListener("click", () => {
 });
 
 function setupPlayerListeners() {
+  if (!gameNode) return;
   gameNode.get("playerOrder").map().on((id) => {
     if (id && !playerOrder.includes(id)) {
       playerOrder.push(id);
@@ -1078,6 +1112,7 @@ function setupPlayerListeners() {
 }
 
 function setupGameListeners() {
+  if (!gameNode) return;
   gameNode.get("balls").map().on((data, key) => {
     if (!data || key === myId) return;
     otherBalls[key] = data;
@@ -1121,13 +1156,18 @@ document.getElementById("startMultiBtn").addEventListener("click", () => {
   document.getElementById("waitView").classList.add("hidden");
   document.getElementById("lobbyOverlay").classList.add("hidden");
   myCurrentHole = 1;
+  if (!allHoles[1]) generateAllHoles();
   loadHole(1);
   resizeCanvas();
   syncMyBall();
-  setupGameListeners();
+  if (gameNode) {
+    setupGameListeners();
+    setupTauntListener();
+    setupEndGameListener();
+  }
   saveGameState();
   updateUI(); updateScorecard();
-  showMsg("Round started! Flick to shoot.", "success");
+  showMsg(gameNode ? "Round started! Flick to shoot." : "Solo round started (offline). Flick to shoot.", "success");
 });
 
 document.getElementById("leaveWaitBtn").addEventListener("click", () => { showView("gamesListView"); });
