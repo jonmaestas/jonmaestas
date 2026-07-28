@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>How to Solve It — Pólya's Method, Wired Into My AI — Jon Maestas</title>
+  <title>Using Pólya's "How to Solve It" to Make AI Agents Better — Jon Maestas</title>
   <link rel="stylesheet" href="../index.css?v=20251007">
-  <meta name="description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+  <meta name="description" content="How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.">
   <meta name="author" content="Jon Maestas">
+  <link rel="canonical" href="https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html">
 
   <!-- Open Graph / LinkedIn / Facebook -->
-  <meta property="og:title" content="How to Solve It — Pólya's Method, Wired Into My AI">
-  <meta property="og:description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+  <meta property="og:title" content="Using Pólya's 'How to Solve It' to Make AI Agents Better">
+  <meta property="og:description" content="How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html">
   <meta property="og:site_name" content="Jon Maestas">
@@ -21,17 +22,21 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@jonmaestas">
   <meta name="twitter:creator" content="@jonmaestas">
-  <meta name="twitter:title" content="How to Solve It — Pólya's Method, Wired Into My AI">
-  <meta name="twitter:description" content="A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.">
+  <meta name="twitter:title" content="Using Pólya's 'How to Solve It' to Make AI Agents Better">
+  <meta name="twitter:description" content="How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.">
 
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "headline": "How to Solve It — Pólya's Method, Wired Into My AI",
-    "author": {"@type": "Person", "name": "Jon Maestas"},
+    "headline": "Using Pólya's 'How to Solve It' to Make AI Agents Better",
+    "description": "How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.",
+    "author": {"@type": "Person", "name": "Jon Maestas", "url": "https://www.linkedin.com/in/jonmaestas/"},
     "datePublished": "2026-07-27",
-    "url": "https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html"
+    "dateModified": "2026-07-27",
+    "url": "https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html",
+    "publisher": {"@type": "Person", "name": "Jon Maestas"},
+    "keywords": ["Pólya", "How to Solve It", "AI agents", "problem solving", "prompt engineering", "Hermes", "AI workflow"]
   }
   </script>
   <!-- CUSTOM_CSS_START -->
@@ -69,16 +74,16 @@
     <!-- BODY_START -->
     <p>A friend recommended a book to me. I bought it, started reading, and immediately wired it into my AI. Haven't looked back.</p>
 
-    <p>The book is <em>How to Solve It</em>, by George Pólya, published in 1945. It's about math. But the principles underneath are about everyday problem solving — and they work on machines just as well as they work on people.</p>
+    <p>The book is <em>How to Solve It</em>, by George Pólya, published in 1945. It's about math. But the principles are about everyday problem solving — and they work on machines just as well as they work on people.</p>
 
     <p>My AI systems now have a framework for attacking problems and requests from me. Before, they'd jump straight to an answer. Now they take steps to understand the problem first. They assume less.</p>
 
     <h2>The Four Steps</h2>
 
-    <p>Pólya broke problem solving into four steps. Not ten. Not a clever acronym. Four.</p>
+    <p>Pólya broke problem solving into four steps.</p>
 
     <div class="fig">
-      <svg viewBox="0 0 720 235" style="width:100%; max-width:720px;" role="img" aria-label="Pólya's four-step problem-solving loop">
+      <svg viewBox="0 0 720 235" style="width:100%; max-width:720px;" role="img" aria-label="Pólya's four-step problem-solving loop: Understand, Devise a Plan, Carry Out, Look Back">
         <defs>
           <marker id="pa1" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
             <polygon points="0 0, 9 3.5, 0 7" fill="#64748b" />
@@ -114,8 +119,6 @@
         <text x="352" y="202" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-style="italic" fill="#0891b2">loop back — use what you learned on the next problem</text>
       </svg>
     </div>
-
-    <p>Here's what each one means in practice:</p>
 
     <div class="steps">
       <ol>
@@ -197,8 +200,6 @@
 
     <h2>The Agent Writing This Post Is Doing Step One</h2>
 
-    <p>Here's the part that still gets me.</p>
-
     <p>The agent interviewing me to write this post is doing step one right now. It's asking me questions because its goal is to understand the problem first — not to fire off a guess and hope.</p>
 
     <p>That's the whole shift. The framework forces the AI to slow down before it speeds up.</p>
@@ -209,7 +210,11 @@
 
     <p>The AI takes steps to understand the problem first. It assumes less. That alone changes what comes back.</p>
 
-    <p>I haven't done a side-by-side — same prompt, with and without the framework — to measure the gap. Might be interesting. I'll save that for another day.</p>
+    <p>I haven't done a side-by-side — same prompt, with and without the framework — to measure the gap. That'd be interesting. For now, the difference is obvious enough that I'm not going back.</p>
+
+    <p>If you're building with AI agents, give Pólya a read. The book is from 1945. It costs twelve dollars. It changed how my AI works more than any prompt engineering trick I've learned.</p>
+
+    <p><a href="../index.html">← Back to home</a></p>
     <!-- BODY_END -->
 
     <p>— Jon</p>

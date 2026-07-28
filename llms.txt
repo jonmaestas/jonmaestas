@@ -16,9 +16,9 @@ He runs SmopLab LLC, building AI-powered sports coaching apps and local communit
 
 ## Blog Posts
 
-- [How to Solve It — Pólya's Method, Wired Into My AI](https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html)
+- [Using Pólya's "How to Solve It" to Make AI Agents Better](https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html)
   Date: 2026-07-27
-  Summary: A 1945 math book changed how my AI agents work. George Pólya's four-step problem-solving framework, baked into Hermes, Pi, and Paseo.
+  Summary: How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.
 
 - [Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence](https://jonmaestas.com/blog/2026-07-09-training-sessions.html)
   Date: 2026-07-09

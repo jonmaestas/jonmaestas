@@ -185,7 +185,20 @@
       <span class="live-dot"></span><span style="font-size:0.75rem;color:var(--muted)">Live</span>
     </div>
     <div class="sc-table-wrapper" id="scorecardContent"></div>
-    <button class="btn" id="closeScorecardBtn" style="margin-top:8px">← Back to Game</button>
+
+    <!-- Taunt -->
+    <div style="margin-top:12px">
+      <input class="code-input" type="text" id="tauntInput" placeholder="Send a taunt..." maxlength="100" style="font-size:0.95rem;padding:10px 14px;text-transform:none;letter-spacing:normal">
+      <button class="btn btn-amber" id="sendTauntBtn" style="margin-top:4px;padding:10px">😤 Send Taunt</button>
+      <div id="tauntList" style="margin-top:8px"></div>
+    </div>
+
+    <!-- Game controls -->
+    <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <button class="btn btn-blue" id="closeScorecardBtn">← Back to Game</button>
+      <button class="btn btn-amber" id="leaveGameBtn">🚪 Leave Game</button>
+    </div>
+    <button class="btn" id="endGameBtn" style="margin-top:6px;background:#7f1d1d;border-color:#991b1b">🗑 End Game (Host Only)</button>
   </div>
 </div>
 
@@ -1129,8 +1142,123 @@ document.getElementById("homeLogo").addEventListener("click", () => {
 });
 
 // Scorecard
-document.getElementById("openScorecardBtn").addEventListener("click", () => { updateScorecard(); document.getElementById("scorecardOverlay").classList.remove("hidden"); });
+document.getElementById("openScorecardBtn").addEventListener("click", () => {
+  updateScorecard();
+  renderTaunts();
+  document.getElementById("scorecardOverlay").classList.remove("hidden");
+});
 document.getElementById("closeScorecardBtn").addEventListener("click", () => { document.getElementById("scorecardOverlay").classList.add("hidden"); });
+
+// ========== TAUNTS ==========
+const TAUNT_COOLDOWN_MS = 30000;
+let lastTauntTime = 0;
+let taunts = [];
+
+function sendTaunt() {
+  if (!gameNode) return;
+  const input = document.getElementById("tauntInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const now = Date.now();
+  if (now - lastTauntTime < TAUNT_COOLDOWN_MS) {
+    const wait = Math.ceil((TAUNT_COOLDOWN_MS - (now - lastTauntTime)) / 1000);
+    showMsg("Taunt cooldown: " + wait + "s left", "warn");
+    return;
+  }
+  lastTauntTime = now;
+  const taunt = { name: myName, text: text, ts: now };
+  gameNode.get("taunts").get(now + "_" + myId).put(JSON.stringify(taunt));
+  input.value = "";
+  showMsg("Taunt sent! 😤", "success");
+}
+
+function renderTaunts() {
+  const div = document.getElementById("tauntList");
+  // Sort newest first, show last 5
+  const sorted = [...taunts].sort((a, b) => b.ts - a.ts).slice(0, 5);
+  if (sorted.length === 0) {
+    div.innerHTML = `<p style="font-size:0.78rem;color:var(--muted);text-align:center">No taunts yet. Be the first to talk trash.</p>`;
+    return;
+  }
+  let html = "";
+  for (const t of sorted) {
+    const ago = Math.floor((Date.now() - t.ts) / 1000);
+    const agoStr = ago < 60 ? ago + "s ago" : Math.floor(ago / 60) + "m ago";
+    html += `<div style="background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:4px">
+      <span style="font-weight:700;color:var(--accent)">${escapeHtml(t.name)}</span>
+      <span style="color:var(--text)">${escapeHtml(t.text)}</span>
+      <span style="font-size:0.7rem;color:var(--muted);float:right">${agoStr}</span>
+    </div>`;
+  }
+  div.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+document.getElementById("sendTauntBtn").addEventListener("click", sendTaunt);
+document.getElementById("tauntInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendTaunt(); });
+
+// Listen for incoming taunts
+function setupTauntListener() {
+  if (!gameNode) return;
+  gameNode.get("taunts").map().on((data, key) => {
+    if (!data) return;
+    try {
+      const t = JSON.parse(data);
+      // Dedupe
+      if (!taunts.find(x => x.ts === t.ts && x.name === t.name)) {
+        taunts.push(t);
+        // Keep last 20
+        if (taunts.length > 20) taunts = taunts.slice(-20);
+        renderTaunts();
+        // In-game notification (if not from me)
+        if (t.name !== myName) {
+          showMsg("😤 " + t.name + ": " + t.text, "warn");
+        }
+      }
+    } catch(_) {}
+  });
+}
+
+// ========== LEAVE GAME ==========
+document.getElementById("leaveGameBtn").addEventListener("click", () => {
+  if (!confirm("Leave this game? You can resume it later from the home screen.")) return;
+  saveGameState();
+  // Reset to lobby
+  loadSavedGames();
+  renderActiveGames();
+  showView("gamesListView");
+  document.getElementById("scorecardOverlay").classList.add("hidden");
+  document.getElementById("lobbyOverlay").classList.remove("hidden");
+});
+
+// ========== END GAME (host only) ==========
+document.getElementById("endGameBtn").addEventListener("click", () => {
+  if (!isHost) {
+    showMsg("Only the host can end the game", "error");
+    return;
+  }
+  if (!confirm("End this game for everyone? This cannot be undone.")) return;
+  if (gameNode) {
+    gameNode.get("state").put({ ended: true, ts: Date.now() });
+  }
+  removeSavedGame(roomCode);
+  location.reload();
+});
+
+// Listen for game-ended signal from host
+function setupEndGameListener() {
+  if (!gameNode) return;
+  gameNode.get("state").on((data) => {
+    if (data && data.ended) {
+      removeSavedGame(roomCode);
+      alert("The host has ended the game.");
+      location.reload();
+    }
+  });
+}
 
 // Mulligan + next hole
 document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
