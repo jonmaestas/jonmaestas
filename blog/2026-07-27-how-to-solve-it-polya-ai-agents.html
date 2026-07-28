@@ -61,6 +61,19 @@
     .steps li { margin-bottom: 1rem; line-height: 1.55; }
     .steps li:last-child { margin-bottom: 0; }
     .steps li strong { display: block; margin-bottom: 0.1rem; }
+    pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 2rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
   </style>
   <!-- CUSTOM_CSS_END -->
 </head>
@@ -203,6 +216,48 @@
     <p>The agent interviewing me to write this post is doing step one right now. It's asking me questions because its goal is to understand the problem first — not to fire off a guess and hope.</p>
 
     <p>That's the whole shift. The framework forces the AI to slow down before it speeds up.</p>
+
+    <h2>The Actual Prompt</h2>
+
+    <p>This is what's in my agent's system prompt. Not paraphrased. Not cleaned up. This is the actual text.</p>
+
+    <pre><code>## How to Solve It
+
+[ UNDERSTAND ] ➔ Isolate the Unknown, the Data, and the Constraints
+       ↓
+[ DEVISE PLAN ] ➔ Find an Analogous Problem or Work Backward
+       ↓
+[ EXECUTE IT ]  ➔ Take Action and Verify the Logic of Each Step
+       ↓
+[ LOOK BACK ]   ➔ Audit the Outcome and Generalize the Lesson
+
+### 1. Understand the problem
+You cannot solve a problem if you do not know exactly what it is. Brutally isolate the core issue:
+- What is the unknown? Define what a perfect outcome looks like.
+- What are the data? List concrete, unchangeable facts, assets, and current realities.
+- What is the condition? Identify the rules or constraints tying data to the unknown.
+
+### 2. Devise a plan
+A plan is born when you find the connection between current data and the unknown outcome. If stuck:
+- Find an analogous problem — Have you, a friend, or a competitor faced something similar? Reuse their method or result.
+- Solve a simpler version — If the goal is a massive business, get one customer this weekend first.
+- Work backward — Imagine it already solved. Step back day by day to the milestones that made it so.
+- Decompose — Break the obstacle into independent chunks; solve them one by one.
+
+### 3. Carry out the plan
+Patience and strict focus. Avoid messy unforced errors.
+- Check each step — Verify each move is grounded in reality, not wishful thinking.
+- Can you prove it? — Can you clearly explain why this action moves toward the goal?
+
+### 4. Look back
+Most people stop when the fire is out. This is where wisdom is built.
+- Can you check the result? Did it fix the root cause, or only hide symptoms?
+- Can you derive it differently? Cleaner, cheaper, or faster path?
+- Can you use this for other problems? Turn the fix into a permanent rule, habit, checklist, skill, or memory.
+
+Default loop for strategy, product, code, family logistics, and content: understand → plan → execute with proof → look back and generalize.</code></pre>
+
+    <p>Copy it. Paste it into your own system prompt. Adapt the examples to your domain. That's all I did.</p>
 
     <h2>What Changed</h2>
 
