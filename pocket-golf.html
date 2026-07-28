@@ -237,12 +237,26 @@
 
 <script>
 // ====================================================================
-// GUN.JS P2P
+// GUN.JS P2P — lazy loaded, game works without it for solo play
 // ====================================================================
-const gun = Gun({
-  peers: ["https://gun-manhattan.herokuapp.com/gun", "https://peer.wallie.io/gun"],
-  localStorage: false,
-});
+let gun = null;
+
+function ensureGun() {
+  if (gun) return gun;
+  if (typeof Gun === "undefined") {
+    console.warn("Gun.js not loaded — multiplayer unavailable, solo play works");
+    return null;
+  }
+  try {
+    gun = Gun({
+      peers: ["https://gun-manhattan.herokuapp.com/gun", "https://peer.wallie.io/gun"],
+      localStorage: false,
+    });
+  } catch (e) {
+    console.warn("Gun.js init failed — multiplayer unavailable", e);
+  }
+  return gun;
+}
 
 // ====================================================================
 // CONSTANTS
@@ -427,6 +441,7 @@ function syncMyBall() {
   if (!gameNode) return;
   gameNode.get("balls").get(myId).put({ hole: myCurrentHole, x: myBall.x, y: myBall.y, safeX: myBall.safeX, safeY: myBall.safeY, strokes: myBall.strokes, done: myBall.done?1:0, ts: Date.now() });
 }
+
 function syncMyScore(hole, score) {
   if (!gameNode) return;
   gameNode.get("scores").get(myId + "_" + hole).put(score);
@@ -905,36 +920,39 @@ window.resumeGame = function(code) {
   myBall = { x: g.ballX, y: g.ballY, safeX: g.ballX, safeY: g.ballY, strokes: g.ballStrokes, done: g.ballDone };
 
   // Reconnect to Gun
-  gameNode = gun.get("pocketgolf/" + roomCode);
+  ensureGun();
+  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
   isHost = false;
 
   // Listen for everything
-  gameNode.get("playerOrder").map().on((id) => { if (id && !playerOrder.includes(id)) { playerOrder.push(id); } });
-  gameNode.get("players").map().on((data, key) => { if (data) { try { players[key] = JSON.parse(data); } catch(_) {} if (!playerOrder.includes(key)) playerOrder.push(key); myColorIdx = playerOrder.indexOf(myId) % 4; updateUI(); updateScorecard(); } });
+  if (gameNode) {
+    gameNode.get("playerOrder").map().on((id) => { if (id && !playerOrder.includes(id)) { playerOrder.push(id); } });
+    gameNode.get("players").map().on((data, key) => { if (data) { try { players[key] = JSON.parse(data); } catch(_) {} if (!playerOrder.includes(key)) playerOrder.push(key); myColorIdx = playerOrder.indexOf(myId) % 4; updateUI(); updateScorecard(); } });
 
-  // Re-register self
-  gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
-  gameNode.get("playerOrder").set(myId);
+    // Re-register self
+    gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
+    gameNode.get("playerOrder").set(myId);
 
-  // Load hole data
-  gameNode.get("holes").map().on((data, key) => {
-    if (!data) return;
-    try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
-    if (parseInt(key) === myCurrentHole) loadHole(myCurrentHole);
-  });
+    // Load hole data
+    gameNode.get("holes").map().on((data, key) => {
+      if (!data) return;
+      try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
+      if (parseInt(key) === myCurrentHole) loadHole(myCurrentHole);
+    });
 
-  // Listen for balls/scores
-  gameNode.get("balls").map().on((data, key) => {
-    if (!data || key === myId) return;
-    otherBalls[key] = data;
-    draw(); updateScorecard();
-  });
-  gameNode.get("scores").map().on((data, key) => {
-    if (!data) return;
-    const parts = key.split("_");
-    const pid = parts[0]; const hole = parseInt(parts[1]);
-    if (players[pid]) { if (!players[pid].scores) players[pid].scores = {}; players[pid].scores[hole] = data; updateScorecard(); }
-  });
+    // Listen for balls/scores
+    gameNode.get("balls").map().on((data, key) => {
+      if (!data || key === myId) return;
+      otherBalls[key] = data;
+      draw(); updateScorecard();
+    });
+    gameNode.get("scores").map().on((data, key) => {
+      if (!data) return;
+      const parts = key.split("_");
+      const pid = parts[0]; const hole = parseInt(parts[1]);
+      if (players[pid]) { if (!players[pid].scores) players[pid].scores = {}; players[pid].scores[hole] = data; updateScorecard(); }
+    });
+  }
 
   document.getElementById("connBadge").textContent = "●";
   document.getElementById("connBadge").classList.add("connected");
@@ -977,17 +995,22 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
   myName = document.getElementById("createName").value.trim() || "Host";
   roomCode = generateCode();
   isHost = true;
-  gameNode = gun.get("pocketgolf/" + roomCode);
+  ensureGun();
+  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
   players = {}; playerOrder = [myId];
   players[myId] = { name: myName };
   myColorIdx = 0;
-  gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
-  gameNode.get("playerOrder").set(myId);
+  if (gameNode) {
+    gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
+    gameNode.get("playerOrder").set(myId);
+  }
 
   generateAllHoles();
-  for (let h = 1; h <= NUM_HOLES; h++) gameNode.get("holes").get(h).put(JSON.stringify(allHoles[h]));
+  if (gameNode) {
+    for (let h = 1; h <= NUM_HOLES; h++) gameNode.get("holes").get(h).put(JSON.stringify(allHoles[h]));
+  }
 
-  setupPlayerListeners();
+  if (gameNode) setupPlayerListeners();
   showWaitRoom();
 });
 
@@ -996,7 +1019,9 @@ document.getElementById("doJoinBtn").addEventListener("click", () => {
   roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
   if (roomCode.length < 4) { alert("Enter a valid code"); return; }
   isHost = false;
-  gameNode = gun.get("pocketgolf/" + roomCode);
+  ensureGun();
+  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
+  if (!gameNode) { alert("Multiplayer not available — check your connection"); return; }
   players = {}; playerOrder = [];
   players[myId] = { name: myName };
   gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
