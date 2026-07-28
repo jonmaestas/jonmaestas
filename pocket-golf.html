@@ -291,7 +291,9 @@ function linePath(x0, y0, x1, y1) {
     if (x >= 0 && x < COLS && y >= 0 && y < ROWS) {
       points.push({ x, y });
     } else {
-      break; // went off grid
+      // Mark that the path went off-grid (out of bounds)
+      points.push({ x: -1, y: -1, oob: true });
+      break;
     }
   }
   return points;
@@ -658,12 +660,16 @@ function processShot(roll, isPutt) {
 
   // Walk the path for `dist` steps
   let newX = ball.x, newY = ball.y;
-  let hitTree = false, landedInWater = false;
+  let hitTree = false, landedInWater = false, wentOOB = false;
   let stepsTaken = 0;
   let passedHole = false;
 
   for (let i = 0; i < path.length && stepsTaken < dist; i++) {
     const pt = path[i];
+
+    // Out of bounds — ball stops at last valid cell, gets penalty
+    if (pt.oob) { wentOOB = true; break; }
+
     const cellTerrain = grid[pt.y] && grid[pt.y][pt.x];
     if (cellTerrain === T.TREE) { hitTree = true; break; }
     newX = pt.x; newY = pt.y;
@@ -671,7 +677,6 @@ function processShot(roll, isPutt) {
 
     // Reached the hole exactly!
     if (newX === holeX && newY === holeY) {
-      // Ball sinks! Stop here regardless of remaining distance
       break;
     }
   }
@@ -703,6 +708,11 @@ function processShot(roll, isPutt) {
         showMsg("Missed the putt. " + ballDist + " away.", "warn");
       }
       ball.safeX = ball.x; ball.safeY = ball.y;
+    } else if (wentOOB) {
+      // Out of bounds — +1 penalty, ball returns to last safe spot
+      ball.strokes++;
+      showMsg((modifierText ? modifierText + " · " : "") + "Out of bounds! +1 penalty", "error");
+      ball.x = ball.safeX; ball.y = ball.safeY;
     } else if (landedInWater) {
       ball.strokes++;
       showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 penalty", "error");
