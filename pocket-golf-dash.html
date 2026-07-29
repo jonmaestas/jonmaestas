@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a1a0a" />
+  <meta name="description" content="Pocket Golf live dashboard — players, holes, strokes, aces, Infinite leaderboards." />
+  <title>Pocket Golf · Live Dashboard</title>
+  <style>
+    :root {
+      --bg: #07120a;
+      --panel: #0f1f12;
+      --panel2: #142818;
+      --text: #e8f5e9;
+      --muted: #8fa896;
+      --accent: #4ade80;
+      --cyan: #22d3ee;
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --line: #1e3a24;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0; min-height: 100%;
+      background: radial-gradient(1200px 600px at 10% -10%, #14301a 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    }
+    a { color: var(--accent); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 16px 14px 48px; }
+    header {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
+      justify-content: space-between; margin-bottom: 18px;
+    }
+    h1 { margin: 0; font-size: 1.55rem; letter-spacing: -0.02em; }
+    h1 span { color: var(--accent); }
+    .sub { color: var(--muted); font-size: 0.86rem; margin-top: 4px; max-width: 36rem; line-height: 1.4; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+      border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; cursor: pointer;
+    }
+    .btn-primary { background: #15803d; border-color: #16a34a; }
+    .btn-cyan { background: #0e7490; border-color: #06b6d4; }
+    .live {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; color: var(--muted); font-weight: 700;
+    }
+    .live i {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(74,222,128,0.7);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.55); }
+      70% { box-shadow: 0 0 0 10px rgba(74,222,128,0); }
+      100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+    }
+    .grid-stats {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    @media (min-width: 640px) {
+      .grid-stats { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat {
+      background: linear-gradient(160deg, var(--panel2), var(--panel));
+      border: 1px solid var(--line); border-radius: 16px; padding: 14px 12px;
+      position: relative; overflow: hidden;
+    }
+    .stat::after {
+      content: ""; position: absolute; right: -20px; top: -20px;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(74,222,128,0.06);
+    }
+    .stat .l { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+    .stat .v { font-size: 1.7rem; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .stat .h { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .cols {
+      display: grid; gap: 12px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px) {
+      .cols { grid-template-columns: 1.1fr 0.9fr; }
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 14px; min-height: 120px;
+    }
+    .card h2 {
+      margin: 0 0 4px; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;
+    }
+    .card .hint { color: var(--muted); font-size: 0.75rem; margin: 0 0 10px; line-height: 1.35; }
+    .pill {
+      font-size: 0.65rem; font-weight: 800; padding: 2px 7px; border-radius: 999px;
+      background: #14532d; color: var(--accent); letter-spacing: 0.04em;
+    }
+    .pill.cyan { background: #164e63; color: var(--cyan); }
+    .pill.amber { background: #78350f; color: var(--amber); }
+    .pill.rose { background: #881337; color: var(--rose); }
+    .row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 6px; border-bottom: 1px solid rgba(30,58,36,0.85);
+    }
+    .row:last-child { border-bottom: 0; }
+    .rank {
+      width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+      font-weight: 900; font-size: 0.8rem; background: var(--panel2); color: var(--muted);
+      flex-shrink: 0;
+    }
+    .rank.top { background: #14532d; color: var(--accent); }
+    .rank.gold { background: #78350f; color: var(--amber); }
+    .who { flex: 1; min-width: 0; }
+    .who .n { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .who .m { font-size: 0.72rem; color: var(--muted); }
+    .score { font-weight: 900; font-variant-numeric: tabular-nums; }
+    .feed-item {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: start;
+      padding: 8px 4px; border-bottom: 1px solid rgba(30,58,36,0.75);
+      font-size: 0.86rem;
+    }
+    .feed-item .emoji { font-size: 1.1rem; line-height: 1.2; }
+    .feed-item .body strong { color: var(--accent); }
+    .feed-item .body .tag { color: var(--muted); font-size: 0.72rem; }
+    .feed-item .ago { color: var(--muted); font-size: 0.7rem; white-space: nowrap; }
+    .feed-item.ace .body strong { color: var(--amber); }
+    .awards {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    @media (min-width: 640px) { .awards { grid-template-columns: repeat(4, 1fr); } }
+    .award {
+      background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 10px;
+    }
+    .award .t { font-size: 0.68rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+    .award .n { font-weight: 800; margin-top: 4px; font-size: 0.92rem; }
+    .award .d { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .empty { color: var(--muted); font-size: 0.85rem; padding: 12px 4px; text-align: center; }
+    footer {
+      margin-top: 22px; color: var(--muted); font-size: 0.75rem; text-align: center; line-height: 1.45;
+    }
+    .conn { font-size: 0.72rem; color: var(--muted); }
+    .conn.on { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Pocket <span>Golf</span> · Live</h1>
+        <p class="sub">Public clubhouse of stats — who’s grinding Infinite, who just aced, how many strokes the world has burned today.</p>
+        <div style="margin-top:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="live"><i></i> LIVE</span>
+          <span class="conn" id="conn">connecting…</span>
+          <span class="conn" id="periodLabel"></span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-primary" href="pocket-golf.html">🏌️ Play</a>
+        <a class="btn btn-cyan" href="pocket-golf.html?infinite=1">♾️ Infinite</a>
+      </div>
+    </header>
+
+    <section class="grid-stats" id="statGrid">
+      <div class="stat"><div class="l">Players</div><div class="v" id="sPlayers">—</div><div class="h">unique devices seen</div></div>
+      <div class="stat"><div class="l">Holes played</div><div class="v" id="sHoles">—</div><div class="h">clubhouse + infinite</div></div>
+      <div class="stat"><div class="l">Total strokes</div><div class="v" id="sStrokes">—</div><div class="h">every swing that counted</div></div>
+      <div class="stat"><div class="l">Aces 💥</div><div class="v" id="sAces">—</div><div class="h">hole-in-ones logged</div></div>
+    </section>
+
+    <section class="card" style="margin-bottom:12px">
+      <h2>🏆 Fun awards <span class="pill amber">all-time public</span></h2>
+      <p class="hint">Pulled from lifetime public player cards (anyone who finished a hole while online).</p>
+      <div class="awards" id="awards">
+        <div class="award"><div class="t">Most holes</div><div class="n" id="aMiles">—</div><div class="d" id="aMilesD">Journey king</div></div>
+        <div class="award"><div class="t">Ace machine</div><div class="n" id="aAces">—</div><div class="d" id="aAcesD">Most HIOs</div></div>
+        <div class="award"><div class="t">Iron will</div><div class="n" id="aIron">—</div><div class="d" id="aIronD">Most strokes</div></div>
+        <div class="award"><div class="t">Mulligan magnet</div><div class="n" id="aMull">—</div><div class="d" id="aMullD">Clubhouse only</div></div>
+      </div>
+    </section>
+
+    <div class="cols">
+      <section class="card">
+        <h2>♾️ Infinite today <span class="pill cyan" id="infPill">daily</span></h2>
+        <p class="hint">
+          <strong>Journey board:</strong> most holes first, then fewest total strokes.<br>
+          <strong>Sharpshooters:</strong> best average among players with ≥9 holes (real sample).
+        </p>
+        <h3 style="margin:10px 0 6px;font-size:0.92rem;color:var(--cyan)">🚀 Deepest journey</h3>
+        <div id="infJourney"><div class="empty">Waiting for Infinite finishers…</div></div>
+        <h3 style="margin:14px 0 6px;font-size:0.92rem;color:var(--amber)">🎯 Sharpshooters (avg · min 9)</h3>
+        <div id="infSharp"><div class="empty">Need 9+ hole finishers…</div></div>
+      </section>
+
+      <section class="card">
+        <h2>📡 Live feed <span class="pill rose">recent</span></h2>
+        <p class="hint">Aces pop gold. Clubhouse + Infinite finishes stream in as they land.</p>
+        <div id="feed"><div class="empty">No swings yet — be first.</div></div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:12px">
+      <h2>👥 Public players <span class="pill">lifetime</span></h2>
+      <p class="hint">Sorted by holes played. Built as people finish holes in the game (new builds only).</p>
+      <div id="playersList"><div class="empty">No public player cards yet.</div></div>
+    </section>
+
+    <footer>
+      Stats are honor-system + live mesh (Gun). Not anti-cheat. Built for vibes.<br>
+      <a href="pocket-golf.html">Play Pocket Golf</a> · jonmaestas.com
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+  <script>
+    const GUN_PEERS = ["https://gun-relay.jonmaestas.com/gun"];
+    const gun = Gun({ peers: GUN_PEERS, localStorage: false, radisk: false });
+    const publicRoot = gun.get("pocketgolf_public_v1");
+
+    const players = {}; // pid -> data
+    const feed = {}; // id -> event
+    let infinitePlayers = {};
+    let connOk = false;
+
+    function dailyPeriodKey() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+
+    const period = dailyPeriodKey();
+    document.getElementById("periodLabel").textContent = "Infinite day · " + period;
+    document.getElementById("infPill").textContent = period;
+
+    function setConn(ok, label) {
+      connOk = ok;
+      const el = document.getElementById("conn");
+      el.textContent = label || (ok ? "relay live" : "offline");
+      el.className = "conn" + (ok ? " on" : "");
+    }
+
+    // Presence ping
+    try {
+      gun.get("pocketgolf_public_v1").get("hello").put({ t: Date.now() });
+      setConn(true, "relay live");
+    } catch (_) {
+      setConn(false, "relay issue");
+    }
+
+    function fmt(n) {
+      n = Number(n) || 0;
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+      if (n >= 10000) return Math.round(n / 1000) + "k";
+      return String(n);
+    }
+
+    function escapeHtml(str) {
+      return String(str || "").replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function ago(ts) {
+      if (!ts) return "";
+      const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+      if (s < 60) return s + "s";
+      if (s < 3600) return Math.floor(s / 60) + "m";
+      if (s < 86400) return Math.floor(s / 3600) + "h";
+      return Math.floor(s / 86400) + "d";
+    }
+
+    function playerList() {
+      return Object.keys(players).map(pid => ({ pid, ...players[pid] }))
+        .filter(p => p.name && ((p.holes || 0) > 0 || (p.strokes || 0) > 0));
+    }
+
+    function renderStats() {
+      const list = playerList();
+      let holes = 0, strokes = 0, aces = 0;
+      list.forEach(p => {
+        holes += Number(p.holes) || 0;
+        strokes += Number(p.strokes) || 0;
+        aces += Number(p.aces) || 0;
+      });
+      // Prefer summing player cards; feed can double-count historical noise
+      document.getElementById("sPlayers").textContent = fmt(list.length);
+      document.getElementById("sHoles").textContent = fmt(holes);
+      document.getElementById("sStrokes").textContent = fmt(strokes);
+      document.getElementById("sAces").textContent = fmt(aces);
+
+      // Awards
+      const byHoles = [...list].sort((a, b) => (b.holes || 0) - (a.holes || 0));
+      const byAces = [...list].sort((a, b) => (b.aces || 0) - (a.aces || 0));
+      const byStrokes = [...list].sort((a, b) => (b.strokes || 0) - (a.strokes || 0));
+      const byMull = [...list].sort((a, b) => (b.mullUsed || 0) - (a.mullUsed || 0));
+
+      function setAward(nId, dId, p, detail) {
+        document.getElementById(nId).textContent = p && p.name ? p.name : "—";
+        document.getElementById(dId).textContent = p ? detail(p) : "—";
+      }
+      setAward("aMiles", "aMilesD", byHoles[0], p => (p.holes || 0) + " holes");
+      setAward("aAces", "aAcesD", byAces[0] && (byAces[0].aces || 0) > 0 ? byAces[0] : null, p => (p.aces || 0) + " aces");
+      setAward("aIron", "aIronD", byStrokes[0], p => (p.strokes || 0) + " strokes");
+      setAward("aMull", "aMullD", byMull[0] && (byMull[0].mullUsed || 0) > 0 ? byMull[0] : null, p => (p.mullUsed || 0) + " mulligans");
+    }
+
+    function renderPlayers() {
+      const list = playerList().sort((a, b) => (b.holes || 0) - (a.holes || 0) || (a.strokes || 0) - (b.strokes || 0));
+      const box = document.getElementById("playersList");
+      if (!list.length) {
+        box.innerHTML = '<div class="empty">No public player cards yet — finish a hole in the latest build.</div>';
+        return;
+      }
+      box.innerHTML = list.slice(0, 40).map((p, i) => {
+        const avg = p.holes ? (p.strokes / p.holes).toFixed(1) : "—";
+        const rankCls = i < 3 ? " top" : "";
+        return `<div class="row">
+          <div class="rank${rankCls}">${i + 1}</div>
+          <div class="who">
+            <div class="n">${escapeHtml(p.name)}</div>
+            <div class="m">${p.holes || 0} holes · ${p.aces || 0} aces · avg ${avg}${p.mullUsed ? " · " + p.mullUsed + " mull" : ""}</div>
+          </div>
+          <div class="score">${p.strokes || 0}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderFeed() {
+      const items = Object.keys(feed).map(id => ({ id, ...feed[id] }))
+        .filter(e => e.ts && e.name)
+        .sort((a, b) => b.ts - a.ts)
+        .slice(0, 35);
+      const box = document.getElementById("feed");
+      if (!items.length) {
+        box.innerHTML = '<div class="empty">No swings yet — be first.</div>';
+        return;
+      }
+      box.innerHTML = items.map(e => {
+        const ace = e.t === "ace" || e.strokes === 1;
+        const mode = e.mode === "inf" ? "Infinite" : (e.room ? ("Club " + e.room) : "Clubhouse");
+        const emoji = ace ? "💥" : (e.mode === "inf" ? "♾️" : "⛳");
+        const line = ace
+          ? `<strong>${escapeHtml(e.name)}</strong> aced hole ${e.hole}`
+          : `<strong>${escapeHtml(e.name)}</strong> finished hole ${e.hole} in ${e.strokes}`;
+        return `<div class="feed-item${ace ? " ace" : ""}">
+          <div class="emoji">${emoji}</div>
+          <div class="body">${line}<div class="tag">${mode}</div></div>
+          <div class="ago">${ago(e.ts)}</div>
+        </div>`;
+      }).join("");
+    }
+
+    function renderInfinite() {
+      const list = Object.keys(infinitePlayers).map(pid => ({ pid, ...infinitePlayers[pid] }))
+        .filter(p => (p.holes || 0) > 0 && p.name);
+      // Journey: most holes, then lowest total
+      const journey = [...list].sort((a, b) => (b.holes || 0) - (a.holes || 0) || (a.total || 0) - (b.total || 0));
+      // Sharp: min 9 holes, best average
+      const sharp = [...list]
+        .filter(p => (p.holes || 0) >= 9)
+        .map(p => ({ ...p, avg: p.total / p.holes }))
+        .sort((a, b) => a.avg - b.avg || b.holes - a.holes);
+
+      function rows(arr, mode) {
+        if (!arr.length) return '<div class="empty">No finishers yet today.</div>';
+        return arr.slice(0, 15).map((p, i) => {
+          const rankCls = i === 0 ? " gold" : (i < 3 ? " top" : "");
+          const meta = mode === "sharp"
+            ? (p.avg.toFixed(2) + " avg · " + p.holes + " holes · " + p.total + " tot")
+            : (p.holes + " holes · " + p.total + " strokes · avg " + (p.total / p.holes).toFixed(1));
+          const score = mode === "sharp" ? p.avg.toFixed(2) : p.holes;
+          return `<div class="row">
+            <div class="rank${rankCls}">${i + 1}</div>
+            <div class="who"><div class="n">${escapeHtml(p.name)}</div><div class="m">${meta}</div></div>
+            <div class="score">${score}</div>
+          </div>`;
+        }).join("");
+      }
+
+      document.getElementById("infJourney").innerHTML = rows(journey, "journey");
+      document.getElementById("infSharp").innerHTML = sharp.length
+        ? rows(sharp, "sharp")
+        : '<div class="empty">Need players with 9+ holes today.</div>';
+    }
+
+    function refreshAll() {
+      renderStats();
+      renderPlayers();
+      renderFeed();
+      renderInfinite();
+    }
+
+    // Public players + feed
+    publicRoot.get("players").map().on((data, key) => {
+      if (!data || !key || key === "_") return;
+      if (!data.name) return;
+      players[key] = data;
+      setConn(true, "relay live");
+      refreshAll();
+    });
+
+    publicRoot.get("feed").map().on((data, key) => {
+      if (!data || !key || key === "_") return;
+      if (!data.ts) return;
+      // Drop very old feed noise on first paint
+      if (Date.now() - data.ts > 1000 * 60 * 60 * 48) return;
+      feed[key] = data;
+      setConn(true, "relay live");
+      renderFeed();
+    });
+
+    // Infinite daily board (same as game)
+    gun.get("pocketgolf_infinite").get(period).get("players").map().on((data, key) => {
+      if (!data || !key || key === "_") return;
+      if (!data.name) return;
+      infinitePlayers[key] = {
+        name: data.name,
+        total: Number(data.total) || 0,
+        holes: Number(data.holes) || 0,
+        updated: data.updated || 0
+      };
+      setConn(true, "relay live");
+      renderInfinite();
+    });
+
+    // Soft re-render ago labels
+    setInterval(() => { renderFeed(); }, 15000);
+    refreshAll();
+  </script>
+</body>
+</html>

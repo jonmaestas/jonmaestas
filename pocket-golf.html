@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "459bcea-20260728220913";
+    window.__PG_BUILD__ = "d909ea4-20260728221252";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -243,6 +243,7 @@
         <button class="btn btn-blue" id="joinBtn" style="font-size:1.1rem;padding:16px">🔗 Join with Code</button>
       </div>
       <button class="btn" id="howToPlayBtn" style="margin-top:6px">📋 How to Play</button>
+      <a class="btn" id="dashLinkBtn" href="pocket-golf-dash.html" style="margin-top:6px;text-align:center;text-decoration:none;display:block">📊 Live Dashboard</a>
       <div id="pwaHelp" class="pwa-help">
         <button class="btn btn-primary hidden" id="installPwaBtn" type="button">📲 Install app</button>
         <button class="btn btn-blue" id="enableNotifsBtn" type="button">🔔 Allow notifications</button>
@@ -977,6 +978,100 @@ function syncMyScore(hole, score) {
   const rn = roundRoot();
   if (!rn) return;
   rn.get("scores").get(myId + "_" + hole).put(score);
+  publishPublicHoleFinish({
+    mode: "club",
+    hole: hole,
+    strokes: score,
+    ace: score === 1,
+    room: roomCode
+  });
+}
+
+// ====================================================================
+// PUBLIC DASHBOARD TELEMETRY (anonymous-ish fun stats)
+// https://jonmaestas.com/pocket-golf-dash.html
+// ====================================================================
+function publicStatsRoot() {
+  if (!gun) return null;
+  return gun.get("pocketgolf_public_v1");
+}
+
+function loadPublicAggLocal() {
+  try {
+    return JSON.parse(localStorage.getItem("pocketgolf_public_agg") || "{}") || {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function savePublicAggLocal(a) {
+  try { localStorage.setItem("pocketgolf_public_agg", JSON.stringify(a)); } catch (_) {}
+}
+
+/** Call once per hole finish — updates local lifetime + Gun public nodes */
+function publishPublicHoleFinish(opts) {
+  opts = opts || {};
+  ensureGun();
+  const root = publicStatsRoot();
+  const ts = Date.now();
+  const strokes = Math.max(1, parseInt(opts.strokes, 10) || 1);
+  const hole = parseInt(opts.hole, 10) || 0;
+  const ace = !!opts.ace || strokes === 1;
+  const mode = opts.mode === "inf" ? "inf" : "club";
+
+  const agg = loadPublicAggLocal();
+  // Avoid double-count same hole finish in same mode (resume/replay)
+  const key = mode + ":" + hole + ":" + (opts.room || infinitePeriod || "");
+  if (!agg.seen) agg.seen = {};
+  if (agg.seen[key]) {
+    // still refresh name/presence
+  } else {
+    agg.seen[key] = ts;
+    agg.holes = (agg.holes || 0) + 1;
+    agg.strokes = (agg.strokes || 0) + strokes;
+    agg.aces = (agg.aces || 0) + (ace ? 1 : 0);
+    if (mode === "inf") agg.infHoles = (agg.infHoles || 0) + 1;
+    else agg.clubHoles = (agg.clubHoles || 0) + 1;
+    // prune seen map
+    const keys = Object.keys(agg.seen);
+    if (keys.length > 400) {
+      keys.sort((a, b) => agg.seen[a] - agg.seen[b]);
+      keys.slice(0, keys.length - 300).forEach(k => delete agg.seen[k]);
+    }
+  }
+  agg.mullUsed = Math.max(agg.mullUsed || 0, myMulligansUsed || 0);
+  agg.name = myName || agg.name || "Player";
+  agg.lastTs = ts;
+  agg.lastMode = mode;
+  agg.lastHole = hole;
+  savePublicAggLocal(agg);
+
+  if (!root) return;
+
+  const feedId = ts + "_" + String(myId).slice(0, 8) + "_" + mode + "_" + hole;
+  root.get("feed").get(feedId).put({
+    t: ace ? "ace" : "hole",
+    mode: mode,
+    name: myName || "Player",
+    pid: myId,
+    hole: hole,
+    strokes: strokes,
+    room: mode === "club" ? (opts.room || null) : null,
+    ts: ts
+  });
+
+  root.get("players").get(myId).put({
+    name: myName || "Player",
+    holes: agg.holes || 0,
+    strokes: agg.strokes || 0,
+    aces: agg.aces || 0,
+    mullUsed: agg.mullUsed || 0,
+    clubHoles: agg.clubHoles || 0,
+    infHoles: agg.infHoles || 0,
+    lastMode: mode,
+    lastHole: hole,
+    lastTs: ts
+  });
 }
 
 // ====================================================================
@@ -2727,6 +2822,12 @@ function submitInfiniteScore(holeNum, strokes) {
       updated: Date.now()
     });
   }
+  publishPublicHoleFinish({
+    mode: "inf",
+    hole: holeNum,
+    strokes: strokes,
+    ace: strokes === 1
+  });
   updateInfiniteRanksUI();
 }
 
