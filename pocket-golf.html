@@ -105,7 +105,16 @@
     .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: blink 1.5s infinite; margin-left: 4px; }
     @keyframes blink { 50% { opacity: 0.3; } }
 
-    footer { margin-top: 6px; text-align: center; color: #4a6b3a; font-size: 0.65rem; }
+    .lb-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--bg); margin-bottom: 4px; font-size: 0.88rem; }
+    .lb-row.me { border: 1px solid var(--accent); background: #0f2a18; }
+    .lb-rank { width: 28px; font-weight: 900; color: var(--muted); text-align: center; }
+    .lb-rank.top { color: var(--accent); }
+    .lb-name { flex: 1; font-weight: 700; }
+    .lb-score { font-weight: 900; font-size: 1rem; }
+    .lb-meta { font-size: 0.72rem; color: var(--muted); }
+    .infinite-banner { width: 100%; max-width: 560px; background: linear-gradient(90deg, #14532d, #1e3a5f); border: 1px solid var(--btn-border); border-radius: 10px; padding: 6px 12px; margin-bottom: 4px; display: none; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+    .infinite-banner strong { color: var(--accent); }
+    .mode-pill { display: inline-block; background: #0ea5e9; color: #042f2e; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.04em; }
   </style>
 </head>
 <body>
@@ -123,10 +132,21 @@
       <h2>Your Games</h2>
       <div id="activeGamesList"></div>
       <div class="clubhouse-options" style="margin-top:12px">
-        <button class="btn btn-primary" id="createBtn" style="font-size:1.1rem;padding:16px">🏌️ New Game</button>
+        <button class="btn btn-primary" id="infiniteBtn" style="font-size:1.15rem;padding:18px;background:#0e7490;border-color:#06b6d4">♾️ Infinite Golf</button>
+        <p style="margin:0;font-size:0.78rem;color:var(--muted);text-align:center">Global daily board. Same holes for everyone. Climb the ranks.</p>
+        <button class="btn btn-primary" id="createBtn" style="font-size:1.1rem;padding:16px">🏌️ Clubhouse Game</button>
         <button class="btn btn-blue" id="joinBtn" style="font-size:1.1rem;padding:16px">🔗 Join with Code</button>
       </div>
       <button class="btn" id="howToPlayBtn" style="margin-top:6px">📋 How to Play</button>
+    </div>
+
+    <!-- Infinite setup -->
+    <div id="infiniteView" class="hidden">
+      <h2>♾️ Infinite Golf</h2>
+      <p>One global course today. Everyone plays the same hole 1, 2, 3… forever. Your rank is among players who finished each hole. Daily reset at midnight local time.</p>
+      <input class="code-input" type="text" id="infiniteName" placeholder="Your name" maxlength="12" style="text-transform:none;letter-spacing:normal">
+      <button class="btn btn-primary" id="doInfiniteBtn" style="background:#0e7490;border-color:#06b6d4">Start Infinite</button>
+      <button class="btn" id="backFromInfiniteBtn" style="margin-top:6px">← Back</button>
     </div>
 
     <!-- Create -->
@@ -184,6 +204,7 @@
         <li><strong>On the green:</strong> auto-putt toward hole, flick controls power</li>
         <li><strong>Mulligans:</strong> 6 per round</li>
         <li><strong>Play whenever</strong> — fully async between holes</li>
+        <li><strong>Infinite Golf</strong> — global daily ladder, endless holes, same layout for everyone</li>
       </ul>
       <button class="btn" id="backFromRulesBtn" style="margin-top:8px">← Back</button>
     </div>
@@ -227,8 +248,13 @@
   <div class="logo" id="homeLogo">Pocket <span>Golf</span></div>
   <div style="display:flex;gap:6px;align-items:center">
     <span class="conn-badge" id="connBadge">●</span>
-    <span class="hole-badge">Hole <strong id="holeNum">1</strong>/<span id="totalHoles">9</span></span>
+    <span class="hole-badge" id="holeBadge">Hole <strong id="holeNum">1</strong>/<span id="totalHoles">9</span></span>
   </div>
+</div>
+
+<div class="infinite-banner" id="infiniteBanner">
+  <div><span class="mode-pill">INFINITE</span> <span id="infinitePeriodLabel">Today</span></div>
+  <div>Hole rank <strong id="infiniteHoleRank">—</strong> · Overall <strong id="infiniteOverallRank">—</strong></div>
 </div>
 
 <div class="my-banner" id="myBanner">
@@ -336,7 +362,19 @@ const MAX_PUTT_POWER = 4;
 // ====================================================================
 // STATE
 // ====================================================================
-let myId = "p" + Math.random().toString(36).substr(2, 6);
+function getStableId() {
+  try {
+    let id = localStorage.getItem("pocketgolf_pid");
+    if (!id) {
+      id = "p" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem("pocketgolf_pid", id);
+    }
+    return id;
+  } catch (_) {
+    return "p" + Math.random().toString(36).slice(2, 10);
+  }
+}
+let myId = getStableId();
 let myName = "You";
 let roomCode = null;
 let gameNode = null;
@@ -369,6 +407,16 @@ let otherBalls = {};
 
 // Saved games (browser localStorage)
 let savedGames = [];
+
+// Infinite Golf
+let infiniteMode = false;
+let infinitePeriod = null;
+let infiniteNode = null;
+let infiniteHoleBoard = {};   // pid -> { name, strokes, ts }
+let infinitePlayers = {};     // pid -> { name, total, holes, updated }
+let infiniteListenersBound = false;
+let infiniteHoleCaches = {};  // holeNum -> { pid: data }
+let infiniteHolesListening = {};
 
 // ====================================================================
 // CANVAS
@@ -436,6 +484,25 @@ function generateAllHoles(seed) {
   }
 }
 
+/** Build one hole on demand (infinite mode) */
+function ensureHole(n) {
+  n = parseInt(n, 10);
+  if (allHoles[n]) return allHoles[n];
+  const seed = infiniteMode
+    ? ("inf|" + (infinitePeriod || dailyPeriodKey()) + "|" + n)
+    : ((roomCode || "solo") + "|hole|" + n);
+  allHoles[n] = generateHoleData(n, makeRng(seed));
+  return allHoles[n];
+}
+
+function dailyPeriodKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + day;
+}
+
 function generateHoleData(holeNum, rand) {
   const r = rand || Math.random;
   const g = [];
@@ -443,7 +510,7 @@ function generateHoleData(holeNum, rand) {
   const tx = Math.floor(COLS/2), ty = ROWS - 2;
   const hx = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(r()*7)-3)));
   const hy = 1 + Math.floor(r()*2);
-  const difficulty = 1 + Math.floor(holeNum/4);
+  const difficulty = Math.min(7, 1 + Math.floor((holeNum - 1) / 4));
 
   let cx = tx, cy = ty, fw = 2;
   let guard = 0;
@@ -521,7 +588,7 @@ function loadHole(holeNum, opts = {}) {
   const nextBtn = document.getElementById("nextHoleBtn");
   if (myBall.done) {
     nextBtn.disabled = false;
-    nextBtn.textContent = (myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
+    nextBtn.textContent = (!infiniteMode && myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
   } else {
     nextBtn.disabled = true;
     nextBtn.textContent = "Next Hole";
@@ -783,11 +850,18 @@ function processShot(angle, dist, isPutt) {
       myBall.done = true;
       myScores[myCurrentHole] = myBall.strokes;
       syncMyScore(myCurrentHole, myBall.strokes);
-      showMsg(scoreName(myBall.strokes, par) + "!", "success");
       const nextBtn = document.getElementById("nextHoleBtn");
       nextBtn.disabled = false;
-      nextBtn.textContent = (myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
-      saveGameState();
+      nextBtn.textContent = (!infiniteMode && myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
+      if (infiniteMode) {
+        submitInfiniteScore(myCurrentHole, myBall.strokes);
+        const hr = rankOnHoleBoard(myCurrentHole, myBall.strokes);
+        showMsg(scoreName(myBall.strokes, par) + "! Hole rank: " + hr.label, "success");
+        saveInfiniteProgress();
+      } else {
+        showMsg(scoreName(myBall.strokes, par) + "!", "success");
+        saveGameState();
+      }
     } else if (isPutt) {
       const bd = Math.abs(myBall.x - holeX) + Math.abs(myBall.y - holeY);
       showMsg(bd <= 1 ? "Lipped out! So close." : "Missed putt. " + bd + " away.", "warn");
@@ -816,7 +890,8 @@ function processShot(angle, dist, isPutt) {
 
     syncMyBall();
     document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
-    saveGameState();
+    if (infiniteMode) saveInfiniteProgress();
+    else saveGameState();
     updateUI(); draw();
   });
 }
@@ -851,7 +926,8 @@ function useMulligan() {
   if (gameNode) gameNode.get("mulligans").get(myId).put(myMulligans);
   syncMyBall();
   showMsg("Mulligan used", "");
-  saveGameState();
+  if (infiniteMode) saveInfiniteProgress();
+  else saveGameState();
   updateUI(); draw();
 }
 
@@ -871,6 +947,17 @@ function scoreName(s, p) {
 // NEXT HOLE
 // ====================================================================
 function goToNextHole() {
+  if (infiniteMode) {
+    myCurrentHole++;
+    ensureHole(myCurrentHole);
+    loadHole(myCurrentHole);
+    showMsg("Hole " + myCurrentHole + " — same layout worldwide today.", "");
+    updateScorecard();
+    listenInfiniteHole(myCurrentHole);
+    saveInfiniteProgress();
+    updateInfiniteRanksUI();
+    return;
+  }
   if (myCurrentHole >= NUM_HOLES) { showRoundEnd(); return; }
   myCurrentHole++;
   loadHole(myCurrentHole);
@@ -887,7 +974,7 @@ function showMsg(t, type) { const el = document.getElementById("msg"); el.textCo
 
 function updateUI() {
   document.getElementById("holeNum").textContent = myCurrentHole;
-  document.getElementById("totalHoles").textContent = NUM_HOLES;
+  document.getElementById("totalHoles").textContent = infiniteMode ? "∞" : NUM_HOLES;
   document.getElementById("parVal").textContent = par;
   document.getElementById("strokeVal").textContent = myBall.strokes;
   document.getElementById("mulliganVal").textContent = myMulligans;
@@ -902,9 +989,17 @@ function updateUI() {
   document.getElementById("myName").textContent = myName;
   document.getElementById("myStrokeInfo").textContent = `Stroke ${myBall.strokes + 1}${myBall.done ? " · Done!" : ""}`;
   document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
+
+  const infBanner = document.getElementById("infiniteBanner");
+  if (infBanner) infBanner.style.display = infiniteMode ? "flex" : "none";
+  if (infiniteMode) updateInfiniteRanksUI();
 }
 
 function updateScorecard() {
+  if (infiniteMode) {
+    renderInfiniteScorecard();
+    return;
+  }
   const wrapper = document.getElementById("scorecardContent");
   let html = `<table class="sc-table-full"><tr><th>Player</th>`;
   for (let h = 1; h <= NUM_HOLES; h++) html += `<th>${h}</th>`;
@@ -960,6 +1055,7 @@ function loadSavedGames() {
 }
 
 function saveGameState() {
+  if (infiniteMode) return;
   if (!roomCode) return;
   const existing = savedGames.findIndex(g => g.code === roomCode);
   const state = {
@@ -1084,8 +1180,9 @@ function generateCode() {
 }
 
 function showView(viewId) {
-  ["gamesListView", "createView", "waitView", "joinView", "rulesView"].forEach(v => {
-    document.getElementById(v).classList.add("hidden");
+  ["gamesListView", "createView", "waitView", "joinView", "rulesView", "infiniteView"].forEach(v => {
+    const el = document.getElementById(v);
+    if (el) el.classList.add("hidden");
   });
   document.getElementById(viewId).classList.remove("hidden");
 }
@@ -1096,9 +1193,22 @@ document.getElementById("howToPlayBtn").addEventListener("click", () => { showVi
 document.getElementById("backFromCreateBtn").addEventListener("click", () => { showView("gamesListView"); });
 document.getElementById("backFromJoinBtn").addEventListener("click", () => { showView("gamesListView"); });
 document.getElementById("backFromRulesBtn").addEventListener("click", () => { showView("gamesListView"); });
+document.getElementById("infiniteBtn").addEventListener("click", () => {
+  showView("infiniteView");
+  try {
+    const saved = localStorage.getItem("pocketgolf_name");
+    if (saved) document.getElementById("infiniteName").value = saved;
+  } catch (_) {}
+  document.getElementById("infiniteName").focus();
+});
+document.getElementById("backFromInfiniteBtn").addEventListener("click", () => { showView("gamesListView"); });
+document.getElementById("doInfiniteBtn").addEventListener("click", startInfiniteGolf);
 
 document.getElementById("doCreateBtn").addEventListener("click", () => {
   myName = document.getElementById("createName").value.trim() || "Host";
+  try { localStorage.setItem("pocketgolf_name", myName); } catch (_) {}
+  infiniteMode = false;
+  document.getElementById("infiniteBanner").style.display = "none";
   roomCode = generateCode();
   isHost = true;
   ensureGun();
@@ -1125,8 +1235,11 @@ document.getElementById("doJoinBtn").addEventListener("click", () => {
 
 function joinGameFromForm() {
   myName = document.getElementById("joinName").value.trim() || "Player";
+  try { localStorage.setItem("pocketgolf_name", myName); } catch (_) {}
   roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
   if (roomCode.length < 4) { alert("Enter a valid code"); return; }
+  infiniteMode = false;
+  document.getElementById("infiniteBanner").style.display = "none";
   isHost = false;
   ensureGun();
   gameNode = gun ? roomRoot(roomCode) : null;
@@ -1352,17 +1465,28 @@ document.getElementById("leaveWaitBtn").addEventListener("click", () => { showVi
 
 // Home button
 document.getElementById("homeLogo").addEventListener("click", () => {
-  saveGameState();
+  if (infiniteMode) saveInfiniteProgress();
+  else saveGameState();
   loadSavedGames();
   renderActiveGames();
   showView("gamesListView");
   document.getElementById("lobbyOverlay").classList.remove("hidden");
+  document.getElementById("scorecardOverlay").classList.add("hidden");
 });
 
 // Scorecard
 document.getElementById("openScorecardBtn").addEventListener("click", () => {
   updateScorecard();
-  renderTaunts();
+  if (!infiniteMode) renderTaunts();
+  // Hide taunt UI in infinite
+  const tauntInput = document.getElementById("tauntInput");
+  const sendTauntBtn = document.getElementById("sendTauntBtn");
+  const tauntList = document.getElementById("tauntList");
+  const endGameBtn = document.getElementById("endGameBtn");
+  if (tauntInput) tauntInput.style.display = infiniteMode ? "none" : "";
+  if (sendTauntBtn) sendTauntBtn.style.display = infiniteMode ? "none" : "";
+  if (tauntList) tauntList.style.display = infiniteMode ? "none" : "";
+  if (endGameBtn) endGameBtn.style.display = infiniteMode ? "none" : "";
   document.getElementById("scorecardOverlay").classList.remove("hidden");
 });
 document.getElementById("closeScorecardBtn").addEventListener("click", () => { document.getElementById("scorecardOverlay").classList.add("hidden"); });
@@ -1442,14 +1566,19 @@ function setupTauntListener() {
 
 // ========== LEAVE GAME ==========
 document.getElementById("leaveGameBtn").addEventListener("click", () => {
-  if (!confirm("Leave this game? You can resume it later from the home screen.")) return;
-  saveGameState();
-  // Reset to lobby
+  if (infiniteMode) {
+    if (!confirm("Leave Infinite Golf? Progress for today is saved.")) return;
+    saveInfiniteProgress();
+  } else {
+    if (!confirm("Leave this game? You can resume it later from the home screen.")) return;
+    saveGameState();
+  }
   loadSavedGames();
   renderActiveGames();
   showView("gamesListView");
   document.getElementById("scorecardOverlay").classList.add("hidden");
   document.getElementById("lobbyOverlay").classList.remove("hidden");
+  document.getElementById("infiniteBanner").style.display = "none";
 });
 
 // ========== END GAME (host only) ==========
@@ -1506,6 +1635,307 @@ function showRoundEnd() {
 }
 
 // ====================================================================
+// INFINITE GOLF — global daily ladder
+// ====================================================================
+function startInfiniteGolf() {
+  myName = document.getElementById("infiniteName").value.trim() || "Player";
+  try { localStorage.setItem("pocketgolf_name", myName); } catch (_) {}
+
+  infiniteMode = true;
+  infinitePeriod = dailyPeriodKey();
+  roomCode = null;
+  isHost = false;
+  gameNode = null;
+  otherBalls = {};
+  players = {};
+  playerOrder = [myId];
+  players[myId] = { name: myName };
+  myColorIdx = 0;
+  myMulligans = 6;
+  allHoles = {};
+  infiniteHoleBoard = {};
+  infinitePlayers = {};
+  infiniteListenersBound = false;
+  infiniteHoleCaches = {};
+  infiniteHolesListening = {};
+
+  // Restore today's progress if any
+  const prog = loadInfiniteProgress();
+  if (prog && prog.period === infinitePeriod) {
+    myScores = prog.scores || {};
+    myCurrentHole = prog.currentHole || 1;
+    myMulligans = prog.mulligans != null ? prog.mulligans : 6;
+    if (prog.ball && prog.ball.hole === myCurrentHole && !prog.ball.done) {
+      // resume mid-hole
+    } else if (myScores[myCurrentHole]) {
+      // hole already done — stay on it done, or advance?
+      // stay so they can review / hit next
+    }
+  } else {
+    myScores = {};
+    myCurrentHole = 1;
+  }
+
+  ensureGun();
+  infiniteNode = gun ? gun.get("pocketgolf_infinite").get(infinitePeriod) : null;
+
+  ensureHole(myCurrentHole);
+  document.getElementById("lobbyOverlay").classList.add("hidden");
+  document.getElementById("infiniteBanner").style.display = "flex";
+  document.getElementById("infinitePeriodLabel").textContent = infinitePeriod;
+
+  resizeCanvas();
+  const keep = prog && prog.period === infinitePeriod && prog.ball && prog.ball.hole === myCurrentHole;
+  if (keep && prog.ball) {
+    loadHole(myCurrentHole, { keepBall: true });
+    myBall = {
+      x: prog.ball.x, y: prog.ball.y,
+      safeX: prog.ball.safeX != null ? prog.ball.safeX : prog.ball.x,
+      safeY: prog.ball.safeY != null ? prog.ball.safeY : prog.ball.y,
+      strokes: prog.ball.strokes || 0,
+      done: !!prog.ball.done
+    };
+    const nextBtn = document.getElementById("nextHoleBtn");
+    nextBtn.disabled = !myBall.done;
+    nextBtn.textContent = "Next Hole";
+  } else {
+    loadHole(myCurrentHole);
+  }
+
+  if (infiniteNode) {
+    infiniteNode.get("players").get(myId).put({
+      name: myName,
+      total: Object.values(myScores).reduce((a, b) => a + b, 0),
+      holes: Object.keys(myScores).length,
+      updated: Date.now()
+    });
+    setupInfiniteListeners();
+    listenInfiniteHole(myCurrentHole);
+  }
+
+  updateUI();
+  updateScorecard();
+  updateInfiniteRanksUI();
+  showMsg("Infinite · " + infinitePeriod + " · Hole " + myCurrentHole + ". Everyone shares this layout.", "success");
+
+  try {
+    const clean = location.pathname + "?infinite=1";
+    history.replaceState(null, "", clean);
+  } catch (_) {}
+}
+
+function setupInfiniteListeners() {
+  if (!infiniteNode || infiniteListenersBound) return;
+  infiniteListenersBound = true;
+  infiniteNode.get("players").map().on((data, key) => {
+    if (!data || !key || key === "_" || !data.name) return;
+    infinitePlayers[key] = {
+      name: data.name,
+      total: Number(data.total) || 0,
+      holes: Number(data.holes) || 0,
+      updated: data.updated || 0
+    };
+    updateInfiniteRanksUI();
+    if (document.getElementById("scorecardOverlay") &&
+        !document.getElementById("scorecardOverlay").classList.contains("hidden")) {
+      renderInfiniteScorecard();
+    }
+  });
+}
+
+function listenInfiniteHole(holeNum) {
+  if (!infiniteNode) return;
+  holeNum = String(holeNum);
+  if (!infiniteHoleCaches[holeNum]) infiniteHoleCaches[holeNum] = {};
+  infiniteHoleBoard = infiniteHoleCaches[holeNum];
+  if (infiniteHolesListening[holeNum]) {
+    updateInfiniteRanksUI();
+    return;
+  }
+  infiniteHolesListening[holeNum] = true;
+  infiniteNode.get("hole").get(holeNum).map().on((data, key) => {
+    if (!data || !key || key === "_") return;
+    const strokes = Number(data.strokes);
+    if (!strokes || strokes < 1) return;
+    if (!infiniteHoleCaches[holeNum]) infiniteHoleCaches[holeNum] = {};
+    infiniteHoleCaches[holeNum][key] = {
+      name: data.name || "Player",
+      strokes,
+      ts: data.ts || 0
+    };
+    if (String(myCurrentHole) === holeNum) {
+      infiniteHoleBoard = infiniteHoleCaches[holeNum];
+      updateInfiniteRanksUI();
+      if (document.getElementById("scorecardOverlay") &&
+          !document.getElementById("scorecardOverlay").classList.contains("hidden")) {
+        renderInfiniteScorecard();
+      }
+    }
+  });
+}
+
+function submitInfiniteScore(holeNum, strokes) {
+  // Keep best (lowest) score if replaying isn't allowed — we only play each hole once
+  myScores[holeNum] = strokes;
+  const total = Object.values(myScores).reduce((a, b) => a + b, 0);
+  const holes = Object.keys(myScores).length;
+
+  // Local board optimistic
+  infiniteHoleBoard[myId] = { name: myName, strokes, ts: Date.now() };
+  if (!infiniteHoleCaches[String(holeNum)]) infiniteHoleCaches[String(holeNum)] = {};
+  infiniteHoleCaches[String(holeNum)][myId] = infiniteHoleBoard[myId];
+  infinitePlayers[myId] = { name: myName, total, holes, updated: Date.now() };
+
+  if (infiniteNode) {
+    infiniteNode.get("hole").get(String(holeNum)).get(myId).put({
+      name: myName,
+      strokes,
+      ts: Date.now()
+    });
+    infiniteNode.get("players").get(myId).put({
+      name: myName,
+      total,
+      holes,
+      updated: Date.now()
+    });
+  }
+  updateInfiniteRanksUI();
+}
+
+function rankOnHoleBoard(holeNum, myStrokes) {
+  const entries = Object.keys(infiniteHoleBoard).map(pid => ({
+    pid,
+    ...infiniteHoleBoard[pid]
+  }));
+  // ensure me
+  if (!entries.find(e => e.pid === myId)) {
+    entries.push({ pid: myId, name: myName, strokes: myStrokes, ts: Date.now() });
+  }
+  entries.sort((a, b) => a.strokes - b.strokes || a.ts - b.ts);
+  const idx = entries.findIndex(e => e.pid === myId);
+  const rank = idx < 0 ? entries.length : idx + 1;
+  return { rank, total: entries.length, label: rank + " of " + entries.length };
+}
+
+function overallRankAmongPeers() {
+  const myHoles = Object.keys(myScores).length;
+  const myTotal = Object.values(myScores).reduce((a, b) => a + b, 0);
+  // Rank among players who finished at least as many holes as you
+  const peers = Object.keys(infinitePlayers)
+    .map(pid => ({ pid, ...infinitePlayers[pid] }))
+    .filter(p => (p.holes || 0) >= myHoles && myHoles > 0);
+  if (!peers.find(p => p.pid === myId) && myHoles > 0) {
+    peers.push({ pid: myId, name: myName, total: myTotal, holes: myHoles });
+  }
+  peers.sort((a, b) => a.total - b.total || b.holes - a.holes);
+  const idx = peers.findIndex(p => p.pid === myId);
+  if (myHoles === 0) return { rank: "—", total: peers.length, label: "—" };
+  const rank = idx < 0 ? peers.length : idx + 1;
+  return { rank, total: peers.length, label: rank + " of " + Math.max(peers.length, 1) };
+}
+
+function updateInfiniteRanksUI() {
+  if (!infiniteMode) return;
+  const holeEl = document.getElementById("infiniteHoleRank");
+  const overallEl = document.getElementById("infiniteOverallRank");
+  if (!holeEl || !overallEl) return;
+  if (myScores[myCurrentHole] != null) {
+    holeEl.textContent = rankOnHoleBoard(myCurrentHole, myScores[myCurrentHole]).label;
+  } else if (myBall.done) {
+    holeEl.textContent = rankOnHoleBoard(myCurrentHole, myBall.strokes).label;
+  } else {
+    const n = Object.keys(infiniteHoleBoard).length;
+    holeEl.textContent = n ? ("— / " + n + " playing") : "—";
+  }
+  overallEl.textContent = overallRankAmongPeers().label;
+}
+
+function renderInfiniteScorecard() {
+  const wrapper = document.getElementById("scorecardContent");
+  const myTotal = Object.values(myScores).reduce((a, b) => a + b, 0);
+  const myHoles = Object.keys(myScores).length;
+
+  // Hole board
+  let holeEntries = Object.keys(infiniteHoleBoard).map(pid => ({
+    pid, name: infiniteHoleBoard[pid].name, strokes: infiniteHoleBoard[pid].strokes, ts: infiniteHoleBoard[pid].ts
+  }));
+  holeEntries.sort((a, b) => a.strokes - b.strokes || a.ts - b.ts);
+  holeEntries = holeEntries.slice(0, 25);
+
+  let html = `<h2 style="margin:0 0 6px;font-size:1rem">Hole ${myCurrentHole} board <span class="lb-meta">(${infinitePeriod})</span></h2>`;
+  if (holeEntries.length === 0) {
+    html += `<p class="lb-meta" style="text-align:center;padding:8px">No scores yet on this hole. Be first.</p>`;
+  } else {
+    holeEntries.forEach((e, i) => {
+      const me = e.pid === myId;
+      const rankCls = i < 3 ? " top" : "";
+      html += `<div class="lb-row${me ? " me" : ""}">
+        <div class="lb-rank${rankCls}">${i + 1}</div>
+        <div class="lb-name">${escapeHtml(e.name)}${me ? " (You)" : ""}</div>
+        <div class="lb-score">${e.strokes}</div>
+      </div>`;
+    });
+  }
+
+  // Overall
+  let overall = Object.keys(infinitePlayers).map(pid => ({
+    pid, name: infinitePlayers[pid].name, total: infinitePlayers[pid].total || 0, holes: infinitePlayers[pid].holes || 0
+  })).filter(p => p.holes > 0);
+  overall.sort((a, b) => b.holes - a.holes || a.total - b.total);
+  overall = overall.slice(0, 25);
+
+  html += `<h2 style="margin:14px 0 6px;font-size:1rem">Overall today</h2>
+    <p class="lb-meta">More holes first, then lower total. Comeback by racking great scores as you climb.</p>`;
+  if (overall.length === 0) {
+    html += `<p class="lb-meta" style="text-align:center;padding:8px">No finishers yet.</p>`;
+  } else {
+    overall.forEach((e, i) => {
+      const me = e.pid === myId;
+      const rankCls = i < 3 ? " top" : "";
+      const avg = e.holes ? (e.total / e.holes).toFixed(1) : "—";
+      html += `<div class="lb-row${me ? " me" : ""}">
+        <div class="lb-rank${rankCls}">${i + 1}</div>
+        <div class="lb-name">${escapeHtml(e.name)}${me ? " (You)" : ""}
+          <div class="lb-meta">${e.holes} holes · avg ${avg}</div>
+        </div>
+        <div class="lb-score">${e.total}</div>
+      </div>`;
+    });
+  }
+
+  html += `<p class="lb-meta" style="margin-top:12px;text-align:center">You: ${myHoles} holes · ${myTotal || 0} strokes · period ${infinitePeriod}</p>`;
+  wrapper.innerHTML = html;
+}
+
+function saveInfiniteProgress() {
+  if (!infiniteMode) return;
+  const state = {
+    period: infinitePeriod,
+    name: myName,
+    currentHole: myCurrentHole,
+    scores: myScores,
+    mulligans: myMulligans,
+    ball: {
+      hole: myCurrentHole,
+      x: myBall.x, y: myBall.y,
+      safeX: myBall.safeX, safeY: myBall.safeY,
+      strokes: myBall.strokes,
+      done: myBall.done
+    },
+    ts: Date.now()
+  };
+  try { localStorage.setItem("pocketgolf_infinite", JSON.stringify(state)); } catch (_) {}
+}
+
+function loadInfiniteProgress() {
+  try {
+    const raw = localStorage.getItem("pocketgolf_infinite");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (_) { return null; }
+}
+
+// ====================================================================
 // INIT
 // ====================================================================
 loadSavedGames();
@@ -1514,7 +1944,26 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 animLoop();
 updateScorecard();
-handleJoinDeepLink();
+// Prefill name fields
+try {
+  const savedName = localStorage.getItem("pocketgolf_name");
+  if (savedName) {
+    const cn = document.getElementById("createName");
+    const jn = document.getElementById("joinName");
+    const inf = document.getElementById("infiniteName");
+    if (cn) cn.value = savedName;
+    if (jn) jn.value = savedName;
+    if (inf) inf.value = savedName;
+  }
+} catch (_) {}
+// Deep links
+const params = new URLSearchParams(location.search);
+if (params.get("infinite") === "1" || params.get("mode") === "infinite") {
+  showView("infiniteView");
+  document.getElementById("infiniteName").focus();
+} else {
+  handleJoinDeepLink();
+}
 </script>
 </body>
 </html>
