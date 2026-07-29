@@ -13,7 +13,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "3c219bc-20260728212359";
+    window.__PG_BUILD__ = "0e8e37a-20260728213135";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -805,7 +805,7 @@ function draw() {
     ctx.lineTo(tipX - Math.cos(flickAngle + 0.45) * headLen, tipY - Math.sin(flickAngle + 0.45) * headLen);
     ctx.closePath(); ctx.fill();
 
-    // Ghost landing ring (past thumb)
+    // Ghost landing ring only — no "sq" text (confusing on mobile)
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.85;
@@ -816,17 +816,6 @@ function draw() {
     ctx.globalAlpha = 0.25;
     ctx.fill();
     ctx.globalAlpha = 1;
-
-    // Power ticks along arrow
-    ctx.fillStyle = "#fff";
-    ctx.font = `bold ${Math.max(11, CELL * 0.35)}px sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.strokeStyle = "rgba(0,0,0,0.55)";
-    ctx.lineWidth = 3;
-    const label = previewCells + " sq";
-    ctx.strokeText(label, landX, landY - CELL * 0.45);
-    ctx.fillText(label, landX, landY - CELL * 0.45);
   }
 }
 
@@ -1098,16 +1087,23 @@ function processShot(angle, dist) {
       }
     } else if (wentOOB) {
       myBall.strokes++;
-      showMsg((modifierText ? modifierText + " · " : "") + "Out of bounds! +1 penalty", "error");
-      myBall.x = myBall.safeX; myBall.y = myBall.safeY;
+      // Stroke-and-distance: back to the lie you played from (not tee)
+      myBall.x = fromX; myBall.y = fromY;
+      myBall.safeX = fromX; myBall.safeY = fromY;
+      showMsg((modifierText ? modifierText + " · " : "") + "Out of bounds! +1 · replay from lie", "error");
     } else if (landedInWater) {
       myBall.strokes++;
-      showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 penalty", "error");
-      myBall.x = myBall.safeX; myBall.y = myBall.safeY;
+      myBall.x = fromX; myBall.y = fromY;
+      myBall.safeX = fromX; myBall.safeY = fromY;
+      showMsg((modifierText ? modifierText + " · " : "") + "Splash! +1 · back to your lie", "error");
     } else if (hitTree) {
+      // Stop short of tree — that cell is your new lie
+      myBall.safeX = myBall.x; myBall.safeY = myBall.y;
       showMsg((modifierText ? modifierText + " · " : "") + "Tree blocked!", "warn");
     } else {
-      if (finalTerrain !== T.WATER && finalTerrain !== T.TREE) { myBall.safeX = myBall.x; myBall.safeY = myBall.y; }
+      if (finalTerrain !== T.WATER && finalTerrain !== T.TREE) {
+        myBall.safeX = myBall.x; myBall.safeY = myBall.y;
+      }
       let msg = modifierText;
       if (!msg) {
         if (finalTerrain === T.GREEN) msg = "On the green — flick aim & power like any shot.";
