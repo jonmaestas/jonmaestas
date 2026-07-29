@@ -263,25 +263,58 @@
 
 <script>
 // ====================================================================
-// GUN.JS P2P — lazy loaded, game works without it for solo play
+// GUN.JS P2P — Jon's relay (public heroku peers are dead)
 // ====================================================================
 let gun = null;
+const GUN_PEERS = ["https://gun-relay.jonmaestas.com/gun"];
+let gunConnected = false;
 
 function ensureGun() {
   if (gun) return gun;
   if (typeof Gun === "undefined") {
     console.warn("Gun.js not loaded — multiplayer unavailable, solo play works");
+    setConnBadge(false, "no gun");
     return null;
   }
   try {
     gun = Gun({
-      peers: ["https://gun-manhattan.herokuapp.com/gun", "https://peer.wallie.io/gun"],
+      peers: GUN_PEERS,
       localStorage: false,
+      radisk: false,
     });
+    // Probe: write + read a heartbeat so badge reflects real relay health
+    try {
+      const probe = gun.get("pocketgolf_probe").get("ping");
+      probe.put({ t: Date.now() }, (ack) => {
+        gunConnected = !(ack && ack.err);
+        setConnBadge(gunConnected, gunConnected ? "relay ok" : "relay err");
+      });
+      // Also watch hi events if available
+      if (gun.on) {
+        gun.on("hi", () => { gunConnected = true; setConnBadge(true, "connected"); });
+      }
+    } catch (_) {
+      setConnBadge(false, "probe fail");
+    }
   } catch (e) {
     console.warn("Gun.js init failed — multiplayer unavailable", e);
+    setConnBadge(false, "init fail");
   }
   return gun;
+}
+
+function setConnBadge(ok, label) {
+  const el = document.getElementById("connBadge");
+  if (!el) return;
+  el.textContent = ok ? "●" : "○";
+  el.title = label || "";
+  if (ok) el.classList.add("connected");
+  else el.classList.remove("connected");
+}
+
+function roomRoot(code) {
+  // v2 namespace — clean break from dead-peer ghost data
+  return gun.get("pocketgolf_v2").get(code);
 }
 
 // ====================================================================
@@ -371,30 +404,57 @@ function linePath(x0, y0, x1, y1) {
 }
 
 // ====================================================================
-// HOLE GENERATION (host generates all 9 holes)
+// HOLE GENERATION — seeded by room code so every player gets SAME course
 // ====================================================================
-function generateAllHoles() {
-  allHoles = {};
-  for (let h = 1; h <= NUM_HOLES; h++) allHoles[h] = generateHoleData(h);
+function hashSeed(str) {
+  let h = 2166136261 >>> 0;
+  const s = String(str);
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
 }
 
-function generateHoleData(holeNum) {
+function makeRng(seedStr) {
+  let a = hashSeed(seedStr) || 1;
+  return function rand() {
+    // mulberry32
+    a |= 0;
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateAllHoles(seed) {
+  const seedBase = String(seed || roomCode || "solo");
+  allHoles = {};
+  for (let h = 1; h <= NUM_HOLES; h++) {
+    allHoles[h] = generateHoleData(h, makeRng(seedBase + "|hole|" + h));
+  }
+}
+
+function generateHoleData(holeNum, rand) {
+  const r = rand || Math.random;
   const g = [];
   for (let y = 0; y < ROWS; y++) { const row = []; for (let x = 0; x < COLS; x++) row.push(T.ROUGH); g.push(row); }
   const tx = Math.floor(COLS/2), ty = ROWS - 2;
-  const hx = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(Math.random()*7)-3)));
-  const hy = 1 + Math.floor(Math.random()*2);
+  const hx = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(r()*7)-3)));
+  const hy = 1 + Math.floor(r()*2);
   const difficulty = 1 + Math.floor(holeNum/4);
 
   let cx = tx, cy = ty, fw = 2;
-  while (cy > hy+1 || cx !== hx) {
+  let guard = 0;
+  while ((cy > hy+1 || cx !== hx) && guard++ < 400) {
     for (let oy=-fw; oy<=fw; oy++) for (let ox=-fw; ox<=fw; ox++) {
       const px=cx+ox, py=cy+oy;
-      if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=fw && g[py][px]===T.ROUGH && Math.random()>0.15) g[py][px] = T.FAIRWAY;
+      if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=fw && g[py][px]===T.ROUGH && r()>0.15) g[py][px] = T.FAIRWAY;
     }
     const ddx=hx-cx, ddy=hy-cy;
-    if (Math.abs(ddy)>0 && (Math.random()>0.35 || cx===hx)) cy += Math.sign(ddy);
-    if (Math.abs(ddx)>0 && Math.random()>0.4) cx += Math.sign(ddx);
+    if (Math.abs(ddy)>0 && (r()>0.35 || cx===hx)) cy += Math.sign(ddy);
+    if (Math.abs(ddx)>0 && r()>0.4) cx += Math.sign(ddx);
     if (cx===hx && cy===hy) break;
   }
   for (let oy=-2; oy<=2; oy++) for (let ox=-2; ox<=2; ox++) {
@@ -406,15 +466,15 @@ function generateHoleData(holeNum) {
     if (px>=0&&px<COLS&&py>=0&&py<ROWS) g[py][px] = T.FAIRWAY;
   }
 
-  const numWater = Math.floor(Math.random()*(difficulty+1));
-  const numSand = 2 + Math.floor(Math.random()*(difficulty+1));
+  const numWater = Math.floor(r()*(difficulty+1));
+  const numSand = 2 + Math.floor(r()*(difficulty+1));
   const numTrees = 3 + difficulty*2;
 
   for (let i=0; i<numWater; i++) {
     let wx,wy,att=0;
-    do { wx=1+Math.floor(Math.random()*(COLS-2)); wy=3+Math.floor(Math.random()*(ROWS-6)); att++; }
+    do { wx=1+Math.floor(r()*(COLS-2)); wy=3+Math.floor(r()*(ROWS-6)); att++; }
     while ((Math.abs(wx-tx)<2&&Math.abs(wy-ty)<2) && att<20);
-    const ws=1+Math.floor(Math.random()*2);
+    const ws=1+Math.floor(r()*2);
     for (let oy=-ws; oy<=ws; oy++) for (let ox=-ws; ox<=ws; ox++) {
       const px=wx+ox, py=wy+oy;
       if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=ws && g[py][px]!==T.GREEN &&
@@ -422,15 +482,15 @@ function generateHoleData(holeNum) {
     }
   }
   for (let i=0; i<numSand; i++) {
-    const sx=1+Math.floor(Math.random()*(COLS-2)), sy=3+Math.floor(Math.random()*(ROWS-6));
-    const ss=1+Math.floor(Math.random()*2);
+    const sx=1+Math.floor(r()*(COLS-2)), sy=3+Math.floor(r()*(ROWS-6));
+    const ss=1+Math.floor(r()*2);
     for (let oy=-ss; oy<=ss; oy++) for (let ox=-ss; ox<=ss; ox++) {
       const px=sx+ox, py=sy+oy;
       if (px>=0&&px<COLS&&py>=0&&py<ROWS && Math.abs(ox)+Math.abs(oy)<=ss && g[py][px]!==T.WATER && g[py][px]!==T.GREEN) g[py][px] = T.SAND;
     }
   }
   for (let i=0; i<numTrees; i++) {
-    const px=Math.floor(Math.random()*COLS), py=2+Math.floor(Math.random()*(ROWS-4));
+    const px=Math.floor(r()*COLS), py=2+Math.floor(r()*(ROWS-4));
     if (g[py][px]!==T.GREEN && !(Math.abs(px-tx)<=1&&Math.abs(py-ty)<=1)) g[py][px] = T.TREE;
   }
 
@@ -971,53 +1031,40 @@ window.resumeGame = function(code) {
     done: !!g.ballDone
   };
 
-  // Local course first (works offline / when Gun peers are down)
   players = {};
   playerOrder = [myId];
   players[myId] = { name: myName };
   myColorIdx = 0;
-  if (g.holes && typeof g.holes === "object") {
+
+  // Prefer saved holes; otherwise rebuild from room-code seed (same course as friends)
+  if (g.holes && typeof g.holes === "object" && Object.keys(g.holes).length) {
     allHoles = {};
     for (const k of Object.keys(g.holes)) allHoles[parseInt(k)] = g.holes[k];
+  } else {
+    generateAllHoles(roomCode);
   }
 
-  // Reconnect to Gun for multiplayer sync (optional)
   ensureGun();
-  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
+  gameNode = gun ? roomRoot(roomCode) : null;
 
   if (gameNode) {
-    gameNode.get("playerOrder").map().on((id) => { if (id && !playerOrder.includes(id)) { playerOrder.push(id); } });
-    gameNode.get("players").map().on((data, key) => { if (data) { try { players[key] = JSON.parse(data); } catch(_) {} if (!playerOrder.includes(key)) playerOrder.push(key); myColorIdx = playerOrder.indexOf(myId) % 4; updateUI(); updateScorecard(); } });
-
-    // Re-register self
-    gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
-    gameNode.get("playerOrder").set(myId);
-
-    // Load hole data from peers if we don't have them locally
-    gameNode.get("holes").map().on((data, key) => {
-      if (!data) return;
-      try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
-      if (parseInt(key) === myCurrentHole && grid.length === 0) loadHole(myCurrentHole, { keepBall: true });
-    });
-
+    gameNode.get("roster").get(myId).put({ name: myName, host: isHost ? 1 : 0, ts: Date.now() });
+    setupPlayerListeners();
     setupGameListeners();
     setupTauntListener();
     setupEndGameListener();
   }
 
-  document.getElementById("connBadge").textContent = gameNode ? "●" : "○";
-  if (gameNode) document.getElementById("connBadge").classList.add("connected");
-  else document.getElementById("connBadge").classList.remove("connected");
+  setConnBadge(!!gameNode, gameNode ? "resumed" : "offline");
   document.getElementById("lobbyOverlay").classList.add("hidden");
   resizeCanvas();
   if (allHoles[myCurrentHole]) {
     loadHole(myCurrentHole, { keepBall: true });
-  } else if (Object.keys(allHoles).length === 0) {
-    // Last resort: generate a fresh local course so the player isn't stuck on a blank grid
-    generateAllHoles();
+  } else {
+    generateAllHoles(roomCode);
     loadHole(myCurrentHole, { keepBall: true });
-    showMsg("Course rebuilt locally (multiplayer sync offline)", "warn");
   }
+  syncMyBall();
   updateUI(); updateScorecard();
   if (grid.length > 0) showMsg("Resumed game " + code, "success");
 };
@@ -1055,21 +1102,20 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
   roomCode = generateCode();
   isHost = true;
   ensureGun();
-  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
+  gameNode = gun ? roomRoot(roomCode) : null;
   players = {}; playerOrder = [myId];
   players[myId] = { name: myName };
   myColorIdx = 0;
+
+  // Same seed → same course for everyone who joins this code
+  generateAllHoles(roomCode);
+
   if (gameNode) {
-    gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
-    gameNode.get("playerOrder").set(myId);
+    gameNode.get("meta").put({ seed: roomCode, host: myId, hostName: myName, created: Date.now(), started: 0 });
+    gameNode.get("roster").get(myId).put({ name: myName, host: 1, ts: Date.now() });
+    setupPlayerListeners();
   }
 
-  generateAllHoles();
-  if (gameNode) {
-    for (let h = 1; h <= NUM_HOLES; h++) gameNode.get("holes").get(h).put(JSON.stringify(allHoles[h]));
-  }
-
-  if (gameNode) setupPlayerListeners();
   showWaitRoom();
 });
 
@@ -1083,39 +1129,45 @@ function joinGameFromForm() {
   if (roomCode.length < 4) { alert("Enter a valid code"); return; }
   isHost = false;
   ensureGun();
-  gameNode = gun ? gun.get("pocketgolf/" + roomCode) : null;
+  gameNode = gun ? roomRoot(roomCode) : null;
   if (!gameNode) { alert("Multiplayer not available — check your connection"); return; }
+
+  // Deterministic course from code — identical to host without needing hole sync
+  generateAllHoles(roomCode);
+
   players = {}; playerOrder = [];
   players[myId] = { name: myName };
-  gameNode.get("players").get(myId).put(JSON.stringify({ name: myName }));
-  gameNode.get("playerOrder").set(myId);
+  gameNode.get("roster").get(myId).put({ name: myName, host: 0, ts: Date.now() });
 
   setupPlayerListeners();
-
-  gameNode.get("holes").map().on((data, key) => {
-    if (!data) return;
-    try { allHoles[parseInt(key)] = JSON.parse(data); } catch(_) {}
-    if (parseInt(key) === myCurrentHole && allHoles[myCurrentHole]) loadHole(myCurrentHole);
-  });
-
   setupGameListeners();
   setupTauntListener();
   setupEndGameListener();
 
-  document.getElementById("connBadge").textContent = "●";
-  document.getElementById("connBadge").classList.add("connected");
+  // Enter game immediately (async multiplayer) on the shared seeded course
   document.getElementById("lobbyOverlay").classList.add("hidden");
-  myColorIdx = playerOrder.length > 0 ? playerOrder.indexOf(myId) % 4 : 0;
+  myCurrentHole = 1;
+  myColorIdx = 0;
   resizeCanvas();
-  if (allHoles[1]) loadHole(1);
+  loadHole(1);
+  syncMyBall();
+  updateUI();
   updateScorecard();
   saveGameState();
-  // Clean join param so refresh doesn't re-prompt
+
   try {
     const clean = location.pathname + (location.hash || "");
     history.replaceState(null, "", clean);
   } catch (_) {}
-  showMsg("Joined! Play whenever.", "success");
+
+  showMsg("Joined " + roomCode + " — same course as host. Flick anytime.", "success");
+
+  // If host already published ball positions, they'll stream in via listeners
+  // Soft wait for roster so scorecard fills
+  setTimeout(() => {
+    myColorIdx = Math.max(0, playerOrder.indexOf(myId)) % 4;
+    updateUI(); updateScorecard(); draw();
+  }, 800);
 }
 
 /** Open join screen from ?join=CODE or ?code=CODE deep link */
@@ -1138,34 +1190,46 @@ function handleJoinDeepLink() {
 
 function setupPlayerListeners() {
   if (!gameNode) return;
-  gameNode.get("playerOrder").map().on((id) => {
-    if (id && !playerOrder.includes(id)) {
-      playerOrder.push(id);
-      gameNode.get("players").get(id).once((data) => {
-        if (data) { try { players[id] = JSON.parse(data); } catch(_) {} }
-        myColorIdx = playerOrder.indexOf(myId) % 4;
-        updateWaitList(); updateScorecard(); updateUI();
-      });
-    }
-  });
-  gameNode.get("players").map().on((data, key) => {
-    if (data) { try { players[key] = JSON.parse(data); } catch(_) {} if (!playerOrder.includes(key)) playerOrder.push(key); myColorIdx = playerOrder.indexOf(myId) % 4; updateWaitList(); updateScorecard(); updateUI(); }
+  gameNode.get("roster").map().on((data, key) => {
+    if (!data || !key || key === "_" || !data.name) return;
+    players[key] = { name: data.name, scores: players[key]?.scores || {} };
+    if (!playerOrder.includes(key)) playerOrder.push(key);
+    // Host always first if present
+    playerOrder.sort((a, b) => {
+      if (a === myId && isHost) return -1;
+      if (b === myId && isHost) return 1;
+      return 0;
+    });
+    myColorIdx = Math.max(0, playerOrder.indexOf(myId)) % 4;
+    updateWaitList(); updateScorecard(); updateUI(); draw();
   });
 }
 
 function setupGameListeners() {
   if (!gameNode) return;
   gameNode.get("balls").map().on((data, key) => {
-    if (!data || key === myId) return;
+    if (!data || !key || key === "_" || key === myId) return;
     otherBalls[key] = data;
-    if (!players[key] || !players[key].name) { gameNode.get("players").get(key).once((d) => { if (d) try { players[key] = JSON.parse(d); } catch(_) {} }); }
+    if (!players[key]) {
+      players[key] = { name: "Player", scores: {} };
+      gameNode.get("roster").get(key).once((d) => {
+        if (d && d.name) { players[key] = { name: d.name, scores: players[key].scores || {} }; updateScorecard(); }
+      });
+    }
     if (!playerOrder.includes(key)) playerOrder.push(key);
     draw(); updateScorecard();
   });
   gameNode.get("scores").map().on((data, key) => {
-    if (!data) return;
-    const parts = key.split("_"); const pid = parts[0]; const hole = parseInt(parts[1]);
-    if (players[pid]) { if (!players[pid].scores) players[pid].scores = {}; players[pid].scores[hole] = data; updateScorecard(); }
+    if (data == null || !key || key === "_") return;
+    const parts = String(key).split("_");
+    if (parts.length < 2) return;
+    const pid = parts[0];
+    const hole = parseInt(parts[1], 10);
+    if (!pid || !hole) return;
+    if (!players[pid]) players[pid] = { name: "Player", scores: {} };
+    if (!players[pid].scores) players[pid].scores = {};
+    players[pid].scores[hole] = data;
+    updateScorecard();
   });
 }
 
@@ -1269,18 +1333,19 @@ document.getElementById("startMultiBtn").addEventListener("click", () => {
   document.getElementById("waitView").classList.add("hidden");
   document.getElementById("lobbyOverlay").classList.add("hidden");
   myCurrentHole = 1;
-  if (!allHoles[1]) generateAllHoles();
+  if (!allHoles[1]) generateAllHoles(roomCode || "solo");
   loadHole(1);
   resizeCanvas();
-  syncMyBall();
   if (gameNode) {
+    gameNode.get("meta").get("started").put(Date.now());
     setupGameListeners();
     setupTauntListener();
     setupEndGameListener();
   }
+  syncMyBall();
   saveGameState();
   updateUI(); updateScorecard();
-  showMsg(gameNode ? "Round started! Flick to shoot." : "Solo round started (offline). Flick to shoot.", "success");
+  showMsg(gameNode ? "Round started! Friends on this link share your course." : "Solo round started (offline). Flick to shoot.", "success");
 });
 
 document.getElementById("leaveWaitBtn").addEventListener("click", () => { showView("gamesListView"); });
