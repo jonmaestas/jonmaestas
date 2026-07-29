@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a1a0a" />
   <meta name="description" content="Pocket Golf — async multiplayer flick golf. Create games, play when free, challenge friends." />
@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "c4a6e5f-20260728215445";
+    window.__PG_BUILD__ = "cfe8375-20260728215527";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -74,10 +74,21 @@
       background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
       overflow: hidden;
+      touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      overscroll-behavior: none;
     }
     body {
       display: flex; flex-direction: column; align-items: center;
       padding: max(4px, env(safe-area-inset-top)) 8px max(6px, env(safe-area-inset-bottom));
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    input, textarea, .code-input, .share-link-box {
+      -webkit-user-select: text;
+      user-select: text;
     }
     .hidden { display: none !important; }
 
@@ -2663,6 +2674,16 @@ function loadInfiniteProgress() {
 // INIT
 // ====================================================================
 registerPwa();
+// Kill pinch / multi-touch zoom on iOS Safari (viewport meta alone isn't enough)
+document.addEventListener("gesturestart", (e) => { e.preventDefault(); }, { passive: false });
+document.addEventListener("gesturechange", (e) => { e.preventDefault(); }, { passive: false });
+document.addEventListener("gestureend", (e) => { e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener("touchend", (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
 loadSavedGames();
 renderActiveGames();
 window.addEventListener("resize", fitPlayLayout);
