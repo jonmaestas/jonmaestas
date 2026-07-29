@@ -13,7 +13,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "635bebe-20260728213429";
+    window.__PG_BUILD__ = "a45c44a-20260728214838";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -301,9 +301,10 @@
     <!-- Game controls -->
     <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <button class="btn btn-blue" id="closeScorecardBtn">← Back to Game</button>
-      <button class="btn btn-amber" id="leaveGameBtn">🚪 Leave Game</button>
+      <button class="btn btn-amber" id="leaveGameBtn">🚪 Leave</button>
     </div>
-    <button class="btn" id="endGameBtn" style="margin-top:6px;background:#7f1d1d;border-color:#991b1b">🗑 End Game (Host Only)</button>
+    <button class="btn btn-primary" id="newRoundBtn" style="margin-top:6px;display:none">🔄 New Round (same group)</button>
+    <button class="btn" id="endGameBtn" style="margin-top:6px;background:#7f1d1d;border-color:#991b1b">🗑 End Clubhouse (Host)</button>
   </div>
 </div>
 
@@ -412,6 +413,16 @@ function roomRoot(code) {
   return gun.get("pocketgolf_v2").get(code);
 }
 
+/** Per-round Gun node: balls + scores live here so rounds don't collide */
+function roundRoot() {
+  if (!gameNode) return null;
+  return gameNode.get("rounds").get(String(currentRound || 1));
+}
+
+function makeRoundSeed(code, round) {
+  return String(code) + "|r|" + String(round || 1);
+}
+
 // ====================================================================
 // CONSTANTS
 // ====================================================================
@@ -448,7 +459,11 @@ let myName = "You";
 let roomCode = null;
 let gameNode = null;
 let isHost = false;
-
+// Clubhouse multi-round: same roomCode + roster; each round has its own course + scores
+let currentRound = 1;
+let courseSeed = null;
+let metaListenerBound = false;
+let awaitingNextRound = false;
 let players = {};
 let playerOrder = [];
 let myColorIdx = 0;
@@ -693,13 +708,19 @@ function loadHole(holeNum, opts = {}) {
 // SYNC
 // ====================================================================
 function syncMyBall() {
-  if (!gameNode) return;
-  gameNode.get("balls").get(myId).put({ hole: myCurrentHole, x: myBall.x, y: myBall.y, safeX: myBall.safeX, safeY: myBall.safeY, strokes: myBall.strokes, done: myBall.done?1:0, ts: Date.now() });
+  const rn = roundRoot();
+  if (!rn) return;
+  rn.get("balls").get(myId).put({
+    hole: myCurrentHole, x: myBall.x, y: myBall.y,
+    safeX: myBall.safeX, safeY: myBall.safeY,
+    strokes: myBall.strokes, done: myBall.done ? 1 : 0, ts: Date.now()
+  });
 }
 
 function syncMyScore(hole, score) {
-  if (!gameNode) return;
-  gameNode.get("scores").get(myId + "_" + hole).put(score);
+  const rn = roundRoot();
+  if (!rn) return;
+  rn.get("scores").get(myId + "_" + hole).put(score);
 }
 
 // ====================================================================
@@ -1250,6 +1271,10 @@ function showMsg(t, type) { const el = document.getElementById("msg"); el.textCo
 function updateUI() {
   document.getElementById("holeNum").textContent = myCurrentHole;
   document.getElementById("totalHoles").textContent = infiniteMode ? "∞" : NUM_HOLES;
+  const holeBadge = document.getElementById("holeBadge");
+  if (holeBadge && !infiniteMode && roomCode && currentRound) {
+    holeBadge.title = "Round " + currentRound + " · clubhouse " + roomCode;
+  }
   document.getElementById("parVal").textContent = par;
   document.getElementById("strokeVal").textContent = myBall.strokes;
   document.getElementById("mulliganVal").textContent = myMulligans;
@@ -1339,13 +1364,14 @@ function saveGameState() {
     myId: myId,
     isHost: isHost,
     currentHole: myCurrentHole,
+    currentRound: currentRound,
+    courseSeed: courseSeed,
     scores: myScores,
     mulligans: myMulligans,
     ballX: myBall.x, ballY: myBall.y,
     ballSafeX: myBall.safeX, ballSafeY: myBall.safeY,
     ballStrokes: myBall.strokes,
     ballDone: myBall.done,
-    // Persist course locally so Resume works when Gun peers are down
     holes: allHoles,
     timestamp: Date.now(),
   };
@@ -1372,7 +1398,7 @@ function renderActiveGames() {
     const numHolesPlayed = Object.keys(g.scores || {}).length;
     html += `<div class="game-list-item" data-code="${g.code}">
       <div style="flex:1">
-        <div class="game-list-code">${g.code}</div>
+        <div class="game-list-code">${g.code}${g.currentRound ? " · R" + g.currentRound : ""}</div>
         <div class="game-list-hole">Hole ${g.currentHole}/${NUM_HOLES} · ${numHolesPlayed} done · ${total} strokes</div>
       </div>
       <div style="text-align:right">
@@ -1391,6 +1417,10 @@ window.resumeGame = function(code) {
   if (g.myId) myId = g.myId;
   roomCode = code;
   isHost = !!g.isHost;
+  currentRound = g.currentRound || 1;
+  courseSeed = g.courseSeed || makeRoundSeed(roomCode, currentRound);
+  awaitingNextRound = false;
+  metaListenerBound = false;
   myCurrentHole = g.currentHole || 1;
   myScores = g.scores || {};
   myMulligans = g.mulligans != null ? g.mulligans : 6;
@@ -1407,20 +1437,20 @@ window.resumeGame = function(code) {
   players[myId] = { name: myName };
   myColorIdx = 0;
 
-  // Prefer saved holes; otherwise rebuild from room-code seed (same course as friends)
   if (g.holes && typeof g.holes === "object" && Object.keys(g.holes).length) {
     allHoles = {};
     for (const k of Object.keys(g.holes)) allHoles[parseInt(k)] = g.holes[k];
   } else {
-    generateAllHoles(roomCode);
+    generateAllHoles(courseSeed);
   }
 
   ensureGun();
   gameNode = gun ? roomRoot(roomCode) : null;
 
   if (gameNode) {
-    gameNode.get("roster").get(myId).put({ name: myName, host: isHost ? 1 : 0, ts: Date.now() });
+    gameNode.get("roster").get(myId).put({ name: myName, host: isHost ? 1 : 0, ts: Date.now(), left: 0 });
     setupPlayerListeners();
+    setupMetaListener();
     setupGameListeners();
     setupTauntListener();
     setupEndGameListener();
@@ -1432,12 +1462,12 @@ window.resumeGame = function(code) {
   if (allHoles[myCurrentHole]) {
     loadHole(myCurrentHole, { keepBall: true });
   } else {
-    generateAllHoles(roomCode);
+    generateAllHoles(courseSeed);
     loadHole(myCurrentHole, { keepBall: true });
   }
   syncMyBall();
   updateUI(); updateScorecard();
-  if (grid.length > 0) showMsg("Resumed game " + code, "success");
+  if (grid.length > 0) showMsg("Resumed " + code + " · round " + currentRound, "success");
 };
 
 window.deleteGame = function(code) {
@@ -1486,19 +1516,28 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
   document.getElementById("infiniteBanner").style.display = "none";
   roomCode = generateCode();
   isHost = true;
+  currentRound = 1;
+  courseSeed = makeRoundSeed(roomCode, 1);
+  awaitingNextRound = false;
+  metaListenerBound = false;
   ensureGun();
   gameNode = gun ? roomRoot(roomCode) : null;
   players = {}; playerOrder = [myId];
   players[myId] = { name: myName };
   myColorIdx = 0;
+  myScores = {};
+  otherBalls = {};
 
-  // Same seed → same course for everyone who joins this code
-  generateAllHoles(roomCode);
+  generateAllHoles(courseSeed);
 
   if (gameNode) {
-    gameNode.get("meta").put({ seed: roomCode, host: myId, hostName: myName, created: Date.now(), started: 0 });
-    gameNode.get("roster").get(myId).put({ name: myName, host: 1, ts: Date.now() });
+    gameNode.get("meta").put({
+      seed: courseSeed, host: myId, hostName: myName,
+      round: 1, created: Date.now(), started: 0
+    });
+    gameNode.get("roster").get(myId).put({ name: myName, host: 1, ts: Date.now(), left: 0 });
     setupPlayerListeners();
+    setupMetaListener();
   }
 
   showWaitRoom();
@@ -1516,25 +1555,42 @@ function joinGameFromForm() {
   infiniteMode = false;
   document.getElementById("infiniteBanner").style.display = "none";
   isHost = false;
+  currentRound = 1;
+  courseSeed = makeRoundSeed(roomCode, 1);
+  awaitingNextRound = false;
+  metaListenerBound = false;
   ensureGun();
   gameNode = gun ? roomRoot(roomCode) : null;
   if (!gameNode) { alert("Multiplayer not available — check your connection"); return; }
 
-  // Deterministic course from code — identical to host without needing hole sync
-  generateAllHoles(roomCode);
+  generateAllHoles(courseSeed);
 
   players = {}; playerOrder = [];
   players[myId] = { name: myName };
-  gameNode.get("roster").get(myId).put({ name: myName, host: 0, ts: Date.now() });
+  gameNode.get("roster").get(myId).put({ name: myName, host: 0, ts: Date.now(), left: 0 });
 
   setupPlayerListeners();
+  setupMetaListener();
   setupGameListeners();
   setupTauntListener();
   setupEndGameListener();
 
-  // Enter game immediately (async multiplayer) on the shared seeded course
+  // Pull current round/seed from host meta (may already be round 2+)
+  gameNode.get("meta").once((data) => {
+    if (data && data.round) {
+      currentRound = Number(data.round) || 1;
+      courseSeed = data.seed || makeRoundSeed(roomCode, currentRound);
+      generateAllHoles(courseSeed);
+      setupGameListeners();
+      if (allHoles[1]) loadHole(1);
+      draw(); updateScorecard();
+    }
+  });
+
   document.getElementById("lobbyOverlay").classList.add("hidden");
   myCurrentHole = 1;
+  myScores = {};
+  myMulligans = 6;
   myColorIdx = 0;
   fitPlayLayout();
   loadHole(1);
@@ -1545,17 +1601,14 @@ function joinGameFromForm() {
 
   try {
     const clean = new URL(location.href);
-    // keep v= for cache bust; drop join after consume
     clean.searchParams.delete("join");
     clean.searchParams.delete("code");
     if (window.__PG_BUILD__) clean.searchParams.set("v", window.__PG_BUILD__);
     history.replaceState(null, "", clean.pathname + clean.search + clean.hash);
   } catch (_) {}
 
-  showMsg("Joined " + roomCode + " — same course as host. Flick anytime.", "success");
+  showMsg("Joined clubhouse " + roomCode + " — same group can play rounds together.", "success");
 
-  // If host already published ball positions, they'll stream in via listeners
-  // Soft wait for roster so scorecard fills
   setTimeout(() => {
     myColorIdx = Math.max(0, playerOrder.indexOf(myId)) % 4;
     updateUI(); updateScorecard(); draw();
@@ -1584,9 +1637,14 @@ function setupPlayerListeners() {
   if (!gameNode) return;
   gameNode.get("roster").map().on((data, key) => {
     if (!data || !key || key === "_" || !data.name) return;
-    players[key] = { name: data.name, scores: players[key]?.scores || {} };
+    if (data.left) {
+      // Still show them dimmed? For now keep name but mark inactive
+      players[key] = { name: data.name, scores: players[key]?.scores || {}, left: true };
+      updateWaitList(); updateScorecard();
+      return;
+    }
+    players[key] = { name: data.name, scores: players[key]?.scores || {}, left: false };
     if (!playerOrder.includes(key)) playerOrder.push(key);
-    // Host always first if present
     playerOrder.sort((a, b) => {
       if (a === myId && isHost) return -1;
       if (b === myId && isHost) return 1;
@@ -1598,20 +1656,23 @@ function setupPlayerListeners() {
 }
 
 function setupGameListeners() {
-  if (!gameNode) return;
-  gameNode.get("balls").map().on((data, key) => {
+  const rn = roundRoot();
+  if (!rn) return;
+  rn.get("balls").map().on((data, key) => {
     if (!data || !key || key === "_" || key === myId) return;
     otherBalls[key] = data;
     if (!players[key]) {
       players[key] = { name: "Player", scores: {} };
-      gameNode.get("roster").get(key).once((d) => {
-        if (d && d.name) { players[key] = { name: d.name, scores: players[key].scores || {} }; updateScorecard(); }
-      });
+      if (gameNode) {
+        gameNode.get("roster").get(key).once((d) => {
+          if (d && d.name) { players[key] = { name: d.name, scores: players[key].scores || {} }; updateScorecard(); }
+        });
+      }
     }
     if (!playerOrder.includes(key)) playerOrder.push(key);
     draw(); updateScorecard();
   });
-  gameNode.get("scores").map().on((data, key) => {
+  rn.get("scores").map().on((data, key) => {
     if (data == null || !key || key === "_") return;
     const parts = String(key).split("_");
     if (parts.length < 2) return;
@@ -1623,6 +1684,101 @@ function setupGameListeners() {
     players[pid].scores[hole] = data;
     updateScorecard();
   });
+}
+
+function setupMetaListener() {
+  if (!gameNode || metaListenerBound) return;
+  metaListenerBound = true;
+  gameNode.get("meta").on((data) => {
+    if (!data) return;
+    if (data.host && data.host === myId) isHost = true;
+    const r = data.round != null ? Number(data.round) : 1;
+    const seed = data.seed || makeRoundSeed(roomCode, r);
+    if (r !== Number(currentRound)) {
+      // Host already applied locally; clients pick up here
+      applyClubhouseRound(r, seed, { fromRemote: true });
+    } else if (seed && seed !== courseSeed) {
+      courseSeed = seed;
+      generateAllHoles(courseSeed);
+      if (allHoles[myCurrentHole]) loadHole(myCurrentHole, { keepBall: myBall.strokes > 0 || myBall.done });
+      draw();
+    }
+  });
+}
+
+/**
+ * Start / join a new round in the same clubhouse (same room code + roster).
+ * Host publishes meta.round; everyone resets scores and gets a fresh course.
+ */
+function applyClubhouseRound(roundNum, seed, opts) {
+  opts = opts || {};
+  awaitingNextRound = false;
+  currentRound = roundNum || 1;
+  courseSeed = seed || makeRoundSeed(roomCode, currentRound);
+  generateAllHoles(courseSeed);
+
+  myScores = {};
+  myMulligans = 6;
+  myCurrentHole = 1;
+  otherBalls = {};
+  shotHistory = [];
+  taunts = [];
+  for (const pid of Object.keys(players)) {
+    if (players[pid]) players[pid].scores = {};
+  }
+
+  document.getElementById("endOverlay").classList.add("hidden");
+  document.getElementById("scorecardOverlay").classList.add("hidden");
+  document.getElementById("lobbyOverlay").classList.add("hidden");
+
+  fitPlayLayout();
+  loadHole(1);
+  setupGameListeners();
+  syncMyBall();
+  updateUI();
+  updateScorecard();
+  saveGameState();
+  showMsg("Round " + currentRound + " · same group · new course", "success");
+}
+
+function hostStartNewRound() {
+  if (infiniteMode) return;
+  if (!roomCode) {
+    showMsg("No clubhouse room", "error");
+    return;
+  }
+  if (gameNode && !isHost) {
+    showMsg("Only the host can start the next round — hang tight", "warn");
+    return;
+  }
+  const next = (Number(currentRound) || 1) + 1;
+  const seed = makeRoundSeed(roomCode, next);
+  if (gameNode) {
+    gameNode.get("meta").put({
+      seed: seed,
+      host: myId,
+      hostName: myName,
+      round: next,
+      started: Date.now()
+    });
+  }
+  applyClubhouseRound(next, seed, { fromRemote: false });
+  document.getElementById("scorecardOverlay").classList.add("hidden");
+}
+
+function openClubhouseWait() {
+  // Keep roster + room; show wait / share UI again
+  document.getElementById("endOverlay").classList.add("hidden");
+  document.getElementById("scorecardOverlay").classList.add("hidden");
+  document.getElementById("lobbyOverlay").classList.remove("hidden");
+  showWaitRoom();
+  const startBtn = document.getElementById("startMultiBtn");
+  if (startBtn) {
+    startBtn.textContent = isHost
+      ? ("Start Round " + ((Number(currentRound) || 1) + 1) + " (same group)")
+      : "Waiting for host…";
+    startBtn.disabled = !isHost && !!gameNode;
+  }
 }
 
 function showWaitRoom() {
@@ -1718,7 +1874,17 @@ function updateWaitList() {
     </div>`;
   }
   div.innerHTML = html;
-  document.getElementById("startMultiBtn").textContent = playerOrder.length === 1 ? "Play Solo" : `Start ${playerOrder.length}-Player Round`;
+  const startBtn = document.getElementById("startMultiBtn");
+  if (!startBtn) return;
+  if (awaitingNextRound) {
+    startBtn.textContent = isHost
+      ? `Start Round ${(Number(currentRound) || 1) + 1} · ${playerOrder.length} player${playerOrder.length === 1 ? "" : "s"}`
+      : "Waiting for host to start next round…";
+    startBtn.disabled = !isHost && !!gameNode;
+  } else {
+    startBtn.disabled = false;
+    startBtn.textContent = playerOrder.length === 1 ? "Play Solo" : `Start ${playerOrder.length}-Player Round`;
+  }
 }
 
 document.getElementById("copyLinkBtn").addEventListener("click", copyJoinLink);
@@ -1727,22 +1893,49 @@ document.getElementById("roomCode").addEventListener("click", copyJoinLink);
 document.getElementById("nativeShareBtn").addEventListener("click", nativeShareJoinLink);
 
 document.getElementById("startMultiBtn").addEventListener("click", () => {
+  if (gameNode && !isHost) {
+    showMsg("Host starts the round — you'll jump in automatically", "warn");
+    return;
+  }
+  if (awaitingNextRound) {
+    hostStartNewRound();
+    return;
+  }
+  // First (or current) round kickoff — keep clubhouse roster
+  currentRound = currentRound || 1;
+  courseSeed = courseSeed || makeRoundSeed(roomCode, currentRound);
+  generateAllHoles(courseSeed);
   document.getElementById("waitView").classList.add("hidden");
   document.getElementById("lobbyOverlay").classList.add("hidden");
   myCurrentHole = 1;
-  if (!allHoles[1]) generateAllHoles(roomCode || "solo");
+  myScores = {};
+  myMulligans = 6;
+  shotHistory = [];
+  otherBalls = {};
+  for (const pid of Object.keys(players)) {
+    if (players[pid]) players[pid].scores = {};
+  }
   loadHole(1);
   fitPlayLayout();
   if (gameNode) {
-    gameNode.get("meta").get("started").put(Date.now());
+    gameNode.get("meta").put({
+      seed: courseSeed, host: myId, hostName: myName,
+      round: currentRound, started: Date.now()
+    });
     setupGameListeners();
     setupTauntListener();
     setupEndGameListener();
+    setupMetaListener();
   }
   syncMyBall();
   saveGameState();
   updateUI(); updateScorecard();
-  showMsg(gameNode ? "Round started! Friends on this link share your course." : "Solo round started (offline). Flick to shoot.", "success");
+  showMsg(
+    gameNode
+      ? ("Round " + currentRound + " · " + playerOrder.length + " in clubhouse " + roomCode)
+      : "Solo round started (offline). Flick to shoot.",
+    "success"
+  );
 });
 
 document.getElementById("leaveWaitBtn").addEventListener("click", () => { showView("gamesListView"); });
@@ -1762,18 +1955,34 @@ document.getElementById("homeLogo").addEventListener("click", () => {
 document.getElementById("openScorecardBtn").addEventListener("click", () => {
   updateScorecard();
   if (!infiniteMode) renderTaunts();
-  // Hide taunt UI in infinite
   const tauntInput = document.getElementById("tauntInput");
   const sendTauntBtn = document.getElementById("sendTauntBtn");
   const tauntList = document.getElementById("tauntList");
   const endGameBtn = document.getElementById("endGameBtn");
+  const newRoundBtn = document.getElementById("newRoundBtn");
   if (tauntInput) tauntInput.style.display = infiniteMode ? "none" : "";
   if (sendTauntBtn) sendTauntBtn.style.display = infiniteMode ? "none" : "";
   if (tauntList) tauntList.style.display = infiniteMode ? "none" : "";
   if (endGameBtn) endGameBtn.style.display = infiniteMode ? "none" : "";
+  if (newRoundBtn) {
+    const show = !infiniteMode && !!roomCode && (isHost || !gameNode);
+    newRoundBtn.style.display = show ? "" : "none";
+    newRoundBtn.textContent = isHost || !gameNode
+      ? "🔄 New Round (same group)"
+      : "Waiting for host…";
+  }
   document.getElementById("scorecardOverlay").classList.remove("hidden");
 });
 document.getElementById("closeScorecardBtn").addEventListener("click", () => { document.getElementById("scorecardOverlay").classList.add("hidden"); });
+document.getElementById("newRoundBtn").addEventListener("click", () => {
+  if (infiniteMode) return;
+  if (gameNode && !isHost) {
+    showMsg("Only the host can start the next round", "warn");
+    return;
+  }
+  if (!confirm("Start a new round with the same group? Fresh course, scores reset. Roster stays.")) return;
+  hostStartNewRound();
+});
 
 // ========== TAUNTS ==========
 const TAUNT_COOLDOWN_MS = 30000;
@@ -1854,8 +2063,11 @@ document.getElementById("leaveGameBtn").addEventListener("click", () => {
     if (!confirm("Leave Infinite Golf? Progress for today is saved.")) return;
     saveInfiniteProgress();
   } else {
-    if (!confirm("Leave this game? You can resume it later from the home screen.")) return;
+    if (!confirm("Leave this clubhouse? Others can keep playing. You can rejoin with the link.")) return;
     saveGameState();
+    if (gameNode) {
+      gameNode.get("roster").get(myId).put({ name: myName, host: isHost ? 1 : 0, ts: Date.now(), left: 1 });
+    }
   }
   loadSavedGames();
   renderActiveGames();
@@ -1865,13 +2077,13 @@ document.getElementById("leaveGameBtn").addEventListener("click", () => {
   document.getElementById("infiniteBanner").style.display = "none";
 });
 
-// ========== END GAME (host only) ==========
+// ========== END CLUBHOUSE (host only) ==========
 document.getElementById("endGameBtn").addEventListener("click", () => {
   if (!isHost) {
-    showMsg("Only the host can end the game", "error");
+    showMsg("Only the host can end the clubhouse", "error");
     return;
   }
-  if (!confirm("End this game for everyone? This cannot be undone.")) return;
+  if (!confirm("End this clubhouse for everyone? They'll need a new code next time.")) return;
   if (gameNode) {
     gameNode.get("state").put({ ended: true, ts: Date.now() });
   }
@@ -1885,7 +2097,7 @@ function setupEndGameListener() {
   gameNode.get("state").on((data) => {
     if (data && data.ended) {
       removeSavedGame(roomCode);
-      alert("The host has ended the game.");
+      alert("The host closed the clubhouse.");
       location.reload();
     }
   });
@@ -1895,13 +2107,16 @@ function setupEndGameListener() {
 document.getElementById("mulliganBtn").addEventListener("click", useMulligan);
 document.getElementById("nextHoleBtn").addEventListener("click", goToNextHole);
 
-// Round end
+// Round end — keep clubhouse, offer another round
 function showRoundEnd() {
+  awaitingNextRound = true;
   const ranked = playerOrder.map((pid, i) => ({
-    name: players[pid]?.name || "Player", idx: i,
+    name: players[pid]?.name || "Player", idx: i, pid,
     total: pid === myId ? Object.values(myScores).reduce((a,b)=>a+b, 0) : Object.values(players[pid]?.scores || {}).reduce((a,b)=>a+b, 0),
   })).sort((a,b) => a.total - b.total);
-  let html = `<h1>Round Complete! 🏆</h1><div style="margin:12px 0">`;
+  let html = `<h1>Round ${currentRound} Complete! 🏆</h1>`;
+  html += `<p style="color:var(--muted);font-size:0.9rem">Clubhouse <strong style="color:var(--accent)">${roomCode || "—"}</strong> · group stays together</p>`;
+  html += `<div style="margin:12px 0">`;
   ranked.forEach((p, rank) => {
     const ci = p.idx % 4;
     const medal = rank===0?"🥇":rank===1?"🥈":rank===2?"🥉":"";
@@ -1912,10 +2127,32 @@ function showRoundEnd() {
   html += `</div>`;
   let totalPar = 0; for (let h = 1; h <= NUM_HOLES; h++) totalPar += allHoles[h] ? allHoles[h].par : 3;
   html += `<p>Course par: ${totalPar}</p>`;
-  html += `<button class="btn btn-primary" onclick="location.reload()">New Game</button>`;
+  if (isHost || !gameNode) {
+    html += `<button class="btn btn-primary" id="endPlayAgainBtn">🔄 Play another round (same group)</button>`;
+  } else {
+    html += `<p style="color:#fbbf24;font-weight:700">Waiting for host to start the next round…</p>`;
+    html += `<p style="font-size:0.85rem;color:var(--muted)">You'll jump in automatically. Or hang in the clubhouse.</p>`;
+  }
+  html += `<button class="btn btn-blue" id="endClubhouseBtn" style="margin-top:8px">🏠 Clubhouse / invite more</button>`;
+  html += `<button class="btn" id="endHomeBtn" style="margin-top:6px">Leave to home</button>`;
   document.getElementById("endCard").innerHTML = html;
   document.getElementById("endOverlay").classList.remove("hidden");
-  removeSavedGame(roomCode);
+  // Keep save so resume still works until next round starts
+  saveGameState();
+
+  const again = document.getElementById("endPlayAgainBtn");
+  if (again) again.addEventListener("click", () => hostStartNewRound());
+  const club = document.getElementById("endClubhouseBtn");
+  if (club) club.addEventListener("click", () => openClubhouseWait());
+  const home = document.getElementById("endHomeBtn");
+  if (home) home.addEventListener("click", () => {
+    document.getElementById("endOverlay").classList.add("hidden");
+    saveGameState();
+    loadSavedGames();
+    renderActiveGames();
+    showView("gamesListView");
+    document.getElementById("lobbyOverlay").classList.remove("hidden");
+  });
 }
 
 // ====================================================================
