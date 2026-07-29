@@ -375,8 +375,10 @@ const T = { FAIRWAY:0, ROUGH:1, SAND:2, WATER:3, TREE:4, GREEN:5 };
 const PCOLORS = ["#60a5fa","#f87171","#fbbf24","#c084fc"];
 const TCOLORS = { [T.FAIRWAY]:"#3a7a28",[T.ROUGH]:"#4a6b2a",[T.SAND]:"#d4a84b",[T.WATER]:"#2563a8",[T.TREE]:"#1a3d10",[T.GREEN]:"#52b040" };
 
-// Flick: max flick distance in pixels = max power
+// Flick: max drag in canvas px for full power (before 2× scale)
+// Effective: half this drag = full power because AIM_DRAG_SCALE = 2
 const MAX_FLICK_PX = 200;
+const AIM_DRAG_SCALE = 2; // 2× — arrow past thumb, less travel for full power
 // Max power in grid cells (same on green — full aim & distance)
 const MAX_POWER = 12;
 
@@ -423,6 +425,7 @@ let flickStartX = 0, flickStartY = 0;  // pixel coords on canvas
 let flickCurX = 0, flickCurY = 0;
 let flickAngle = 0;
 let flickPower = 0;  // 0 to 1
+let flickDragPx = 0; // raw finger travel (before 2× scale)
 
 let otherBalls = {};
 
@@ -715,30 +718,69 @@ function draw() {
     ctx.fillText(String(myColorIdx+1), bx*CELL+CELL/2, by*CELL+CELL/2);
   }
 
-  // Flick aim arrow
+  // Flick aim arrow — 2× drag so tip sits past the thumb
   if (flicking) {
-    const bx = myBall.x * CELL + CELL/2;
-    const by = myBall.y * CELL + CELL/2;
-    // Arrow from ball in flick direction, length proportional to power
-    const arrowLen = CELL * 1.5 + flickPower * CELL * 4;
+    const bx = myBall.x * CELL + CELL / 2;
+    const by = myBall.y * CELL + CELL / 2;
+
+    // Preview shot distance in cells (pre-terrain; fairway/sand apply on release)
+    const previewCells = Math.max(1, Math.round(flickPower * MAX_POWER));
+    // Arrow length: 2× finger travel, but at least shows full preview to landing
+    const scaledDrag = flickDragPx * AIM_DRAG_SCALE;
+    const previewPx = previewCells * CELL;
+    const arrowLen = Math.max(CELL * 1.8, Math.min(Math.max(scaledDrag, previewPx), CELL * (MAX_POWER + 2)));
     const tipX = bx + Math.cos(flickAngle) * arrowLen;
     const tipY = by + Math.sin(flickAngle) * arrowLen;
 
-    // Color based on power (green → yellow → red)
+    // Landing ghost (where a max-clean shot of this power heads)
+    const landX = bx + Math.cos(flickAngle) * previewPx;
+    const landY = by + Math.sin(flickAngle) * previewPx;
+
     let color;
     if (flickPower < 0.4) color = "#22c55e";
     else if (flickPower < 0.7) color = "#eab308";
     else color = "#ef4444";
 
-    ctx.strokeStyle = color; ctx.lineWidth = 4;
+    // Soft guide line under the thick arrow
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = 7;
+    ctx.lineCap = "round";
     ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipX, tipY); ctx.stroke();
-    const headLen = CELL * 0.7;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tipX, tipY); ctx.stroke();
+
+    const headLen = Math.max(10, CELL * 0.75);
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(tipX, tipY);
-    ctx.lineTo(tipX - Math.cos(flickAngle - 0.5) * headLen, tipY - Math.sin(flickAngle - 0.5) * headLen);
-    ctx.lineTo(tipX - Math.cos(flickAngle + 0.5) * headLen, tipY - Math.sin(flickAngle + 0.5) * headLen);
+    ctx.lineTo(tipX - Math.cos(flickAngle - 0.45) * headLen, tipY - Math.sin(flickAngle - 0.45) * headLen);
+    ctx.lineTo(tipX - Math.cos(flickAngle + 0.45) * headLen, tipY - Math.sin(flickAngle + 0.45) * headLen);
     ctx.closePath(); ctx.fill();
+
+    // Ghost landing ring (past thumb)
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.arc(landX, landY, Math.max(6, CELL * 0.35), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.25;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Power ticks along arrow
+    ctx.fillStyle = "#fff";
+    ctx.font = `bold ${Math.max(11, CELL * 0.35)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.lineWidth = 3;
+    const label = previewCells + " sq";
+    ctx.strokeText(label, landX, landY - CELL * 0.45);
+    ctx.fillText(label, landX, landY - CELL * 0.45);
   }
 }
 
@@ -892,11 +934,12 @@ function moveFlick(clientX, clientY) {
 function updateFlick() {
   const dx = flickCurX - flickStartX;
   const dy = flickCurY - flickStartY;
-  const dist = Math.sqrt(dx*dx + dy*dy);
+  const rawDist = Math.sqrt(dx * dx + dy * dy);
+  flickDragPx = rawDist;
   flickAngle = Math.atan2(dy, dx);
-  flickPower = Math.min(1, dist / MAX_FLICK_PX);
+  // 2× scale: half the physical drag reaches full power; arrow draws past thumb
+  flickPower = Math.min(1, (rawDist * AIM_DRAG_SCALE) / MAX_FLICK_PX);
 
-  // Update power bar
   const pct = Math.round(flickPower * 100);
   document.getElementById("powerBar").style.width = pct + "%";
   document.getElementById("powerPct").textContent = pct + "%";
