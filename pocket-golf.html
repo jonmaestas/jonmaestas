@@ -6,7 +6,53 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#0a1a0a" />
   <meta name="description" content="Pocket Golf — async multiplayer flick golf. Create games, play when free, challenge friends." />
+  <!-- Mobile Safari / GH Pages: prefer revalidate. Real bust = ?v= from build check. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Pocket Golf — Flick & Play</title>
+  <script>
+    // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
+    window.__PG_BUILD__ = "3c219bc-20260728212359";
+    (function pgCacheBust() {
+      var BUILD = window.__PG_BUILD__;
+      var checking = false;
+      function apply(remote) {
+        try {
+          var u = new URL(location.href);
+          if (remote && remote !== BUILD) {
+            // Already on ?v=remote but HTML still stale → don't loop
+            if (u.searchParams.get("v") === remote) return false;
+            // Stale HTML in mobile cache → new query key forces network fetch
+            u.searchParams.set("v", remote);
+            location.replace(u.pathname + u.search + u.hash);
+            return true;
+          }
+          if (u.searchParams.get("v") !== BUILD) {
+            u.searchParams.set("v", BUILD);
+            history.replaceState(null, "", u.pathname + u.search + u.hash);
+          }
+        } catch (e) {}
+        return false;
+      }
+      function check() {
+        if (checking) return;
+        checking = true;
+        fetch("pocket-golf-build.json?t=" + Date.now(), { cache: "no-store", credentials: "omit" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) { apply(j && j.b); })
+          .catch(function () { apply(BUILD); })
+          .then(function () { checking = false; });
+      }
+      check();
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") check();
+      });
+      window.addEventListener("pageshow", function (e) {
+        if (e.persisted) check(); // bfcache restore
+      });
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
@@ -1481,8 +1527,12 @@ function joinGameFromForm() {
   saveGameState();
 
   try {
-    const clean = location.pathname + (location.hash || "");
-    history.replaceState(null, "", clean);
+    const clean = new URL(location.href);
+    // keep v= for cache bust; drop join after consume
+    clean.searchParams.delete("join");
+    clean.searchParams.delete("code");
+    if (window.__PG_BUILD__) clean.searchParams.set("v", window.__PG_BUILD__);
+    history.replaceState(null, "", clean.pathname + clean.search + clean.hash);
   } catch (_) {}
 
   showMsg("Joined " + roomCode + " — same course as host. Flick anytime.", "success");
@@ -1580,7 +1630,12 @@ function buildJoinLink(code) {
   let path = "/pocket-golf.html";
   if (onSite && /pocket-golf\.html$/i.test(location.pathname)) path = location.pathname;
   const base = onSite ? (location.origin + path) : "https://jonmaestas.com/pocket-golf.html";
-  return base + "?join=" + encodeURIComponent(code);
+  const u = new URL(base);
+  u.searchParams.set("join", code);
+  // Cache-bust so friends' phones load this build, not a week-old Safari disk cache
+  const b = (typeof window !== "undefined" && window.__PG_BUILD__) || "";
+  if (b) u.searchParams.set("v", b);
+  return u.toString();
 }
 
 function setCopyFeedback(msg) {
@@ -1931,8 +1986,12 @@ function startInfiniteGolf() {
   showMsg("Infinite · " + infinitePeriod + " · Hole " + myCurrentHole + ". Everyone shares this layout.", "success");
 
   try {
-    const clean = location.pathname + "?infinite=1";
-    history.replaceState(null, "", clean);
+    const u = new URL(location.href);
+    u.searchParams.set("infinite", "1");
+    u.searchParams.delete("join");
+    u.searchParams.delete("code");
+    if (window.__PG_BUILD__) u.searchParams.set("v", window.__PG_BUILD__);
+    history.replaceState(null, "", u.pathname + u.search + u.hash);
   } catch (_) {}
 }
 
