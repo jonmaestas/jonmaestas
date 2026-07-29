@@ -6,8 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0b1220" />
-  <meta name="description" content="45s on / 15s rest soccer ball-mastery drill timer. Start Now skips rest when you're ready." />
-  <title>Soccer Drill Timer — 45s / 15s</title>
+  <meta name="description" content="45s soccer ball-mastery drill timer. Self-paced rest — start each rep when ready. Voice: start / begin / go." />
+  <title>Soccer Drill Timer — 45s self-paced</title>
   <style>
     :root {
       --bg: #0b1220;
@@ -229,6 +229,15 @@
       color: var(--muted);
     }
     #primary { background: #1d4ed8; border-color: #2563eb; }
+    /* Big Start when waiting between drills */
+    #primary.ready-go {
+      grid-column: 1 / -1;
+      background: #14532d;
+      border-color: #166534;
+      color: #dcfce7;
+      font-size: 1.25rem;
+      padding: 22px 14px;
+    }
     #reset { background: #7f1d1d; border-color: #991b1b; }
 
     /* --- Voice button --- */
@@ -399,15 +408,14 @@
   </div>
 
   <div class="controls">
-    <button id="startNow" type="button" disabled>Start Now</button>
-    <button id="primary" type="button">Start</button>
+    <button id="primary" type="button" class="ready-go">Start</button>
     <button id="reset" type="button">Restart Drill</button>
   </div>
 
   <button id="voiceBtn" type="button">🎙 Voice Off — tap to enable</button>
   <button id="audioCuesBtn" type="button">🔊 Audio Cues On</button>
 
-  <p class="hint">45s work · 15s rest · Start Now skips rest early · Spoken cues read drills aloud</p>
+  <p class="hint">45s work · rest as long as you need · Start or say “start / begin / go”</p>
 
   <div class="list-toggle">
     <details>
@@ -440,7 +448,6 @@
     ];
 
     const WORK_SEC = 45;
-    const REST_SEC = 15;
 
     const els = {
       countBadge: document.getElementById("countBadge"),
@@ -451,7 +458,6 @@
       progressBar: document.getElementById("progressBar"),
       nextBox: document.getElementById("nextBox"),
       nextName: document.getElementById("nextName"),
-      startNow: document.getElementById("startNow"),
       primary: document.getElementById("primary"),
       reset: document.getElementById("reset"),
       drillList: document.getElementById("drillList"),
@@ -465,7 +471,7 @@
     };
 
     let index = 0;
-    let phase = "ready"; // ready | work | rest | done
+    let phase = "ready"; // ready | work | done
     let remaining = WORK_SEC;
     let phaseTotal = WORK_SEC;
     let running = false;
@@ -633,7 +639,7 @@
     function setPhaseClasses(p) {
       els.timer.className = "timer " + p;
       els.phaseBadge.className = "badge phase " + p;
-      els.progressBar.className = "progress-bar" + (p === "rest" ? " rest" : "");
+      els.progressBar.className = "progress-bar";
     }
 
     function updateSessionProgress() {
@@ -642,14 +648,12 @@
       if (phase === "done") {
         pct = 100;
       } else {
-        // Each drill = 1/total. Within a drill, progress is partial.
         const drillFraction = completedDrills.size / total;
         let inDrillFraction = 0;
         if (phase === "work") {
           inDrillFraction = (1 - remaining / WORK_SEC) / total;
-        } else if (phase === "rest") {
-          inDrillFraction = (1 / total) - (remaining / REST_SEC / total);
         }
+        // ready between drills: completed already counts; no partial
         pct = Math.round((drillFraction + inDrillFraction) * 100);
       }
       pct = Math.max(0, Math.min(100, pct));
@@ -668,34 +672,27 @@
 
       if (phase === "ready") {
         els.phaseBadge.textContent = "Ready";
-        els.phaseLabel.textContent = "Tap Start when ready";
+        els.phaseLabel.textContent = completedDrills.size > 0
+          ? "Rest as long as you need — then Start"
+          : "Tap Start when ready";
         els.nextBox.style.visibility = index < total - 1 ? "visible" : "hidden";
         els.nextName.textContent = index < total - 1 ? DRILLS[index + 1] : "—";
-        els.startNow.disabled = true;
         els.primary.textContent = "Start";
+        els.primary.classList.add("ready-go");
         els.primary.disabled = false;
         els.prevBtn.disabled = (index === 0);
         els.skipBtn.disabled = (index >= total - 1);
         els.reset.textContent = "Restart Drill";
+        // Show full work time while waiting
+        els.timer.textContent = fmt(WORK_SEC);
+        els.progressBar.style.width = "0%";
       } else if (phase === "work") {
         els.phaseBadge.textContent = "Work";
         els.phaseLabel.textContent = "Go!";
         els.nextBox.style.visibility = index < total - 1 ? "visible" : "hidden";
         els.nextName.textContent = index < total - 1 ? DRILLS[index + 1] : "Last drill";
-        els.startNow.disabled = true;
         els.primary.textContent = running ? "Pause" : "Resume";
-        els.primary.disabled = false;
-        els.prevBtn.disabled = (index === 0);
-        els.skipBtn.disabled = (index >= total - 1);
-        els.reset.textContent = "Restart Drill";
-      } else if (phase === "rest") {
-        els.phaseBadge.textContent = "Rest";
-        els.phaseLabel.textContent = "Rest — next move coming up";
-        els.exerciseName.textContent = "Rest";
-        els.nextBox.style.visibility = "visible";
-        els.nextName.textContent = DRILLS[index];
-        els.startNow.disabled = false;
-        els.primary.textContent = running ? "Pause" : "Resume";
+        els.primary.classList.remove("ready-go");
         els.primary.disabled = false;
         els.prevBtn.disabled = (index === 0);
         els.skipBtn.disabled = (index >= total - 1);
@@ -704,8 +701,8 @@
         els.phaseBadge.textContent = "Done";
         els.phaseLabel.textContent = "Nice work";
         els.nextBox.style.visibility = "hidden";
-        els.startNow.disabled = true;
-        els.primary.textContent = "Restart";
+        els.primary.textContent = "Restart session";
+        els.primary.classList.add("ready-go");
         els.primary.disabled = false;
         els.prevBtn.disabled = true;
         els.skipBtn.disabled = true;
@@ -737,21 +734,21 @@
       if (!running) startLoop();
     }
 
-    function enterRest() {
+    /** After work: advance to next drill and wait — rest is self-paced */
+    function enterReadyNext() {
+      stopLoop();
+      completedDrills.add(index);
       if (index >= DRILLS.length - 1) {
         finishSession();
         return;
       }
-      completedDrills.add(index);
       index += 1;
-      phase = "rest";
-      phaseTotal = REST_SEC;
-      remaining = REST_SEC;
-      endAt = performance.now() + REST_SEC * 1000;
+      phase = "ready";
+      phaseTotal = WORK_SEC;
+      remaining = WORK_SEC;
       beep("rest");
       flash("rest");
-      // Announce rest + what's next
-      speak("Rest. Next up: " + DRILLS[index]);
+      speak("Done. Next: " + DRILLS[index] + ". Say start when ready.");
       updateUI();
     }
 
@@ -777,11 +774,7 @@
 
       if (nextCeil !== prevCeil && nextCeil > 0) {
         if (phase === "work" && nextCeil <= 10) {
-          // Spoken countdown from 10 during work
           speak(String(nextCeil), { rate: 1.6 });
-          if (nextCeil <= 3) beep("tick");
-        } else if (phase === "rest") {
-          if (nextCeil === 5) speak("Get ready", { rate: 1.3 });
           if (nextCeil <= 3) beep("tick");
         }
       }
@@ -789,8 +782,7 @@
       updateUI();
 
       if (msLeft <= 0) {
-        if (phase === "work") enterRest();
-        else if (phase === "rest") enterWork();
+        if (phase === "work") enterReadyNext();
       }
 
       if (running) rafId = requestAnimationFrame(tick);
@@ -811,7 +803,7 @@
     }
 
     function resume() {
-      if (running || phase === "ready" || phase === "done") return;
+      if (running || phase !== "work") return;
       endAt = performance.now() + remaining * 1000;
       startLoop();
       updateUI();
@@ -824,6 +816,16 @@
       enterWork();
     }
 
+    /** Start the drill currently on screen (ready / mid-session) */
+    function startCurrent() {
+      ensureAudio();
+      if (phase === "done") {
+        startSession();
+        return;
+      }
+      if (phase === "ready") enterWork();
+    }
+
     // Restart ONLY the current drill (not the whole session)
     function restartCurrentDrill() {
       stopLoop();
@@ -831,43 +833,40 @@
       enterWork();
     }
 
-    // Jump to a specific drill by index (from list tap)
-    function jumpToDrill(targetIdx) {
+    // Jump to a specific drill — land on Ready so she starts when set
+    function jumpToDrill(targetIdx, autoStart) {
       if (targetIdx < 0 || targetIdx >= DRILLS.length) return;
       stopLoop();
       index = targetIdx;
-      // Remove completion for this and all drills after
       for (let i = targetIdx; i < DRILLS.length; i++) completedDrills.delete(i);
-      enterWork();
+      if (autoStart) {
+        enterWork();
+      } else {
+        phase = "ready";
+        remaining = WORK_SEC;
+        phaseTotal = WORK_SEC;
+        speak("Ready. " + DRILLS[index]);
+        updateUI();
+      }
     }
 
-    // Navigate to previous drill
     function prevDrill() {
       if (index <= 0) return;
-      jumpToDrill(index - 1);
+      jumpToDrill(index - 1, false);
     }
 
-    // Skip current drill (forward)
     function skipDrill() {
       if (index >= DRILLS.length - 1) return;
       completedDrills.add(index);
-      jumpToDrill(index + 1);
+      jumpToDrill(index + 1, false);
     }
 
     els.primary.addEventListener("click", () => {
       ensureAudio();
-      if (phase === "ready") startSession();
-      else if (phase === "done") { startSession(); }
+      if (phase === "ready") startCurrent();
+      else if (phase === "done") startSession();
       else if (running) pause();
       else resume();
-    });
-
-    els.startNow.addEventListener("click", () => {
-      if (phase !== "rest") return;
-      ensureAudio();
-      remaining = 0;
-      endAt = performance.now();
-      enterWork();
     });
 
     els.reset.addEventListener("click", () => {
@@ -900,15 +899,15 @@
       recognition.onresult = (event) => {
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript.trim().toLowerCase();
-          // Check commands on interim results for faster response
           if (transcript.includes("pause") || transcript.includes("hold")) {
             doCommand("pause");
-          } else if (transcript.includes("resume") || transcript.includes("go") || transcript.includes("continue")) {
+          } else if (transcript.includes("begin") || transcript.includes("start") || /\bgo\b/.test(transcript)) {
+            // start / begin / go → begin current drill or resume
+            doCommand("start");
+          } else if (transcript.includes("resume") || transcript.includes("continue")) {
             doCommand("resume");
           } else if (transcript.includes("skip") || transcript.includes("next")) {
             doCommand("skip");
-          } else if (transcript.includes("start now") || transcript.includes("start")) {
-            doCommand("startnow");
           } else if (transcript.includes("restart") || transcript.includes("reset")) {
             doCommand("restart");
           } else if (transcript.includes("back") || transcript.includes("previous")) {
@@ -925,7 +924,6 @@
       };
 
       recognition.onend = () => {
-        // Auto-restart if still supposed to be on
         if (voiceOn) {
           try { recognition.start(); } catch (_) {}
         }
@@ -945,20 +943,15 @@
           if (running) pause();
           break;
         case "resume":
-          if (!running && phase !== "ready" && phase !== "done") resume();
-          else if (phase === "ready") startSession();
+          if (!running && phase === "work") resume();
+          break;
+        case "start":
+          if (phase === "ready") startCurrent();
+          else if (phase === "done") startSession();
+          else if (phase === "work" && !running) resume();
           break;
         case "skip":
           skipDrill();
-          break;
-        case "startnow":
-          if (phase === "rest") {
-            remaining = 0;
-            endAt = performance.now();
-            enterWork();
-          } else if (phase === "ready") {
-            startSession();
-          }
           break;
         case "restart":
           restartCurrentDrill();
@@ -979,7 +972,7 @@
         try {
           recognition.start();
           els.voiceBtn.classList.add("listening");
-          els.voiceBtn.textContent = "🔴 Listening — say: pause, resume, skip, back, start, restart";
+          els.voiceBtn.textContent = "🔴 Listening — say: start, begin, go, pause, skip, back, restart";
         } catch (_) {}
       } else {
         voiceOn = false;
