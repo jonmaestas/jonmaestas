@@ -13,7 +13,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "a45c44a-20260728214838";
+    window.__PG_BUILD__ = "42b8f15-20260728215113";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -275,7 +275,8 @@
         <li><strong>Every shot is the same</strong> — green included, full aim &amp; power</li>
         <li><strong>Lie rolls</strong> — fairway ×1–2 · rough/sand ×0.5–1 (random each swing)</li>
         <li><strong>Mulligans:</strong> 6 per round (erases last shot trail)</li>
-        <li><strong>Async</strong> — play when free. Infinite = global daily ladder</li>
+        <li><strong>Async clubhouse</strong> — share a code, play forever; checkpoints every 9 holes</li>
+        <li><strong>Infinite</strong> — global daily ladder, same holes worldwide</li>
       </ul>
       <button class="btn" id="backFromRulesBtn" style="margin-top:8px">← Back</button>
     </div>
@@ -589,13 +590,13 @@ function generateAllHoles(seed) {
   }
 }
 
-/** Build one hole on demand (infinite mode) */
+/** Build one hole on demand (infinite global OR endless clubhouse) */
 function ensureHole(n) {
   n = parseInt(n, 10);
   if (allHoles[n]) return allHoles[n];
   const seed = infiniteMode
     ? ("inf|" + (infinitePeriod || dailyPeriodKey()) + "|" + n)
-    : ((roomCode || "solo") + "|hole|" + n);
+    : ((roomCode || courseSeed || "solo") + "|hole|" + n);
   allHoles[n] = generateHoleData(n, makeRng(seed));
   return allHoles[n];
 }
@@ -677,6 +678,7 @@ function generateHoleData(holeNum, rand) {
 // LOAD HOLE
 // ====================================================================
 function loadHole(holeNum, opts = {}) {
+  ensureHole(holeNum);
   const data = allHoles[holeNum];
   if (!data) return false;
   grid = [];
@@ -690,11 +692,12 @@ function loadHole(holeNum, opts = {}) {
     myBall = { x: teeX, y: teeY, safeX: teeX, safeY: teeY, strokes: 0, done: false };
     shotHistory = [];
   }
-  // Enable Next/Finish after hole is sunk
+  // Next is always continue (clubhouse is endless; checkpoints every 9)
   const nextBtn = document.getElementById("nextHoleBtn");
   if (myBall.done) {
     nextBtn.disabled = false;
-    nextBtn.textContent = (!infiniteMode && myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
+    const atCheckpoint = !infiniteMode && myCurrentHole > 0 && myCurrentHole % 9 === 0;
+    nextBtn.textContent = atCheckpoint ? "Continue →" : "Next Hole";
   } else {
     nextBtn.disabled = true;
     nextBtn.textContent = "Next Hole";
@@ -1116,14 +1119,18 @@ function processShot(angle, dist) {
       syncMyScore(myCurrentHole, myBall.strokes);
       const nextBtn = document.getElementById("nextHoleBtn");
       nextBtn.disabled = false;
-      nextBtn.textContent = (!infiniteMode && myCurrentHole >= NUM_HOLES) ? "Finish Round" : "Next Hole";
+      const atCheckpoint = !infiniteMode && myCurrentHole > 0 && myCurrentHole % 9 === 0;
+      nextBtn.textContent = atCheckpoint ? "Continue →" : "Next Hole";
       if (infiniteMode) {
         submitInfiniteScore(myCurrentHole, myBall.strokes);
         const hr = rankOnHoleBoard(myCurrentHole, myBall.strokes);
         showMsg(scoreName(myBall.strokes, par) + "! Hole rank: " + hr.label, "success");
         saveInfiniteProgress();
       } else {
-        showMsg(scoreName(myBall.strokes, par) + "!", "success");
+        const cp = (myCurrentHole % 9 === 0)
+          ? (" · " + myCurrentHole + "-hole checkpoint — keep going")
+          : "";
+        showMsg(scoreName(myBall.strokes, par) + "!" + cp, "success");
         saveGameState();
       }
     } else if (wentOOB) {
@@ -1240,7 +1247,8 @@ function scoreName(s, p) {
 }
 
 // ====================================================================
-// NEXT HOLE
+// NEXT HOLE — clubhouse never ends (like infinite, but private group)
+// Every 9 holes = soft checkpoint; mulligans refill
 // ====================================================================
 function goToNextHole() {
   if (infiniteMode) {
@@ -1254,11 +1262,21 @@ function goToNextHole() {
     updateInfiniteRanksUI();
     return;
   }
-  if (myCurrentHole >= NUM_HOLES) { showRoundEnd(); return; }
+
+  // Endless group / solo — no "finish round", just hole 10, 11, …
   myCurrentHole++;
+  ensureHole(myCurrentHole);
+
+  // Checkpoint: finished a 9-block → refill mulligans
+  if (myCurrentHole > 1 && (myCurrentHole - 1) % 9 === 0) {
+    myMulligans = 6;
+    showMsg("Checkpoint · starting hole " + myCurrentHole + " · mulligans refilled", "success");
+  } else {
+    showMsg("", "");
+  }
+
   loadHole(myCurrentHole);
   syncMyBall();
-  showMsg("", "");
   updateScorecard();
   saveGameState();
 }
@@ -1270,29 +1288,51 @@ function showMsg(t, type) { const el = document.getElementById("msg"); el.textCo
 
 function updateUI() {
   document.getElementById("holeNum").textContent = myCurrentHole;
-  document.getElementById("totalHoles").textContent = infiniteMode ? "∞" : NUM_HOLES;
+  // Clubhouse + infinite both endless
+  document.getElementById("totalHoles").textContent = "∞";
   const holeBadge = document.getElementById("holeBadge");
-  if (holeBadge && !infiniteMode && roomCode && currentRound) {
-    holeBadge.title = "Round " + currentRound + " · clubhouse " + roomCode;
+  if (holeBadge) {
+    if (infiniteMode) holeBadge.title = "Infinite · global daily";
+    else if (roomCode) holeBadge.title = "Clubhouse " + roomCode + " · endless · checkpoints every 9";
+    else holeBadge.title = "Endless solo";
   }
   document.getElementById("parVal").textContent = par;
   document.getElementById("strokeVal").textContent = myBall.strokes;
   document.getElementById("mulliganVal").textContent = myMulligans;
 
   let myTotal = 0, playedPar = 0;
-  for (const h in myScores) { myTotal += myScores[h]; playedPar += (allHoles[h] ? allHoles[h].par : 3); }
+  for (const h in myScores) {
+    myTotal += myScores[h];
+    ensureHole(parseInt(h, 10));
+    playedPar += (allHoles[h] ? allHoles[h].par : 3);
+  }
   const diff = myTotal - playedPar;
   document.getElementById("myScoreVal").textContent = (myTotal === 0) ? "E" : (diff === 0 ? "E" : (diff > 0 ? "+"+diff : diff));
 
   const banner = document.getElementById("myBanner");
   banner.style.borderLeft = `4px solid ${PCOLORS[myColorIdx]}`;
   document.getElementById("myName").textContent = myName;
-  document.getElementById("myStrokeInfo").textContent = `Stroke ${myBall.strokes + 1}${myBall.done ? " · Done!" : ""}`;
+  const block = Math.floor((myCurrentHole - 1) / 9) + 1;
+  document.getElementById("myStrokeInfo").textContent =
+    `Stroke ${myBall.strokes + 1}${myBall.done ? " · Done!" : ""} · 9-block ${block}`;
   document.getElementById("mulliganBtn").disabled = (myMulligans <= 0 || myBall.done);
 
   const infBanner = document.getElementById("infiniteBanner");
   if (infBanner) infBanner.style.display = infiniteMode ? "flex" : "none";
   if (infiniteMode) updateInfiniteRanksUI();
+}
+
+/** Highest hole number anyone has scored or is playing */
+function clubMaxHole() {
+  let m = myCurrentHole || 1;
+  for (const h of Object.keys(myScores || {})) m = Math.max(m, parseInt(h, 10) || 0);
+  for (const pid of playerOrder) {
+    const sc = (players[pid] && players[pid].scores) || {};
+    for (const h of Object.keys(sc)) m = Math.max(m, parseInt(h, 10) || 0);
+    const b = otherBalls[pid];
+    if (b && b.hole) m = Math.max(m, parseInt(b.hole, 10) || 0);
+  }
+  return Math.max(1, m);
 }
 
 function updateScorecard() {
@@ -1301,14 +1341,28 @@ function updateScorecard() {
     return;
   }
   const wrapper = document.getElementById("scorecardContent");
-  let html = `<table class="sc-table-full"><tr><th>Player</th>`;
-  for (let h = 1; h <= NUM_HOLES; h++) html += `<th>${h}</th>`;
-  html += `<th>Tot</th></tr>`;
+  const maxH = clubMaxHole();
+  // Current 9-hole window (1–9, 10–18, …)
+  const block = Math.floor((Math.max(myCurrentHole, maxH) - 1) / 9);
+  const startH = block * 9 + 1;
+  const endH = startH + 8;
+
+  let html = `<p style="font-size:0.8rem;color:var(--muted);margin:0 0 8px">Holes ${startH}–${endH}`;
+  if (block > 0) html += ` · checkpoint ${block * 9} done`;
+  html += ` · keep going forever</p>`;
+  html += `<table class="sc-table-full"><tr><th>Player</th>`;
+  for (let h = startH; h <= endH; h++) html += `<th>${h}</th>`;
+  html += `<th>9</th><th>All</th></tr>`;
 
   html += `<tr><td class="pname" style="color:var(--muted)">Par</td>`;
-  let pt = 0;
-  for (let h = 1; h <= NUM_HOLES; h++) { const p = allHoles[h] ? allHoles[h].par : 3; html += `<td>${p}</td>`; pt += p; }
-  html += `<td class="total">${pt}</td></tr>`;
+  let pt9 = 0;
+  for (let h = startH; h <= endH; h++) {
+    ensureHole(h);
+    const p = allHoles[h] ? allHoles[h].par : 3;
+    html += `<td>${p}</td>`;
+    pt9 += p;
+  }
+  html += `<td class="total">${pt9}</td><td class="total">–</td></tr>`;
 
   for (let i = 0; i < playerOrder.length; i++) {
     const pid = playerOrder[i];
@@ -1319,18 +1373,25 @@ function updateScorecard() {
     const ballData = isMe ? myBall : otherBalls[pid];
     const scoresData = isMe ? myScores : (p.scores || {});
 
-    html += `<tr style="color:${PCOLORS[ci]}"><td class="pname">${p.name}${isMe?" (You)":""}</td>`;
-    let total = 0;
-    for (let h = 1; h <= NUM_HOLES; h++) {
+    html += `<tr style="color:${PCOLORS[ci]}"><td class="pname">${p.name}${isMe?" (You)":""}${p.left?" · out":""}</td>`;
+    let tot9 = 0, totAll = 0, has9 = false;
+    for (const hk of Object.keys(scoresData)) {
+      const hv = scoresData[hk];
+      if (hv) totAll += hv;
+    }
+    for (let h = startH; h <= endH; h++) {
       const s = scoresData[h];
+      ensureHole(h);
       const holePar = allHoles[h] ? allHoles[h].par : 3;
       if (s) {
+        has9 = true;
         const d = s - holePar;
         let cls = "";
         if (d <= -2) cls = "eagle"; else if (d === -1) cls = "birdie";
         else if (d === 1) cls = "bogey"; else if (d >= 2) cls = "dbogey";
-        html += `<td class="${cls}">${s}</td>`; total += s;
-      } else if (ballData && ballData.hole === h && !isMe) {
+        html += `<td class="${cls}">${s}</td>`;
+        tot9 += s;
+      } else if (ballData && Number(ballData.hole) === h && !isMe) {
         html += `<td class="playing">${ballData.strokes || 0}</td>`;
       } else if (isMe && myCurrentHole === h && !myBall.done) {
         html += `<td class="playing">${myBall.strokes}</td>`;
@@ -1338,7 +1399,8 @@ function updateScorecard() {
         html += `<td>–</td>`;
       }
     }
-    html += `<td class="total">${total || "–"}</td></tr>`;
+    html += `<td class="total">${has9 ? tot9 : "–"}</td>`;
+    html += `<td class="total">${totAll || "–"}</td></tr>`;
   }
   html += `</table>`;
   wrapper.innerHTML = html;
@@ -1399,7 +1461,7 @@ function renderActiveGames() {
     html += `<div class="game-list-item" data-code="${g.code}">
       <div style="flex:1">
         <div class="game-list-code">${g.code}${g.currentRound ? " · R" + g.currentRound : ""}</div>
-        <div class="game-list-hole">Hole ${g.currentHole}/${NUM_HOLES} · ${numHolesPlayed} done · ${total} strokes</div>
+        <div class="game-list-hole">Hole ${g.currentHole} · ${numHolesPlayed} played · ${total} strokes</div>
       </div>
       <div style="text-align:right">
         <button class="btn btn-primary" style="padding:8px 14px;font-size:0.85rem" onclick="resumeGame('${g.code}')">Resume</button>
@@ -1964,13 +2026,7 @@ document.getElementById("openScorecardBtn").addEventListener("click", () => {
   if (sendTauntBtn) sendTauntBtn.style.display = infiniteMode ? "none" : "";
   if (tauntList) tauntList.style.display = infiniteMode ? "none" : "";
   if (endGameBtn) endGameBtn.style.display = infiniteMode ? "none" : "";
-  if (newRoundBtn) {
-    const show = !infiniteMode && !!roomCode && (isHost || !gameNode);
-    newRoundBtn.style.display = show ? "" : "none";
-    newRoundBtn.textContent = isHost || !gameNode
-      ? "🔄 New Round (same group)"
-      : "Waiting for host…";
-  }
+  if (newRoundBtn) newRoundBtn.style.display = "none"; // endless clubhouse — no "new round"
   document.getElementById("scorecardOverlay").classList.remove("hidden");
 });
 document.getElementById("closeScorecardBtn").addEventListener("click", () => { document.getElementById("scorecardOverlay").classList.add("hidden"); });
