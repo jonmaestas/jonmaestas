@@ -10,10 +10,17 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Pocket Golf" />
+  <link rel="manifest" href="pocket-golf.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/pocket-golf-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/pocket-golf-192.png" />
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "42b8f15-20260728215113";
+    window.__PG_BUILD__ = "c4a6e5f-20260728215445";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -422,6 +429,120 @@ function roundRoot() {
 
 function makeRoundSeed(code, round) {
   return String(code) + "|r|" + String(round || 1);
+}
+
+// ====================================================================
+// PWA + grabby notifications (not spammy)
+// ====================================================================
+let swReg = null;
+let notifyReady = false;
+let notifyPrompted = false;
+const notifyDedupe = new Map(); // tag -> ts
+
+async function registerPwa() {
+  if (!("serviceWorker" in navigator)) return null;
+  try {
+    swReg = await navigator.serviceWorker.register("pocket-golf-sw.js", { scope: "./" });
+    return swReg;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function ensureNotifyPermission(forcePrompt) {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") {
+    notifyReady = true;
+    return true;
+  }
+  if (Notification.permission === "denied") return false;
+  if (!forcePrompt) return false;
+  if (notifyPrompted) return false;
+  notifyPrompted = true;
+  try {
+    const p = await Notification.requestPermission();
+    notifyReady = p === "granted";
+    return notifyReady;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Soft prompt once multiplayer actually starts */
+function armClubhouseNotifs() {
+  ensureNotifyPermission(true);
+}
+
+/**
+ * Grabby moments only: hole-in-ones, friend joins.
+ * Deduped by tag for 2 minutes.
+ */
+function pgNotify(title, body, tag) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  tag = tag || (title + "|" + body);
+  const now = Date.now();
+  const prev = notifyDedupe.get(tag) || 0;
+  if (now - prev < 120000) return;
+  notifyDedupe.set(tag, now);
+
+  const payload = {
+    type: "notify",
+    title: title,
+    body: body || "",
+    tag: tag,
+    renotify: false,
+    url: location.href
+  };
+
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage(payload);
+    return;
+  }
+  if (swReg && swReg.showNotification) {
+    swReg.showNotification(title, {
+      body: body || "",
+      tag: tag,
+      icon: "icons/pocket-golf-192.png",
+      badge: "icons/pocket-golf-192.png",
+      data: { url: location.href }
+    });
+    return;
+  }
+  try {
+    new Notification(title, { body: body || "", tag: tag });
+  } catch (_) {}
+}
+
+function publishBuzz(eventObj) {
+  if (!gameNode || !eventObj) return;
+  try {
+    const id = Date.now() + "_" + myId + "_" + (eventObj.t || "x");
+    gameNode.get("buzz").get(id).put(JSON.stringify(Object.assign({
+      pid: myId,
+      name: myName,
+      ts: Date.now(),
+      room: roomCode
+    }, eventObj)));
+  } catch (_) {}
+}
+
+function setupBuzzListener() {
+  if (!gameNode) return;
+  gameNode.get("buzz").map().on((data, key) => {
+    if (!data || !key) return;
+    try {
+      const e = typeof data === "string" ? JSON.parse(data) : data;
+      if (!e || e.pid === myId) return;
+      // Ignore stale buzzes (>10 min) when rejoining
+      if (e.ts && Date.now() - e.ts > 600000) return;
+      if (e.t === "hio") {
+        pgNotify("💥 Hole in one!", (e.name || "Friend") + " aced hole " + e.hole, "hio-" + key);
+      } else if (e.t === "join") {
+        pgNotify("Friendlies live", (e.name || "Friend") + " joined the clubhouse", "join-" + e.pid);
+      }
+    } catch (_) {}
+  });
 }
 
 // ====================================================================
@@ -1121,6 +1242,10 @@ function processShot(angle, dist) {
       nextBtn.disabled = false;
       const atCheckpoint = !infiniteMode && myCurrentHole > 0 && myCurrentHole % 9 === 0;
       nextBtn.textContent = atCheckpoint ? "Continue →" : "Next Hole";
+      if (myBall.strokes === 1) {
+        pgNotify("💥 Hole in one!", "You aced hole " + myCurrentHole, "hio-me-" + myCurrentHole);
+        publishBuzz({ t: "hio", hole: myCurrentHole });
+      }
       if (infiniteMode) {
         submitInfiniteScore(myCurrentHole, myBall.strokes);
         const hr = rankOnHoleBoard(myCurrentHole, myBall.strokes);
@@ -1516,6 +1641,8 @@ window.resumeGame = function(code) {
     setupGameListeners();
     setupTauntListener();
     setupEndGameListener();
+    setupBuzzListener();
+    armClubhouseNotifs();
   }
 
   setConnBadge(!!gameNode, gameNode ? "resumed" : "offline");
@@ -1600,6 +1727,8 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
     gameNode.get("roster").get(myId).put({ name: myName, host: 1, ts: Date.now(), left: 0 });
     setupPlayerListeners();
     setupMetaListener();
+    setupBuzzListener();
+    armClubhouseNotifs();
   }
 
   showWaitRoom();
@@ -1630,12 +1759,15 @@ function joinGameFromForm() {
   players = {}; playerOrder = [];
   players[myId] = { name: myName };
   gameNode.get("roster").get(myId).put({ name: myName, host: 0, ts: Date.now(), left: 0 });
+  publishBuzz({ t: "join" });
 
   setupPlayerListeners();
   setupMetaListener();
   setupGameListeners();
   setupTauntListener();
   setupEndGameListener();
+  setupBuzzListener();
+  armClubhouseNotifs();
 
   // Pull current round/seed from host meta (may already be round 2+)
   gameNode.get("meta").once((data) => {
@@ -1700,19 +1832,22 @@ function setupPlayerListeners() {
   gameNode.get("roster").map().on((data, key) => {
     if (!data || !key || key === "_" || !data.name) return;
     if (data.left) {
-      // Still show them dimmed? For now keep name but mark inactive
       players[key] = { name: data.name, scores: players[key]?.scores || {}, left: true };
       updateWaitList(); updateScorecard();
       return;
     }
+    const wasNew = !playerOrder.includes(key);
     players[key] = { name: data.name, scores: players[key]?.scores || {}, left: false };
-    if (!playerOrder.includes(key)) playerOrder.push(key);
+    if (wasNew) playerOrder.push(key);
     playerOrder.sort((a, b) => {
       if (a === myId && isHost) return -1;
       if (b === myId && isHost) return 1;
       return 0;
     });
     myColorIdx = Math.max(0, playerOrder.indexOf(myId)) % 4;
+    if (wasNew && key !== myId) {
+      pgNotify("Friendlies live", data.name + " is in the clubhouse", "join-" + key);
+    }
     updateWaitList(); updateScorecard(); updateUI(); draw();
   });
 }
@@ -1743,8 +1878,14 @@ function setupGameListeners() {
     if (!pid || !hole) return;
     if (!players[pid]) players[pid] = { name: "Player", scores: {} };
     if (!players[pid].scores) players[pid].scores = {};
+    const prev = players[pid].scores[hole];
     players[pid].scores[hole] = data;
     updateScorecard();
+    // Friend ace (backup if buzz missed)
+    if (pid !== myId && data === 1 && prev !== 1) {
+      const nm = players[pid].name || "Friend";
+      pgNotify("💥 Hole in one!", nm + " aced hole " + hole, "hio-sc-" + pid + "-" + hole);
+    }
   });
 }
 
@@ -1988,14 +2129,16 @@ document.getElementById("startMultiBtn").addEventListener("click", () => {
     setupTauntListener();
     setupEndGameListener();
     setupMetaListener();
+    setupBuzzListener();
+    armClubhouseNotifs();
   }
   syncMyBall();
   saveGameState();
   updateUI(); updateScorecard();
   showMsg(
     gameNode
-      ? ("Round " + currentRound + " · " + playerOrder.length + " in clubhouse " + roomCode)
-      : "Solo round started (offline). Flick to shoot.",
+      ? ("Clubhouse " + roomCode + " · hole " + myCurrentHole + " · keep going forever")
+      : "Solo started — hole 1 of ∞. Flick to shoot.",
     "success"
   );
 });
@@ -2519,6 +2662,7 @@ function loadInfiniteProgress() {
 // ====================================================================
 // INIT
 // ====================================================================
+registerPwa();
 loadSavedGames();
 renderActiveGames();
 window.addEventListener("resize", fitPlayLayout);
