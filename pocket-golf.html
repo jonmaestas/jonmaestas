@@ -37,7 +37,11 @@
     .btn-amber { background: #78350f; border-color: #92400e; }
 
     .clubhouse-options { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
-    .room-code-display { font-size: 2.5rem; font-weight: 900; letter-spacing: 0.15em; text-align: center; color: var(--accent); background: var(--bg); border-radius: 14px; padding: 16px; margin: 12px 0; border: 2px dashed var(--btn-border); }
+    .room-code-display { font-size: 2.5rem; font-weight: 900; letter-spacing: 0.15em; text-align: center; color: var(--accent); background: var(--bg); border-radius: 14px; padding: 16px; margin: 12px 0 8px; border: 2px dashed var(--btn-border); cursor: pointer; }
+    .share-link-box { background: var(--bg); border: 1px solid var(--btn-border); border-radius: 12px; padding: 10px 12px; margin: 0 0 8px; word-break: break-all; font-size: 0.78rem; color: var(--muted); line-height: 1.4; text-align: center; cursor: pointer; user-select: all; }
+    .share-link-box strong { color: var(--accent); font-size: 0.72rem; display: block; margin-bottom: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .share-link-box .url { color: var(--text); font-weight: 600; font-size: 0.82rem; }
+    .copy-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px; }
     .code-input { width: 100%; background: var(--bg); border: 1px solid var(--btn-border); border-radius: 12px; color: var(--text); padding: 14px 16px; font-size: 1.3rem; font-weight: 700; text-align: center; letter-spacing: 0.1em; text-transform: uppercase; margin: 6px 0; }
     .player-list-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: var(--bg); margin-bottom: 4px; font-size: 0.9rem; }
     .player-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
@@ -134,8 +138,17 @@
 
     <!-- Wait room -->
     <div id="waitView" class="hidden">
-      <p style="text-align:center;color:var(--muted)">Share this code — friends can join anytime:</p>
+      <p style="text-align:center;color:var(--muted)">Share this link — friends tap it and join:</p>
       <div class="room-code-display" id="roomCode">------</div>
+      <div class="share-link-box" id="shareLinkBox" title="Tap to copy">
+        <strong>Join link</strong>
+        <span class="url" id="shareLinkUrl">—</span>
+      </div>
+      <div class="copy-row">
+        <button class="btn btn-blue" id="copyLinkBtn" type="button">📋 Copy Link</button>
+        <button class="btn btn-amber" id="nativeShareBtn" type="button">⬆️ Share</button>
+      </div>
+      <p id="copyFeedback" style="text-align:center;font-size:0.78rem;color:var(--accent);min-height:1.1em;margin:4px 0"></p>
       <p style="text-align:center;font-size:0.8rem">Players:</p>
       <div id="waitPlayerList"></div>
       <button class="btn btn-primary" id="startMultiBtn" style="margin-top:12px">Start Round</button>
@@ -1061,6 +1074,10 @@ document.getElementById("doCreateBtn").addEventListener("click", () => {
 });
 
 document.getElementById("doJoinBtn").addEventListener("click", () => {
+  joinGameFromForm();
+});
+
+function joinGameFromForm() {
   myName = document.getElementById("joinName").value.trim() || "Player";
   roomCode = document.getElementById("joinCode").value.trim().toUpperCase();
   if (roomCode.length < 4) { alert("Enter a valid code"); return; }
@@ -1082,6 +1099,8 @@ document.getElementById("doJoinBtn").addEventListener("click", () => {
   });
 
   setupGameListeners();
+  setupTauntListener();
+  setupEndGameListener();
 
   document.getElementById("connBadge").textContent = "●";
   document.getElementById("connBadge").classList.add("connected");
@@ -1091,8 +1110,31 @@ document.getElementById("doJoinBtn").addEventListener("click", () => {
   if (allHoles[1]) loadHole(1);
   updateScorecard();
   saveGameState();
+  // Clean join param so refresh doesn't re-prompt
+  try {
+    const clean = location.pathname + (location.hash || "");
+    history.replaceState(null, "", clean);
+  } catch (_) {}
   showMsg("Joined! Play whenever.", "success");
-});
+}
+
+/** Open join screen from ?join=CODE or ?code=CODE deep link */
+function handleJoinDeepLink() {
+  let join = "";
+  try {
+    const params = new URLSearchParams(location.search);
+    join = (params.get("join") || params.get("code") || "").trim().toUpperCase();
+  } catch (_) {}
+  if (!join || join.length < 4) return false;
+  showView("joinView");
+  const codeInput = document.getElementById("joinCode");
+  codeInput.value = join;
+  codeInput.readOnly = true;
+  codeInput.style.opacity = "0.85";
+  document.getElementById("doJoinBtn").textContent = "Join Game " + join;
+  document.getElementById("joinName").focus();
+  return true;
+}
 
 function setupPlayerListeners() {
   if (!gameNode) return;
@@ -1130,9 +1172,75 @@ function setupGameListeners() {
 function showWaitRoom() {
   showView("waitView");
   document.getElementById("roomCode").textContent = roomCode;
-  document.getElementById("connBadge").textContent = "●";
-  document.getElementById("connBadge").classList.add("connected");
+  const link = buildJoinLink(roomCode);
+  document.getElementById("shareLinkUrl").textContent = link;
+  document.getElementById("copyFeedback").textContent = "";
+  document.getElementById("connBadge").textContent = gameNode ? "●" : "○";
+  if (gameNode) document.getElementById("connBadge").classList.add("connected");
+  else document.getElementById("connBadge").classList.remove("connected");
+  // Hide native share if unsupported
+  const shareBtn = document.getElementById("nativeShareBtn");
+  if (!navigator.share) shareBtn.style.display = "none";
+  else shareBtn.style.display = "";
   updateWaitList();
+}
+
+function buildJoinLink(code) {
+  const onSite = (location.protocol === "http:" || location.protocol === "https:")
+    && /jonmaestas\.com$/i.test(location.hostname);
+  let path = "/pocket-golf.html";
+  if (onSite && /pocket-golf\.html$/i.test(location.pathname)) path = location.pathname;
+  const base = onSite ? (location.origin + path) : "https://jonmaestas.com/pocket-golf.html";
+  return base + "?join=" + encodeURIComponent(code);
+}
+
+function setCopyFeedback(msg) {
+  const el = document.getElementById("copyFeedback");
+  el.textContent = msg;
+  if (msg) setTimeout(() => { if (el.textContent === msg) el.textContent = ""; }, 2500);
+}
+
+async function copyJoinLink() {
+  if (!roomCode) return;
+  const link = buildJoinLink(roomCode);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(link);
+    } else {
+      const ta = document.createElement("textarea");
+      ta.value = link;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopyFeedback("Link copied — paste it in a text or chat");
+  } catch (_) {
+    setCopyFeedback("Couldn't auto-copy — long-press the link above");
+  }
+}
+
+async function nativeShareJoinLink() {
+  if (!roomCode) return;
+  const link = buildJoinLink(roomCode);
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Pocket Golf",
+        text: "Join my Pocket Golf game (" + roomCode + ")",
+        url: link,
+      });
+      setCopyFeedback("Shared!");
+    } else {
+      await copyJoinLink();
+    }
+  } catch (e) {
+    // User cancelled share — ignore
+    if (e && e.name === "AbortError") return;
+    await copyJoinLink();
+  }
 }
 
 function updateWaitList() {
@@ -1151,6 +1259,11 @@ function updateWaitList() {
   div.innerHTML = html;
   document.getElementById("startMultiBtn").textContent = playerOrder.length === 1 ? "Play Solo" : `Start ${playerOrder.length}-Player Round`;
 }
+
+document.getElementById("copyLinkBtn").addEventListener("click", copyJoinLink);
+document.getElementById("shareLinkBox").addEventListener("click", copyJoinLink);
+document.getElementById("roomCode").addEventListener("click", copyJoinLink);
+document.getElementById("nativeShareBtn").addEventListener("click", nativeShareJoinLink);
 
 document.getElementById("startMultiBtn").addEventListener("click", () => {
   document.getElementById("waitView").classList.add("hidden");
@@ -1336,6 +1449,7 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 animLoop();
 updateScorecard();
+handleJoinDeepLink();
 </script>
 </body>
 </html>
