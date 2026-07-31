@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "f6de004-20260730220939";
+    window.__PG_BUILD__ = "a01e834-20260730230636";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -259,6 +259,7 @@
       <input class="code-input" type="text" id="infiniteName" placeholder="Your name" maxlength="12" style="text-transform:none;letter-spacing:normal">
       <button class="btn btn-primary" id="doInfiniteBtn" style="background:#0e7490;border-color:#06b6d4">Start Infinite</button>
       <button class="btn" id="backFromInfiniteBtn" style="margin-top:6px">← Back</button>
+      <button class="btn" id="resetInfiniteBtn" style="margin-top:10px;font-size:0.78rem;color:var(--muted);padding:8px">↺ Reset today's progress</button>
     </div>
 
     <!-- Create -->
@@ -2002,6 +2003,36 @@ document.getElementById("infiniteBtn").addEventListener("click", () => {
 document.getElementById("backFromInfiniteBtn").addEventListener("click", () => { showView("gamesListView"); });
 document.getElementById("doInfiniteBtn").addEventListener("click", startInfiniteGolf);
 
+document.getElementById("resetInfiniteBtn").addEventListener("click", () => {
+  const period = dailyPeriodKey();
+  const prog = loadInfiniteProgress();
+  const holes = Object.keys((prog && prog.period === period && prog.scores) || {});
+  if (!holes.length) { showMsg("No infinite progress to reset today", ""); return; }
+  if (!confirm("Reset today's Infinite Golf progress? Your scores come off today's global board.")) return;
+  try { localStorage.removeItem("pocketgolf_infinite"); } catch (_) {}
+  ensureGun();
+  const node = gun ? gun.get("pocketgolf_infinite").get(period) : null;
+  if (node) {
+    holes.forEach(h => node.get("hole").get(String(h)).get(myId).put(null));
+    node.get("players").get(myId).put(null);
+  }
+  // If currently in an infinite round, reset live state to a fresh hole 1
+  if (infiniteMode && infinitePeriod === period) {
+    myScores = {};
+    myCurrentHole = 1;
+    myBall = { x: 0, y: 0, safeX: 0, safeY: 0, strokes: 0, done: false };
+    infiniteHoleBoard = {};
+    infiniteHoleCaches = {};
+    infinitePlayers = {};
+    ensureHole(1);
+    loadHole(1);
+    updateUI();
+    updateScorecard();
+    updateInfiniteRanksUI();
+  }
+  showMsg("Today's infinite progress reset — fresh ladder", "success");
+});
+
 document.getElementById("doCreateBtn").addEventListener("click", () => {
   myName = document.getElementById("createName").value.trim() || "Host";
   try { localStorage.setItem("pocketgolf_name", myName); } catch (_) {}
@@ -2184,6 +2215,26 @@ function setupGameListeners() {
     if (!players[pid].scores) players[pid].scores = {};
     const prev = players[pid].scores[hole];
     players[pid].scores[hole] = data;
+    // Heal: the room is source of truth. Backfill own scores that the local
+    // save lost (e.g. saves skipped while the infinite-mode bug was active).
+    // Gun replays existing keys on subscribe, so this also runs on resume.
+    if (!infiniteMode && pid === myId && myScores[hole] == null) {
+      myScores[hole] = data;
+      // Catch-up: if the hole we're standing on already has a room score and
+      // we haven't started it locally, walk past all completed holes.
+      if (hole === myCurrentHole && myBall.strokes === 0 && !myBall.done) {
+        let h = myCurrentHole;
+        while (myScores[h] != null) h++;
+        if (h !== myCurrentHole) {
+          myCurrentHole = h;
+          ensureHole(h);
+          loadHole(h);
+          syncMyBall();
+          updateUI();
+          saveGameState();
+        }
+      }
+    }
     updateScorecard();
     // Friend ace (backup if buzz missed)
     if (pid !== myId && data === 1 && prev !== 1) {
@@ -2789,7 +2840,17 @@ function setupInfiniteListeners() {
   if (!infiniteNode || infiniteListenersBound) return;
   infiniteListenersBound = true;
   infiniteNode.get("players").map().on((data, key) => {
-    if (!data || !key || key === "_" || !data.name) return;
+    if (!key || key === "_") return;
+    // Null = player reset their day → drop them from the local board
+    if (!data || !data.name) {
+      if (infinitePlayers[key]) {
+        delete infinitePlayers[key];
+        updateInfiniteRanksUI();
+        const sc = document.getElementById("scorecardOverlay");
+        if (sc && !sc.classList.contains("hidden")) renderInfiniteScorecard();
+      }
+      return;
+    }
     infinitePlayers[key] = {
       name: data.name,
       total: Number(data.total) || 0,
@@ -2815,7 +2876,18 @@ function listenInfiniteHole(holeNum) {
   }
   infiniteHolesListening[holeNum] = true;
   infiniteNode.get("hole").get(holeNum).map().on((data, key) => {
-    if (!data || !key || key === "_") return;
+    if (!key || key === "_") return;
+    // Null = player reset their day → drop from this hole's board
+    if (!data) {
+      if (infiniteHoleCaches[holeNum] && infiniteHoleCaches[holeNum][key]) {
+        delete infiniteHoleCaches[holeNum][key];
+        if (String(myCurrentHole) === holeNum) {
+          infiniteHoleBoard = infiniteHoleCaches[holeNum];
+          updateInfiniteRanksUI();
+        }
+      }
+      return;
+    }
     const strokes = Number(data.strokes);
     if (!strokes || strokes < 1) return;
     if (!infiniteHoleCaches[holeNum]) infiniteHoleCaches[holeNum] = {};
