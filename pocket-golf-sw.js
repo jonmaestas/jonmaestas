@@ -3,7 +3,7 @@
    When the SW file changes, the browser detects a new SW, installs it,
    skipWaiting() activates it, old caches are purged, and the page
    (listening for controllerchange) reloads. */
-const CACHE_VER = "v1-20260730195443";
+const CACHE_VER = "v1-20260730220939";
 const CACHE = "pocket-golf-" + CACHE_VER;
 const PRECACHE = [
   "./pocket-golf.html",

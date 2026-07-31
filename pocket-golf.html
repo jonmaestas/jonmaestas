@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "58338db-20260730195443";
+    window.__PG_BUILD__ = "f6de004-20260730220939";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -1893,6 +1893,18 @@ window.resumeGame = function(code) {
   if (!g) return;
   myName = g.name;
   if (g.myId) myId = g.myId;
+  // Leaving infinite → clubhouse. Clear infinite state or the UI stays in
+  // infinite mode (banner on, mulligans hidden, scores post to wrong board).
+  infiniteMode = false;
+  infinitePeriod = null;
+  infiniteNode = null;
+  document.getElementById("infiniteBanner").style.display = "none";
+  try {
+    const u = new URL(location.href);
+    u.searchParams.delete("infinite");
+    u.searchParams.delete("mode");
+    history.replaceState(null, "", u.pathname + u.search + u.hash);
+  } catch (_) {}
   roomCode = code;
   isHost = !!g.isHost;
   currentRound = g.currentRound || 1;
