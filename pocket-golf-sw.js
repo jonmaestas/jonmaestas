@@ -1,5 +1,10 @@
 /* Pocket Golf service worker — installable PWA + local notification relay */
-const CACHE = "pocket-golf-v1";
+/* CACHE_VER is bumped by bump-pocket-golf-build.sh on every deploy.
+   When the SW file changes, the browser detects a new SW, installs it,
+   skipWaiting() activates it, old caches are purged, and the page
+   (listening for controllerchange) reloads. */
+const CACHE_VER = "v1-20260730195443";
+const CACHE = "pocket-golf-" + CACHE_VER;
 const PRECACHE = [
   "./pocket-golf.html",
   "./pocket-golf-build.json",
@@ -64,6 +69,10 @@ self.addEventListener("fetch", (event) => {
 // Page posts {type:'notify', title, body, tag, url}
 self.addEventListener("message", (event) => {
   const data = event.data || {};
+  if (data === "SKIP_WAITING" || data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
   if (data.type !== "notify") return;
   const title = data.title || "Pocket Golf";
   const opts = {

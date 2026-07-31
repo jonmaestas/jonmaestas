@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "d909ea4-20260728221252";
+    window.__PG_BUILD__ = "58338db-20260730195443";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -474,7 +474,33 @@ const notifyDedupe = new Map(); // tag -> ts
 async function registerPwa() {
   if (!("serviceWorker" in navigator)) return null;
   try {
-    swReg = await navigator.serviceWorker.register("pocket-golf-sw.js", { scope: "./" });
+    // updateViaCache:"none" — never serve a stale SW from HTTP cache; always
+    // check the network for a new pocket-golf-sw.js on every navigation.
+    swReg = await navigator.serviceWorker.register("pocket-golf-sw.js", {
+      scope: "./",
+      updateViaCache: "none"
+    });
+    // Force a check for SW updates right now (covers the case where the page
+    // was launched from app icon / bfcache without a fresh navigation).
+    swReg.update().catch(function () {});
+    // When a new SW takes over, reload once so the page runs the new code.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
+    // New SW downloaded but waiting → ask it to activate immediately.
+    if (swReg.waiting) swReg.waiting.postMessage("SKIP_WAITING");
+    swReg.addEventListener("updatefound", function () {
+      var nw = swReg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", function () {
+        if (nw.state === "installed" && swReg.waiting) {
+          swReg.waiting.postMessage("SKIP_WAITING");
+        }
+      });
+    });
     return swReg;
   } catch (_) {
     return null;
