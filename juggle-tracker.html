@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Juggle Tracker — Player 1</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%; overflow: hidden;
+    background: #0a0e14; color: #e8e8e8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    touch-action: manipulation; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  .shell {
+    display: flex; flex-direction: column;
+    height: 100dvh; width: 100%;
+  }
+
+  /* TOP CHROME */
+  .top-bar {
+    flex-shrink: 0; padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #10141c; border-bottom: 1px solid #1e2430;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand-icon { font-size: 22px; }
+  .brand-text { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+  .brand-text span { color: #4ade80; }
+
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn {
+    padding: 6px 12px; border: none; border-radius: 8px;
+    background: transparent; color: #6b7689; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn.active { background: #1c2230; color: #e8e8e8; }
+  .tab-btn:active { transform: scale(0.95); }
+
+  /* CAMERA / TRACKING AREA */
+  .cam-area {
+    flex: 1; min-height: 0; position: relative;
+    background: #000; overflow: hidden;
+  }
+  #video, #overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  #video { transform: scaleX(-1); }
+  #overlay { pointer-events: none; z-index: 2; }
+
+  /* COUNTER DISPLAY */
+  .counter-card {
+    position: absolute; top: 12px; left: 50%;
+    transform: translateX(-50%); z-index: 10;
+    background: rgba(10,14,20,0.88); backdrop-filter: blur(12px);
+    border-radius: 18px; padding: 10px 28px;
+    border: 1px solid rgba(255,255,255,0.08);
+    text-align: center; min-width: 160px;
+  }
+  .counter-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: #6b7689;
+  }
+  .counter-num {
+    font-size: 56px; font-weight: 800; line-height: 1;
+    color: #4ade80; font-variant-numeric: tabular-nums;
+    transition: transform 0.1s;
+  }
+  .counter-num.bump { transform: scale(1.15); }
+  .counter-best {
+    font-size: 11px; color: #6b7689; margin-top: 2px;
+  }
+
+  /* BOTTOM CHROME */
+  .bottom-bar {
+    flex-shrink: 0; padding: 10px 12px;
+    background: #10141c; border-top: 1px solid #1e2430;
+    display: flex; gap: 8px; align-items: center;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .ctrl-btn {
+    flex: 1; padding: 12px 8px; border: none; border-radius: 12px;
+    background: #1c2230; color: #e8e8e8; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.1s; display: flex;
+    flex-direction: column; align-items: center; gap: 2px;
+  }
+  .ctrl-btn:active { transform: scale(0.97); }
+  .ctrl-btn .icon { font-size: 18px; }
+  .ctrl-btn.primary {
+    background: #4ade80; color: #0a0e14;
+  }
+  .ctrl-btn.danger {
+    background: #1c2230; color: #f87171;
+  }
+  .ctrl-btn[disabled] { opacity: 0.4; }
+
+  /* MILESTONE POPUP */
+  .milestone-popup {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    background: linear-gradient(135deg, #4ade80, #22d3ee);
+    color: #0a0e14; padding: 24px 36px; border-radius: 24px;
+    text-align: center; z-index: 20; opacity: 0;
+    pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 20px 60px rgba(74, 222, 128, 0.4);
+  }
+  .milestone-popup.show {
+    opacity: 1; transform: translate(-50%, -50%) scale(1);
+  }
+  .milestone-popup .emoji { font-size: 48px; }
+  .milestone-popup .text { font-size: 20px; font-weight: 800; }
+  .milestone-popup .sub { font-size: 13px; opacity: 0.8; }
+
+  /* START OVERLAY */
+  .start-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    background: #0a0e14; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 20px;
+    padding: 30px; text-align: center;
+  }
+  .start-overlay h1 { font-size: 28px; font-weight: 800; color: #4ade80; }
+  .start-overlay p { font-size: 14px; color: #9ca3af; line-height: 1.5; max-width: 320px; }
+  .start-btn {
+    padding: 16px 40px; border: none; border-radius: 16px;
+    background: #4ade80; color: #0a0e14; font-size: 18px; font-weight: 800;
+    cursor: pointer; transition: transform 0.1s;
+  }
+  .start-btn:active { transform: scale(0.97); }
+  .start-btn[disabled] { opacity: 0.4; }
+  .start-hint { font-size: 12px; color: #4b5563; }
+
+  /* MESSAGE */
+  .msg {
+    position: absolute; bottom: 8px; left: 50%;
+    transform: translateX(-50%); z-index: 10;
+    background: rgba(10,14,20,0.85); backdrop-filter: blur(8px);
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 12px; color: #9ca3af; white-space: nowrap;
+    max-width: 90%; overflow: hidden; text-overflow: ellipsis;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .msg.error { color: #f87171; }
+
+  /* CALIBRATION DOT */
+  .calib-hint {
+    position: absolute; z-index: 5;
+    width: 60px; height: 60px; border: 3px solid #facc15;
+    border-radius: 50%; pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .calib-hint::after {
+    content: 'Tap the ball'; position: absolute; top: -28px; left: 50%;
+    transform: translateX(-50%); white-space: nowrap;
+    font-size: 12px; color: #facc15; font-weight: 600;
+  }
+
+  /* GUIDE TAB */
+  .guide-scroll {
+    flex: 1; min-height: 0; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; padding: 14px;
+  }
+  .guide-scroll h2 {
+    font-size: 20px; font-weight: 800; color: #e8e8e8;
+    margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #1c2230;
+  }
+  .guide-scroll h2:first-child { margin-top: 0; }
+  .guide-scroll h3 {
+    font-size: 15px; font-weight: 700; color: #4ade80;
+    margin: 14px 0 4px;
+  }
+  .guide-scroll p, .guide-scroll li {
+    font-size: 14px; color: #b0b6c0; line-height: 1.6;
+  }
+  .guide-scroll ul { padding-left: 18px; margin-bottom: 8px; }
+  .guide-scroll .level-card {
+    background: #10141c; border: 1px solid #1e2430;
+    border-radius: 12px; padding: 12px 14px; margin: 8px 0;
+  }
+  .guide-scroll .level-tag {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 6px; margin-bottom: 4px;
+    background: #1c2230; color: #4ade80;
+  }
+  .guide-scroll .milestone-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+    margin: 8px 0;
+  }
+  .guide-scroll .milestone-cell {
+    background: #10141c; border-radius: 10px; padding: 10px;
+    text-align: center; border: 1px solid #1e2430;
+  }
+  .guide-scroll .milestone-cell .num {
+    font-size: 22px; font-weight: 800; color: #4ade80;
+  }
+  .guide-scroll .milestone-cell .lbl {
+    font-size: 11px; color: #6b7689;
+  }
+  .guide-scroll .mistake {
+    background: #10141c; border-left: 3px solid #f87171;
+    border-radius: 8px; padding: 10px 12px; margin: 6px 0;
+  }
+  .guide-scroll .mistake .m-label {
+    font-size: 12px; color: #f87171; font-weight: 700;
+  }
+  .guide-scroll .mistake .m-fix {
+    font-size: 13px; color: #4ade80; margin-top: 2px;
+  }
+  .guide-scroll .routine {
+    background: #10141c; border: 1px solid #1e2430;
+    border-radius: 12px; padding: 12px; margin: 8px 0;
+  }
+  .guide-scroll .routine-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; border-bottom: 1px solid #1e2430;
+    font-size: 13px;
+  }
+  .guide-scroll .routine-row:last-child { border-bottom: none; }
+  .guide-scroll .routine-row .time { color: #4ade80; font-weight: 700; }
+  .guide-scroll .benefit-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0;
+  }
+  .guide-scroll .benefit-card {
+    background: #10141c; border-radius: 10px; padding: 12px;
+    text-align: center; border: 1px solid #1e2430;
+  }
+  .guide-scroll .benefit-card .b-icon { font-size: 24px; }
+  .guide-scroll .benefit-card .b-title { font-size: 13px; font-weight: 700; color: #e8e8e8; margin: 4px 0 2px; }
+  .guide-scroll .benefit-card .b-text { font-size: 11px; color: #6b7689; line-height: 1.4; }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand">
+      <span class="brand-icon">⚽</span>
+      <span class="brand-text">JUGGLE<span>TRACKER</span></span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabTrack">Track</button>
+      <button class="tab-btn" id="tabGuide">Guide</button>
+    </div>
+  </div>
+
+  <!-- TRACK VIEW -->
+  <div id="trackView" style="display:flex; flex-direction:column; flex:1; min-height:0;">
+    <div class="cam-area" id="camArea">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
+
+      <!-- Counter -->
+      <div class="counter-card">
+        <div class="counter-label">Juggles</div>
+        <div class="counter-num" id="counter">0</div>
+        <div class="counter-best">Best: <span id="bestScore">0</span></div>
+      </div>
+
+      <!-- Milestone popup -->
+      <div class="milestone-popup" id="milestone">
+        <div class="emoji" id="mileEmoji">🎉</div>
+        <div class="text" id="mileText">10 Touches!</div>
+        <div class="sub" id="mileSub">Basics down</div>
+      </div>
+
+      <!-- Message -->
+      <div class="msg" id="msg">Tap Start Camera</div>
+
+      <!-- Start overlay -->
+      <div class="start-overlay" id="startOverlay">
+        <h1>⚽ Juggle Tracker</h1>
+        <p>Track your soccer juggles with your camera. 100% on-device — no video leaves your phone. Set your phone down, start juggling, and watch your count climb.</p>
+        <button class="start-btn" id="startBtn">Start Camera</button>
+        <div class="start-hint">Prop your phone ~6ft away. Ball should be clearly visible in frame.</div>
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="bottom-bar">
+      <button class="ctrl-btn primary" id="resetBtn">
+        <span class="icon">🔄</span>
+        <span>Reset</span>
+      </button>
+      <button class="ctrl-btn" id="calibBtn">
+        <span class="icon">🎯</span>
+        <span>Recalibrate</span>
+      </button>
+      <button class="ctrl-btn" id="flipBtn">
+        <span class="icon">📷</span>
+        <span>Flip Cam</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- GUIDE VIEW -->
+  <div id="guideView" class="guide-scroll hidden">
+    <h2>⚽ Why Juggling Matters</h2>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <div class="b-icon">🦶</div>
+        <div class="b-title">Develops Touch</div>
+        <div class="b-text">Every juggle is a first touch. Soft feet, ball control.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="b-icon">⚡</div>
+        <div class="b-title">Builds Coordination</div>
+        <div class="b-text">Timing, balance, and body control all improve.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="b-icon">💪</div>
+        <div class="b-title">Confidence Booster</div>
+        <div class="b-text">New personal records transfer to games.</div>
+      </div>
+      <div class="benefit-card">
+        <div class="b-icon">📍</div>
+        <div class="b-title">Train Anywhere</div>
+        <div class="b-text">All you need is a ball and a few feet of space.</div>
+      </div>
+    </div>
+
+    <h2>📊 Juggling Milestones</h2>
+    <div class="milestone-grid">
+      <div class="milestone-cell"><div class="num">10</div><div class="lbl">Basics down</div></div>
+      <div class="milestone-cell"><div class="num">25</div><div class="lbl">Solid control</div></div>
+      <div class="milestone-cell"><div class="num">50</div><div class="lbl">Getting consistent</div></div>
+      <div class="milestone-cell"><div class="num">100</div><div class="lbl">Competent juggler</div></div>
+      <div class="milestone-cell"><div class="num">250</div><div class="lbl">Advanced player</div></div>
+      <div class="milestone-cell"><div class="num">500+</div><div class="lbl">Elite mastery</div></div>
+    </div>
+
+    <h2>📈 The 0-100 Progression</h2>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 1 · 0–5 JUGGLES</span>
+      <h3>Self-Drop</h3>
+      <p>Hold ball at waist height. Drop it, kick it back to your hands with your laces. Catch. Repeat.</p>
+      <ul>
+        <li>Start with your dominant foot</li>
+        <li>Kick straight up, not forward</li>
+        <li>Lock your ankle</li>
+      </ul>
+      <p><strong>Goal:</strong> 20 successful catches in a row</p>
+    </div>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 2 · 5–10 JUGGLES</span>
+      <h3>Two Touches</h3>
+      <p>Drop, kick up, let it bounce, kick up again, catch. The bounce gives you time to reset.</p>
+      <ul>
+        <li>Same foot for both touches</li>
+        <li>Alternate: right-bounce-right, then left-bounce-left</li>
+      </ul>
+      <p><strong>Goal:</strong> 10 sets of 2 touches each foot</p>
+    </div>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 3 · 10–20 JUGGLES</span>
+      <h3>Alternating Feet</h3>
+      <p>Drop, kick right, let bounce, kick left, let bounce, repeat. Alternating feet is how you'll eventually juggle continuously.</p>
+      <ul>
+        <li>Right-bounce-left-bounce pattern</li>
+        <li>Keep the ball at waist height</li>
+      </ul>
+      <p><strong>Goal:</strong> 10 alternating touches with bounces</p>
+    </div>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 4 · 20–50 JUGGLES</span>
+      <h3>Remove the Bounces</h3>
+      <p>Continuous juggles without letting the ball bounce. Start with 3 touches, then 5, then 10. Use whatever foot keeps the ball up.</p>
+      <ul>
+        <li>Start from a self-drop</li>
+        <li>Keep touches soft and controlled</li>
+        <li>Stay on your toes, ready to move</li>
+      </ul>
+      <p><strong>Milestones:</strong> 5, 10, 20, 30, 50</p>
+    </div>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 5 · 50–100 JUGGLES</span>
+      <h3>Add Thighs</h3>
+      <p>When the ball gets too high or too close to your body, use your thigh. Thigh juggles give you time to reset.</p>
+      <ul>
+        <li>Pattern: feet-feet-thigh-feet-feet</li>
+        <li>Angle your thigh to keep the ball going up</li>
+        <li>Use thigh touches to recover when off-balance</li>
+      </ul>
+      <p><strong>Goal:</strong> 100 touches using feet and thighs</p>
+    </div>
+
+    <div class="level-card">
+      <span class="level-tag">LEVEL 6 · 100+ JUGGLES</span>
+      <h3>Mastery</h3>
+      <p>Once you can hit 100, you're ready for advanced juggling. Add head touches, juggle while walking, juggle with only your weak foot, do tricks.</p>
+    </div>
+
+    <h2>⏱️ Daily Routine (10 Minutes)</h2>
+    <div class="routine">
+      <div class="routine-row"><span><strong>0–2 min</strong> — Warm-up</span><span class="time">20 self-drops each foot</span></div>
+      <div class="routine-row"><span><strong>2–5 min</strong> — Practice</span><span class="time">Work your current level</span></div>
+      <div class="routine-row"><span><strong>5–8 min</strong> — Challenges</span><span class="time">Beat your personal record</span></div>
+      <div class="routine-row"><span><strong>8–10 min</strong> — Weak foot</span><span class="time">Extra non-dominant work</span></div>
+    </div>
+
+    <h2>⚠️ Common Mistakes</h2>
+
+    <div class="mistake">
+      <div class="m-label">Mistake: Kicking the ball too high</div>
+      <div class="m-fix">Fix: Aim for waist height. Smaller, controlled touches give more control.</div>
+    </div>
+    <div class="mistake">
+      <div class="m-label">Mistake: Kicking forward instead of up</div>
+      <div class="m-fix">Fix: Point your toe down and kick straight up. The ball should land near where it started.</div>
+    </div>
+    <div class="mistake">
+      <div class="m-label">Mistake: Tense body and stiff movements</div>
+      <div class="m-fix">Fix: Relax. Stay light on your toes. Soft touches come from a relaxed body.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+// ─── STATE ──────────────────────────────────────────
+let video = document.getElementById('video');
+let overlay = document.getElementById('overlay');
+let ctx = overlay.getContext('2d');
+let counterEl = document.getElementById('counter');
+let bestEl = document.getElementById('bestScore');
+let msgEl = document.getElementById('msg');
+let startOverlay = document.getElementById('startOverlay');
+let startBtn = document.getElementById('startBtn');
+let resetBtn = document.getElementById('resetBtn');
+let calibBtn = document.getElementById('calibBtn');
+let flipBtn = document.getElementById('flipBtn');
+let milestoneEl = document.getElementById('milestone');
+
+let stream = null;
+let tracking = false;
+let facingMode = 'environment'; // rear camera
+let frontCamera = false;
+
+let juggleCount = 0;
+let bestScore = parseInt(localStorage.getItem('juggle_best') || '0');
+bestEl.textContent = bestScore;
+
+// Tracking state
+let ballColor = null;       // {h, s, v} calibrated ball color
+let ballPos = null;         // {x, y, r} current ball centroid
+let lastBallY = null;       // for bounce detection
+let ballPhase = 'idle';     // 'idle' | 'falling' | 'rising'
+let touchCounted = false;   // debounce for current bounce cycle
+let recentTouches = [];     // timestamps of touches for rate limiting
+let frameCount = 0;
+
+// Pixel tracking buffer
+let lowResCanvas = document.createElement('canvas');
+let lowResCtx = lowResCanvas.getContext('2d', { willReadFrequently: true });
+const PROC_W = 160; // processing resolution width
+let procH = 120;
+
+// ─── CONSTANTS ──────────────────────────────────────
+const MILESTONES = [
+  { n: 10,  emoji: '🎯', text: '10 Touches!',  sub: "You've got the basics down" },
+  { n: 25,  emoji: '🔥', text: '25 Touches!',  sub: 'Solid ball control developing' },
+  { n: 50,  emoji: '⚡', text: '50 Touches!',  sub: "You're getting consistent" },
+  { n: 100, emoji: '🏆', text: '100 Touches!', sub: 'Competent juggler — celebrate!' },
+  { n: 250, emoji: '💎', text: '250 Touches!', sub: 'Advanced player territory' },
+  { n: 500, emoji: '👑', text: '500 Touches!', sub: 'Elite level mastery' }
+];
+
+// ─── TABS ───────────────────────────────────────────
+const tabTrack = document.getElementById('tabTrack');
+const tabGuide = document.getElementById('tabGuide');
+const trackView = document.getElementById('trackView');
+const guideView = document.getElementById('guideView');
+
+tabTrack.addEventListener('click', () => {
+  tabTrack.classList.add('active'); tabGuide.classList.remove('active');
+  trackView.classList.remove('hidden'); guideView.classList.add('hidden');
+});
+tabGuide.addEventListener('click', () => {
+  tabGuide.classList.add('active'); tabTrack.classList.remove('active');
+  guideView.classList.remove('hidden'); trackView.classList.add('hidden');
+});
+
+// ─── CAMERA ─────────────────────────────────────────
+async function startCamera() {
+  try {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); }
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await new Promise(r => { if (video.readyState >= 2) r(); else video.onloadedmetadata = r; });
+    await video.play();
+
+    // Setup canvas sizes
+    resizeOverlay();
+    procH = Math.round(PROC_W * video.videoHeight / video.videoWidth) || 120;
+    lowResCanvas.width = PROC_W;
+    lowResCanvas.height = procH;
+
+    startOverlay.classList.add('hidden');
+    msgEl.textContent = 'Looking for ball…';
+    msgEl.classList.remove('error');
+
+    tracking = true;
+    requestAnimationFrame(processFrame);
+  } catch(err) {
+    msgEl.textContent = 'Camera error: ' + (err.message || 'denied');
+    msgEl.classList.add('error');
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start Camera';
+  }
+}
+
+function resizeOverlay() {
+  const area = document.getElementById('camArea');
+  overlay.width = area.clientWidth;
+  overlay.height = area.clientHeight;
+}
+window.addEventListener('resize', resizeOverlay);
+
+startBtn.addEventListener('click', () => {
+  startBtn.disabled = true;
+  startBtn.textContent = 'Starting…';
+  startCamera();
+});
+
+// ─── COLOR HELPERS ──────────────────────────────────
+function rgb2hsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const s = max === 0 ? 0 : d / max;
+  return [h, s, max];
+}
+
+function colorDist(c1, c2) {
+  // Hue distance is circular
+  let dh = Math.abs(c1[0] - c2[0]);
+  if (dh > 180) dh = 360 - dh;
+  const ds = Math.abs(c1[1] - c2[1]);
+  const dv = Math.abs(c1[2] - c2[2]);
+  // Weight hue less if saturation/value is low (near-gray colors are ambiguous in hue)
+  const avgS = (c1[1] + c2[1]) / 2;
+  return Math.sqrt(dh*dh * avgS + ds*ds * 3 + dv*dv * 3);
+}
+
+// ─── BALL DETECTION ─────────────────────────────────
+function detectBallColor() {
+  if (!video.videoWidth) return;
+  const vw = video.videoWidth, vh = video.videoHeight;
+
+  // Draw current frame to low-res
+  lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
+  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
+  const d = imgData.data;
+
+  // Sample center region — assume ball is roughly centered when calibrating
+  const cx = PROC_W / 2, cy = procH / 2;
+  const sampleR = 15;
+  let rSum=0, gSum=0, bSum=0, count=0;
+
+  for (let y = cy - sampleR; y < cy + sampleR; y++) {
+    for (let x = cx - sampleR; x < cx + sampleR; x++) {
+      if (x < 0 || x >= PROC_W || y < 0 || y >= procH) continue;
+      const dx = x - cx, dy = y - cy;
+      if (dx*dx + dy*dy > sampleR*sampleR) continue;
+      const i = (y * PROC_W + x) * 4;
+      rSum += d[i]; gSum += d[i+1]; bSum += d[i+2]; count++;
+    }
+  }
+  if (count === 0) return;
+  const avgR = rSum/count, avgG = gSum/count, avgB = bSum/count;
+  ballColor = rgb2hsv(avgR, avgG, avgB);
+
+  msgEl.textContent = 'Ball locked! Start juggling ⚽';
+}
+
+function detectBall() {
+  if (!ballColor || !video.videoWidth) return null;
+
+  lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
+  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
+  const d = imgData.data;
+
+  // Threshold for color match
+  const THRESH = 60;
+
+  let sumX = 0, sumY = 0, count = 0;
+  let minX = PROC_W, maxX = 0, minY = procH, maxY = 0;
+
+  for (let y = 0; y < procH; y++) {
+    for (let x = 0; x < PROC_W; x++) {
+      const i = (y * PROC_W + x) * 4;
+      const hsv = rgb2hsv(d[i], d[i+1], d[i+2]);
+      if (colorDist(hsv, ballColor) < THRESH) {
+        sumX += x; sumY += y; count++;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (count < 20) return null;
+
+  const cx = sumX / count, cy = sumY / count;
+  const w = maxX - minX, h = maxY - minY;
+  const r = Math.max(w, h) / 2;
+
+  // Aspect ratio sanity — ball should be roughly circular
+  if (w > 0 && h > 0) {
+    const ar = Math.min(w, h) / Math.max(w, h);
+    if (ar < 0.3) return null; // too elongated
+  }
+
+  return {
+    x: cx, y: cy, r: r,
+    pxX: cx * (overlay.width / PROC_W),
+    pxY: cy * (overlay.height / procH),
+    pxR: r * (overlay.width / PROC_W)
+  };
+}
+
+// ─── JUGGLE COUNTING LOGIC ──────────────────────────
+function updateTracking(ball) {
+  if (!ball) {
+    ballPhase = 'idle';
+    return;
+  }
+
+  const y = ball.y;
+  const movementThreshold = 1.5; // pixels in low-res space
+
+  if (lastBallY !== null) {
+    const dy = y - lastBallY;
+
+    // Detect transitions
+    if (ballPhase === 'idle' || ballPhase === 'falling') {
+      if (dy < -movementThreshold) {
+        // Ball is rising
+        ballPhase = 'rising';
+      } else if (dy > movementThreshold) {
+        ballPhase = 'falling';
+      }
+    }
+
+    // Detect bounce: ball was rising, now starts falling
+    // This is a FOOT TOUCH (the ball goes up after being kicked)
+    if (ballPhase === 'rising' && dy > movementThreshold && !touchCounted) {
+      registerTouch();
+      touchCounted = true;
+      ballPhase = 'falling';
+    }
+
+    // Reset touch debounce when ball starts rising again
+    if (ballPhase === 'falling' && dy < -movementThreshold) {
+      touchCounted = false;
+      ballPhase = 'rising';
+    }
+  }
+
+  lastBallY = y;
+}
+
+function registerTouch() {
+  juggleCount++;
+  counterEl.textContent = juggleCount;
+  counterEl.classList.add('bump');
+  setTimeout(() => counterEl.classList.remove('bump'), 100);
+
+  // Check milestones
+  const m = MILESTONES.find(m => m.n === juggleCount);
+  if (m) showMilestone(m);
+
+  // Update best
+  if (juggleCount > bestScore) {
+    bestScore = juggleCount;
+    bestEl.textContent = bestScore;
+    localStorage.setItem('juggle_best', String(bestScore));
+  }
+}
+
+function showMilestone(m) {
+  document.getElementById('mileEmoji').textContent = m.emoji;
+  document.getElementById('mileText').textContent = m.text;
+  document.getElementById('mileSub').textContent = m.sub;
+  milestoneEl.classList.add('show');
+  // Vibrate if available
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  setTimeout(() => milestoneEl.classList.remove('show'), 2500);
+}
+
+// ─── MAIN LOOP ──────────────────────────────────────
+function processFrame() {
+  if (!tracking) return;
+  frameCount++;
+
+  // Only process every other frame for performance
+  if (frameCount % 2 === 0) {
+    const ball = detectBall();
+    if (ball) {
+      updateTracking(ball);
+      drawOverlay(ball);
+    } else {
+      drawOverlay(null);
+    }
+  }
+
+  requestAnimationFrame(processFrame);
+}
+
+function drawOverlay(ball) {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+  if (ball) {
+    // Draw tracking circle
+    ctx.beginPath();
+    ctx.arc(ball.pxX, ball.pxY, ball.pxR + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = '#4ade80';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Inner glow
+    ctx.beginPath();
+    ctx.arc(ball.pxX, ball.pxY, ball.pxR + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(ball.pxX, ball.pxY, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#4ade80';
+    ctx.fill();
+  }
+}
+
+// ─── AUTO-CALIBRATION (find largest circular colored blob) ───
+function autoCalibrate() {
+  if (!video.videoWidth) return false;
+  lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
+  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
+  const d = imgData.data;
+
+  // Build a color histogram (quantized hue) to find dominant non-gray color
+  const buckets = {};
+  for (let y = 0; y < procH; y++) {
+    for (let x = 0; x < PROC_W; x++) {
+      const i = (y * PROC_W + x) * 4;
+      const [h, s, v] = rgb2hsv(d[i], d[i+1], d[i+2]);
+      if (s < 0.25 || v < 0.2 || v > 0.95) continue; // skip gray/dark/white
+      const hb = Math.round(h / 20) * 20; // 18-degree hue buckets
+      if (!buckets[hb]) buckets[hb] = { hSum:0, sSum:0, vSum:0, count:0 };
+      buckets[hb].hSum += h; buckets[hb].sSum += s; buckets[hb].vSum += v; buckets[hb].count++;
+    }
+  }
+
+  // Find the bucket with the most pixels that's a reasonable blob size
+  let best = null;
+  for (const k in buckets) {
+    const b = buckets[k];
+    if (b.count > 200 && b.count < 3000) {
+      if (!best || b.count > best.count) best = b;
+    }
+  }
+  if (!best) return false;
+
+  ballColor = [best.hSum/best.count, best.sSum/best.count, best.vSum/best.count];
+  return true;
+}
+
+// ─── CONTROLS ───────────────────────────────────────
+resetBtn.addEventListener('click', () => {
+  juggleCount = 0;
+  counterEl.textContent = '0';
+  touchCounted = false;
+  ballPhase = 'idle';
+  lastBallY = null;
+  msgEl.textContent = 'Reset! Start juggling ⚽';
+  if (navigator.vibrate) navigator.vibrate(50);
+});
+
+calibBtn.addEventListener('click', () => {
+  msgEl.textContent = 'Recalibrating…';
+  if (autoCalibrate()) {
+    msgEl.textContent = 'Ball locked! Start juggling ⚽';
+  } else {
+    msgEl.textContent = 'No ball found — make sure ball is in frame';
+    msgEl.classList.add('color: #f87171');
+  }
+});
+
+flipBtn.addEventListener('click', () => {
+  frontCamera = !frontCamera;
+  facingMode = frontCamera ? 'user' : 'environment';
+  if (stream) {
+    tracking = false;
+    startCamera();
+  }
+});
+
+})();
+</script>
+</body>
+</html>
