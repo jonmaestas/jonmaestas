@@ -20,7 +20,7 @@
   <title>Pocket Golf — Flick & Play</title>
   <script>
     // Bump with pocket-golf-build.json on every deploy (scripts/bump-pocket-golf-build.sh)
-    window.__PG_BUILD__ = "0035769-20260805211941";
+    window.__PG_BUILD__ = "166cb93-20260805214259";
     (function pgCacheBust() {
       var BUILD = window.__PG_BUILD__;
       var checking = false;
@@ -327,11 +327,12 @@
       </div>
       <ul>
         <li><strong>Flick</strong> on the grid — direction + power from your swipe</li>
-        <li><strong>Clubs</strong> — Driver (6) · Iron (3) · Putter (2). Max distance = club × lie multiplier. No randomness — you see exactly where it lands.</li>
-        <li><strong>Driver</strong> — tee box or fairway only. <strong>Iron</strong> — anywhere except green. <strong>Putter</strong> — green only.</li>
-        <li><strong>Tee box ×2</strong> · <strong>Fairway ×1.5</strong> · Rough ×0.75 · Sand ×0.5</li>
-        <li><strong>Club auto-picks</strong> based on your lie. Tap a pill to override.</li>
-        <li><strong>Trees:</strong> tee shots fly over; from rough or fairway, trees block.</li>
+        <li><strong>Clubs</strong> — Driver (6) · Iron (4) · Putter (2). Tap a pill or let auto-select pick the right one for your lie.</li>
+        <li><strong>Right club wins.</strong> Iron ignores rough penalty (×1.0). Driver in rough drops to ×0.75. Wrong club = shorter shot.</li>
+        <li><strong>Driver:</strong> tee &amp; fairway only. <strong>Iron:</strong> anywhere except green. <strong>Putter:</strong> green only.</li>
+        <li><strong>Tee box ×2</strong> on every club — big drives off the tee fly over trees too.</li>
+        <li><strong>Trees:</strong> tee shots fly over; everywhere else they block the ball.</li>
+        <li><strong>Short par-3s</strong> show up ~1 in 4 holes — reachable in one shot.</li>
         <li><strong>Mulligans (clubhouse only):</strong> 6 per 9-hole block — used count shows on the scorecard</li>
         <li><strong>Infinite:</strong> no mulligans · global daily ladder</li>
         <li><strong>Install:</strong> home screen app + notifications for friend joins &amp; hole-in-ones</li>
@@ -744,36 +745,77 @@ const MAX_FLICK_PX = 200;
 const AIM_DRAG_SCALE = 2; // 2× — arrow past thumb, less travel for full power
 
 // ====================================================================
-// CLUBS — deterministic, no randomness. Max distance in grid cells.
-// Driver 6 · Iron 3 · Putter 2. Effective max = clubMax × lieBonus.
+// CLUBS — deterministic. Each club has its own max range AND its own
+// lie-multiplier table, so the RIGHT club for the lie always wins.
+//   Driver: big off tee/fairway, penalized in rough/sand, blocked on green
+//   Iron:   steady everywhere except green (ignores rough penalty)
+//   Putter: green only
 // ====================================================================
 const CLUBS = {
   driver: { name:"Driver", max:6, short:"D" },
-  iron:   { name:"Iron",   max:3, short:"I" },
+  iron:   { name:"Iron",   max:4, short:"I" },
   putter: { name:"Putter", max:2, short:"P" }
 };
 const CLUB_ORDER = ["driver","iron","putter"]; // highest → lowest max
 
-// Lie multipliers (deterministic — replaces the old random rolls)
-const LIE_MULT = {
-  [T.FAIRWAY]: 1.5,
-  [T.ROUGH]:   0.75,
-  [T.SAND]:    0.5,
-  [T.GREEN]:   1.0,
-  [T.WATER]:   1.0
+// Per-club lie multipliers. Rows = club, cols = terrain.
+// "null" = blocked on that terrain.
+// Design rule: the RIGHT club for a lie always reaches farther than the wrong one.
+//   Driver fairway 9 > Iron fairway 5  ✓ (driver is the big club)
+//   Iron rough 4   > Driver rough 3    ✓ (iron ignores rough)
+//   Iron sand 3    > Driver sand 1.5   ✓ (iron is the escape club)
+const CLUB_LIE_MULT = {
+  driver: {
+    [T.FAIRWAY]: 1.5,
+    [T.ROUGH]:   0.5,    // penalized — iron is better here
+    [T.SAND]:    0.25,   // heavy penalty — iron is the escape club
+    [T.GREEN]:   null,   // blocked
+    [T.WATER]:   1.0
+  },
+  iron: {
+    [T.FAIRWAY]: 1.25,
+    [T.ROUGH]:   1.0,    // right club for rough — no penalty
+    [T.SAND]:    0.75,   // still decent out of sand
+    [T.GREEN]:   null,   // blocked
+    [T.WATER]:   1.0
+  },
+  putter: {
+    [T.FAIRWAY]: null,   // blocked
+    [T.ROUGH]:   null,
+    [T.SAND]:    null,
+    [T.GREEN]:   1.0,    // green only
+    [T.WATER]:   null
+  }
 };
 
-// Club allowed on which terrain? (null = anywhere unless blocked)
+// Club allowed on this terrain?
 function clubAllowedOn(club, terrain) {
-  if (club === "driver") return terrain === T.FAIRWAY || terrain === T.GREEN; // tee sits on FAIRWAY
-  if (club === "iron")   return terrain !== T.GREEN;
-  if (club === "putter") return terrain === T.GREEN;
-  return false;
+  const m = CLUB_LIE_MULT[club];
+  if (!m) return false;
+  const v = m[terrain];
+  return v !== null && v !== undefined;
+}
+
+// Best club for a terrain (highest max that's allowed). Used by auto-select.
+function bestClubFor(terrain) {
+  for (const c of CLUB_ORDER) {
+    if (clubAllowedOn(c, terrain)) return c;
+  }
+  return "iron"; // fallback (shouldn't happen)
 }
 
 // Is the ball currently on the tee box? (tee cell is FAIRWAY at teeX,teeY)
 function isOnTee() {
   return myBall.x === teeX && myBall.y === teeY;
+}
+
+// Per-club effective max distance on a given terrain (already includes lie mult)
+function effectiveClubMax(club, terrain) {
+  const mult = CLUB_LIE_MULT[club][terrain];
+  if (mult === null || mult === undefined) return 0;
+  // Tee box is always ×2 on top of the lie multiplier (tee shots fly far)
+  const teeBonus = isOnTee() ? 2.0 : 1.0;
+  return CLUBS[club].max * mult * teeBonus;
 }
 
 // ====================================================================
@@ -954,8 +996,13 @@ function generateHoleData(holeNum, rand) {
   const g = [];
   for (let y = 0; y < ROWS; y++) { const row = []; for (let x = 0; x < COLS; x++) row.push(T.ROUGH); g.push(row); }
   const tx = Math.floor(COLS/2), ty = ROWS - 2;
+
+  // ~25% of holes are short par-3s: green placed mid-grid so it's reachable
+  // off the tee with a controlled driver or iron shot (HIO opportunity).
+  const isShort = r() < 0.25;
+
   const hx = Math.max(2, Math.min(COLS-3, Math.floor(COLS/2) + (Math.floor(r()*7)-3)));
-  const hy = 1 + Math.floor(r()*2);
+  const hy = isShort ? (9 + Math.floor(r()*3)) : (1 + Math.floor(r()*2)); // short: row 9-11, normal: row 1-2
   const difficulty = Math.min(7, 1 + Math.floor((holeNum - 1) / 4));
 
   let cx = tx, cy = ty, fw = 2;
@@ -979,9 +1026,9 @@ function generateHoleData(holeNum, rand) {
     if (px>=0&&px<COLS&&py>=0&&py<ROWS) g[py][px] = T.FAIRWAY;
   }
 
-  const numWater = Math.floor(r()*(difficulty+1));
-  const numSand = 2 + Math.floor(r()*(difficulty+1));
-  const numTrees = 3 + difficulty*2;
+  const numWater = isShort ? 0 : Math.floor(r()*(difficulty+1));
+  const numSand = isShort ? (1 + Math.floor(r()*2)) : (2 + Math.floor(r()*(difficulty+1)));
+  const numTrees = isShort ? (2 + Math.floor(r()*3)) : (3 + difficulty*2);
 
   for (let i=0; i<numWater; i++) {
     let wx,wy,att=0;
@@ -1491,41 +1538,27 @@ canvas.addEventListener("touchend", (e) => {
 
 // ====================================================================
 // SHOT PROCESSING — deterministic clubs, no randomness.
-// Distance = flickPower × clubMax × lieMultiplier.
-// Lie multiplier: tee ×2 · fairway ×1.5 · rough ×0.75 · sand ×0.5
+// Distance = flickPower × clubMax × clubLieMultiplier × teeBonus.
 // ====================================================================
-function effectiveClubMax(club, terrain) {
-  const clubMax = CLUBS[club].max;
-  const lieMult = (isOnTee()) ? 2.0 : (LIE_MULT[terrain] !== undefined ? LIE_MULT[terrain] : 1.0);
-  return clubMax * lieMult;
-}
 
-// Semi-auto: keep selectedClub unless blocked by rules → go to next highest allowed.
+// Semi-auto: keep selectedClub if legal; otherwise pick the BEST club for lie.
 function autoSelectClub() {
   const terrain = grid[myBall.y] && grid[myBall.y][myBall.x];
   if (terrain === undefined) return;
-  // 1. Current club still legal here? Keep it.
   if (clubAllowedOn(selectedClub, terrain)) return;
-  // 2. Find next highest-club by CLUB_ORDER that is allowed on this lie.
-  for (const c of CLUB_ORDER) {
-    if (clubAllowedOn(c, terrain)) {
-      selectedClub = c;
-      return;
-    }
-  }
-  // Fallback (shouldn't happen): iron.
-  selectedClub = "iron";
+  selectedClub = bestClubFor(terrain);
 }
 
+// Returns { mult, label } for the current club+lie combo (for display + dist calc)
 function terrainMultiplier(terrain) {
-  // Deterministic now — returns the fixed lie multiplier for display.
-  if (isOnTee()) return { mult: 2.0, label: "Tee ×2.00" };
-  if (LIE_MULT[terrain] !== undefined) {
-    const names = { [T.FAIRWAY]:"Fairway", [T.ROUGH]:"Rough", [T.SAND]:"Sand", [T.GREEN]:"Green", [T.WATER]:"Water" };
-    const n = names[terrain] || "Lie";
-    return { mult: LIE_MULT[terrain], label: n + " ×" + LIE_MULT[terrain].toFixed(2) };
-  }
-  return { mult: 1, label: "" };
+  const mult = CLUB_LIE_MULT[selectedClub] && CLUB_LIE_MULT[selectedClub][terrain];
+  if (mult === null || mult === undefined) return { mult: 1, label: "" };
+  const teeBonus = isOnTee() ? 2.0 : 1.0;
+  const totalMult = mult * teeBonus;
+  const names = { [T.FAIRWAY]:"Fairway", [T.ROUGH]:"Rough", [T.SAND]:"Sand", [T.GREEN]:"Green", [T.WATER]:"Water" };
+  const lieName = isOnTee() ? "Tee" : (names[terrain] || "Lie");
+  const label = CLUBS[selectedClub].name + " " + lieName + " ×" + totalMult.toFixed(2);
+  return { mult: totalMult, label };
 }
 
 function processShot(angle, dist) {
@@ -1555,11 +1588,34 @@ function processShot(angle, dist) {
     const pt = path[i];
     if (pt.oob) { wentOOB = true; break; }
     const cellTerrain = grid[pt.y] && grid[pt.y][pt.x];
+    // Trees block the shot UNLESS we're flying from the tee.
     if (cellTerrain === T.TREE && !canFlyTrees) { hitTree = true; break; }
     newX = pt.x; newY = pt.y;
     traveled.push({ x: pt.x, y: pt.y });
     stepsTaken++;
     if (newX === holeX && newY === holeY) break;
+  }
+
+  // Ball must never stop on a tree cell (even if flying over from tee).
+  // If the landing cell is a tree, deflect to the last safe cell traveled.
+  let finalCellTerrain = grid[newY] && grid[newY][newX];
+  if (finalCellTerrain === T.TREE) {
+    // Walk back through traveled to find the last non-tree cell
+    let foundSafe = false;
+    for (let j = traveled.length - 1; j >= 0; j--) {
+      const tc = traveled[j];
+      const tt = grid[tc.y] && grid[tc.y][tc.x];
+      if (tt !== T.TREE) {
+        newX = tc.x; newY = tc.y;
+        foundSafe = true;
+        break;
+      }
+    }
+    if (!foundSafe) {
+      // Entire path was trees — stay put (no movement)
+      newX = fromX; newY = fromY;
+    }
+    hitTree = true; // treat as a tree collision for messaging
   }
 
   const sank = (newX === holeX && newY === holeY);
@@ -1622,10 +1678,10 @@ function processShot(angle, dist) {
       }
       let msg = modifierText;
       if (!msg) {
-        if (finalTerrain === T.GREEN) msg = "On the green — putter active.";
-        else if (finalTerrain === T.FAIRWAY) msg = "Fairway lie — next shot ×1.5.";
-        else if (finalTerrain === T.SAND) msg = "Bunker — next shot ×0.5.";
-        else if (finalTerrain === T.ROUGH) msg = "Rough — next shot ×0.75.";
+        if (finalTerrain === T.GREEN) msg = "On the green — putter only.";
+        else if (finalTerrain === T.FAIRWAY) msg = "Fairway lie — driver or iron.";
+        else if (finalTerrain === T.SAND) msg = "Bunker — iron is the safe pick.";
+        else if (finalTerrain === T.ROUGH) msg = "Rough — iron reaches full range here.";
         else msg = "In the rough.";
       }
       showMsg(msg, modifierText ? "success" : "");
