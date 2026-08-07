@@ -697,54 +697,70 @@ function detectBallColor() {
   msgEl.textContent = 'Ball locked! Start juggling ⚽';
 }
 
+// ─── FRAME DIFFERENCING ─────────────────────────────
+// Store previous frame for motion detection
+let prevFrame = null;
+
 function detectBall() {
   if (!ballColor || !video.videoWidth) return null;
 
+  // Draw current frame to low-res
   lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
-  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
-  const d = imgData.data;
+  const curData = lowResCtx.getImageData(0, 0, PROC_W, procH);
+  const d = curData.data;
 
-  // Threshold for color match
-  const THRESH = 50;
+  const THRESH = 55;        // color distance threshold
+  const MOTION_THRESH = 30; // pixel intensity difference to count as "moved"
+  const MOTION_COUNT_MIN = 8;
 
+  // First pass: find centroid of pixels that are BOTH:
+  //   1. Ball-colored (colorDist < THRESH)
+  //   2. Moving (frame diff > MOTION_THRESH)
   let sumX = 0, sumY = 0, count = 0;
+  const candidates = [];
 
-  // First pass: find centroid of matching pixels
   for (let y = 0; y < procH; y++) {
     for (let x = 0; x < PROC_W; x++) {
       const i = (y * PROC_W + x) * 4;
+      // Color match
       const hsv = rgb2hsv(d[i], d[i+1], d[i+2]);
-      if (colorDist(hsv, ballColor) < THRESH) {
+      if (colorDist(hsv, ballColor) >= THRESH) continue;
+
+      // Motion match (if we have a previous frame)
+      let isMoving = true;
+      if (prevFrame) {
+        const pi = i;
+        const dr = Math.abs(d[i]   - prevFrame[pi]);
+        const dg = Math.abs(d[i+1] - prevFrame[pi+1]);
+        const db = Math.abs(d[i+2] - prevFrame[pi+2]);
+        isMoving = (dr + dg + db) > MOTION_THRESH;
+      }
+
+      if (isMoving) {
         sumX += x; sumY += y; count++;
+        candidates.push(x, y); // store as flat array for radius pass
       }
     }
   }
 
-  if (count < 15) return null;
+  // Save current frame as previous for next call
+  prevFrame = new Uint8ClampedArray(d);
+
+  if (count < MOTION_COUNT_MIN) return null;
 
   const cx = sumX / count, cy = sumY / count;
 
-  // Second pass: compute average distance from centroid (robust radius)
-  // Also filter outliers — only count pixels within 2x the median distance
+  // Compute radius: 80th percentile distance from centroid
   const dists = [];
-  for (let y = 0; y < procH; y++) {
-    for (let x = 0; x < PROC_W; x++) {
-      const i = (y * PROC_W + x) * 4;
-      const hsv = rgb2hsv(d[i], d[i+1], d[i+2]);
-      if (colorDist(hsv, ballColor) < THRESH) {
-        dists.push(Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)));
-      }
-    }
+  for (let j = 0; j < candidates.length; j += 2) {
+    const px = candidates[j], py = candidates[j+1];
+    dists.push(Math.sqrt((px-cx)*(px-cx) + (py-cy)*(py-cy)));
   }
   dists.sort((a,b) => a - b);
-  // Use 80th percentile for radius (ignores stray far pixels)
   const r80 = dists[Math.floor(dists.length * 0.8)] || 5;
-  // Clamp radius to reasonable bounds (5px to 30px in proc space)
-  const r = Math.max(5, Math.min(30, r80));
+  const r = Math.max(4, Math.min(25, r80));
 
-  return {
-    x: cx, y: cy, r: r
-  };
+  return { x: cx, y: cy, r: r };
 }
 
 // ─── GATE CROSSING LOGIC ────────────────────────────
@@ -866,6 +882,7 @@ resetBtn.addEventListener('click', () => {
   juggleCount = 0;
   counterEl.textContent = '0';
   lastBallSide = null;
+  prevFrame = null; // reset motion baseline
   msgEl.textContent = 'Reset! Start juggling ⚽';
   if (navigator.vibrate) navigator.vibrate(50);
 });
@@ -900,6 +917,7 @@ function handleOverlayTap(clientY) {
   gateY = overlayYToProc(touchY);
   gateSet = true;
   lastBallSide = null;
+  prevFrame = null; // reset motion baseline
   document.getElementById('calibLabel').textContent = 'Recalibrate';
   msgEl.textContent = 'Gate set! Start juggling ⚽';
   if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
