@@ -275,7 +275,7 @@
       <!-- Start overlay -->
       <div class="start-overlay" id="startOverlay">
         <h1>⚽ Juggle Tracker</h1>
-        <p>Track your soccer juggles with your camera. 100% on-device — no video leaves your phone. Set your phone down, start juggling, and watch your count climb.</p>
+        <p>Track your soccer juggles with your camera. 100% on-device — no video leaves your phone. Hold the ball in the yellow ring, tap Calibrate, then start juggling.</p>
         <button class="start-btn" id="startBtn">Start Camera</button>
         <div class="start-hint">Prop your phone ~6ft away. Ball should be clearly visible in frame.</div>
       </div>
@@ -289,7 +289,7 @@
       </button>
       <button class="ctrl-btn" id="calibBtn">
         <span class="icon">🎯</span>
-        <span>Recalibrate</span>
+        <span id="calibLabel">Calibrate</span>
       </button>
     </div>
   </div>
@@ -506,10 +506,12 @@ async function startCamera() {
     lowResCanvas.height = procH;
 
     startOverlay.classList.add('hidden');
-    msgEl.textContent = 'Looking for ball…';
+    msgEl.textContent = 'Hold ball in the yellow ring → tap Calibrate';
     msgEl.classList.remove('error');
 
     tracking = true;
+    // Draw target ring until calibrated
+    if (!ballColor) drawTargetRing();
     requestAnimationFrame(processFrame);
   } catch(err) {
     msgEl.textContent = 'Camera error: ' + (err.message || 'denied');
@@ -558,6 +560,67 @@ function colorDist(c1, c2) {
   // Weight hue less if saturation/value is low (near-gray colors are ambiguous in hue)
   const avgS = (c1[1] + c2[1]) / 2;
   return Math.sqrt(dh*dh * avgS + ds*ds * 3 + dv*dv * 3);
+}
+
+// ─── TARGET RING ────────────────────────────────────
+// Draws a pulsing yellow ring in the center of the screen.
+// User holds the ball inside this ring, then taps Calibrate.
+function drawTargetRing() {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  const cx = overlay.width / 2;
+  const cy = overlay.height / 2;
+  const ringR = Math.min(overlay.width, overlay.height) * 0.12;
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([10, 6]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Crosshair
+  ctx.beginPath();
+  ctx.moveTo(cx - ringR * 0.3, cy); ctx.lineTo(cx + ringR * 0.3, cy);
+  ctx.moveTo(cx, cy - ringR * 0.3); ctx.lineTo(cx, cy + ringR * 0.3);
+  ctx.strokeStyle = '#facc15';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Label
+  ctx.fillStyle = '#facc15';
+  ctx.font = 'bold 13px -apple-system, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Hold ball here', cx, cy + ringR + 22);
+}
+
+// ─── MANUAL CALIBRATION (sample center ring pixels) ───
+function calibrateFromCenterRing() {
+  if (!video.videoWidth) return false;
+
+  lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
+  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
+  const d = imgData.data;
+
+  // Sample a disc in the center of the low-res frame
+  const cx = PROC_W / 2, cy = procH / 2;
+  const sampleR = Math.min(PROC_W, procH) * 0.12;
+  let rSum=0, gSum=0, bSum=0, count=0;
+
+  for (let y = 0; y < procH; y++) {
+    for (let x = 0; x < PROC_W; x++) {
+      const dx = x - cx, dy = y - cy;
+      if (dx*dx + dy*dy > sampleR*sampleR) continue;
+      const i = (y * PROC_W + x) * 4;
+      rSum += d[i]; gSum += d[i+1]; bSum += d[i+2]; count++;
+    }
+  }
+
+  if (count < 10) return false;
+
+  ballColor = rgb2hsv(rSum/count, gSum/count, bSum/count);
+  return true;
 }
 
 // ─── BALL DETECTION ─────────────────────────────────
@@ -733,14 +796,18 @@ function processFrame() {
   if (!tracking) return;
   frameCount++;
 
-  // Only process every other frame for performance
   if (frameCount % 2 === 0) {
-    const ball = detectBall();
-    if (ball) {
-      updateTracking(ball);
-      drawOverlay(ball);
+    if (!ballColor) {
+      // Not calibrated yet — show target ring, don't try to detect
+      drawTargetRing();
     } else {
-      drawOverlay(null);
+      const ball = detectBall();
+      if (ball) {
+        updateTracking(ball);
+        drawOverlay(ball);
+      } else {
+        drawOverlay(null);
+      }
     }
   }
 
@@ -817,17 +884,23 @@ resetBtn.addEventListener('click', () => {
   touchCounted = false;
   ballPhase = 'idle';
   lastBallY = null;
+  // Keep calibration — only reset the count
   msgEl.textContent = 'Reset! Start juggling ⚽';
   if (navigator.vibrate) navigator.vibrate(50);
 });
 
 calibBtn.addEventListener('click', () => {
-  msgEl.textContent = 'Recalibrating…';
-  if (autoCalibrate()) {
+  if (calibrateFromCenterRing()) {
     msgEl.textContent = 'Ball locked! Start juggling ⚽';
+    msgEl.classList.remove('error');
+    lastBallY = null;
+    ballPhase = 'idle';
+    touchCounted = false;
+    document.getElementById('calibLabel').textContent = 'Recalibrate';
+    if (navigator.vibrate) navigator.vibrate(30);
   } else {
-    msgEl.textContent = 'No ball found — make sure ball is in frame';
-    msgEl.classList.add('color: #f87171');
+    msgEl.textContent = 'Calibration failed — hold ball in the ring and try again';
+    msgEl.classList.add('error');
   }
 });
 
