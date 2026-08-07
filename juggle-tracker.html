@@ -449,17 +449,15 @@ bestEl.textContent = bestScore;
 
 // Tracking state
 let ballColor = null;       // {h, s, v} calibrated ball color
-let ballPos = null;         // {x, y, r} current ball centroid
-let lastBallY = null;       // for bounce detection
-let ballPhase = 'idle';     // 'idle' | 'falling' | 'rising'
-let touchCounted = false;   // debounce for current bounce cycle
-let recentTouches = [];     // timestamps of touches for rate limiting
+let gateY = null;           // gate line Y position in proc-space (0..procH)
+let gateSet = false;        // has the user positioned the gate?
+let lastBallSide = null;    // 'above' | 'below' — which side of gate the ball was on
 let frameCount = 0;
 
 // Pixel tracking buffer
 let lowResCanvas = document.createElement('canvas');
 let lowResCtx = lowResCanvas.getContext('2d', { willReadFrequently: true });
-const PROC_W = 160; // processing resolution width
+const PROC_W = 160;
 let procH = 120;
 
 // ─── CONSTANTS ──────────────────────────────────────
@@ -506,7 +504,7 @@ async function startCamera() {
     lowResCanvas.height = procH;
 
     startOverlay.classList.add('hidden');
-    msgEl.textContent = 'Hold ball in the yellow ring → tap Calibrate';
+    msgEl.textContent = 'Hold ball in yellow ring → tap Calibrate';
     msgEl.classList.remove('error');
 
     tracking = true;
@@ -562,16 +560,16 @@ function colorDist(c1, c2) {
   return Math.sqrt(dh*dh * avgS + ds*ds * 3 + dv*dv * 3);
 }
 
-// ─── TARGET RING ────────────────────────────────────
-// Draws a pulsing yellow ring in the center of the screen.
-// User holds the ball inside this ring, then taps Calibrate.
+// ─── TARGET RING + GATE LINE ────────────────────────
+// Phase 1: Show target ring for color calibration
+// Phase 2: Show draggable gate line for counting
+
 function drawTargetRing() {
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   const cx = overlay.width / 2;
   const cy = overlay.height / 2;
   const ringR = Math.min(overlay.width, overlay.height) * 0.12;
 
-  // Outer ring
   ctx.beginPath();
   ctx.arc(cx, cy, ringR, 0, Math.PI * 2);
   ctx.strokeStyle = '#facc15';
@@ -580,7 +578,6 @@ function drawTargetRing() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Crosshair
   ctx.beginPath();
   ctx.moveTo(cx - ringR * 0.3, cy); ctx.lineTo(cx + ringR * 0.3, cy);
   ctx.moveTo(cx, cy - ringR * 0.3); ctx.lineTo(cx, cy + ringR * 0.3);
@@ -588,11 +585,40 @@ function drawTargetRing() {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Label
   ctx.fillStyle = '#facc15';
   ctx.font = 'bold 13px -apple-system, system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('Hold ball here', cx, cy + ringR + 22);
+}
+
+function drawGateLine() {
+  if (gateY === null) return;
+  const sc = procToOverlay(0, gateY);
+  const y = sc.y;
+
+  // Dashed horizontal line
+  ctx.beginPath();
+  ctx.moveTo(0, y); ctx.lineTo(overlay.width, y);
+  ctx.strokeStyle = '#22d3ee';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([12, 8]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Label
+  ctx.fillStyle = '#22d3ee';
+  ctx.font = 'bold 12px -apple-system, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('GATE — tap to move', 12, y - 8);
+}
+
+// Convert a tap on the overlay to proc-space Y
+function overlayYToProc(touchY) {
+  const ovH = overlay.height;
+  const scale = Math.max(overlay.width / PROC_W, ovH / procH);
+  const dispH = procH * scale;
+  const offsetY = (ovH - dispH) / 2;
+  return (touchY - offsetY) / scale;
 }
 
 // ─── MANUAL CALIBRATION (sample center ring pixels) ───
@@ -603,7 +629,6 @@ function calibrateFromCenterRing() {
   const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
   const d = imgData.data;
 
-  // Sample a disc in the center of the low-res frame
   const cx = PROC_W / 2, cy = procH / 2;
   const sampleR = Math.min(PROC_W, procH) * 0.12;
   let rSum=0, gSum=0, bSum=0, count=0;
@@ -722,45 +747,31 @@ function detectBall() {
   };
 }
 
-// ─── JUGGLE COUNTING LOGIC ──────────────────────────
+// ─── GATE CROSSING LOGIC ────────────────────────────
+// Ball must go ABOVE the gate (up), then come back DOWN through it = 1 touch.
+// Ground bounces below the gate line never cross it, so they don't count.
 function updateTracking(ball) {
-  if (!ball) {
-    ballPhase = 'idle';
+  if (!ball || gateY === null) return;
+
+  const ballY = ball.y;
+  const margin = 2; // proc-space pixels of hysteresis
+
+  const currentSide = ballY < gateY ? 'above' : 'below';
+
+  if (lastBallSide === null) {
+    lastBallSide = currentSide;
     return;
   }
 
-  const y = ball.y;
-  const movementThreshold = 1.5; // pixels in low-res space
-
-  if (lastBallY !== null) {
-    const dy = y - lastBallY;
-
-    // Detect transitions
-    if (ballPhase === 'idle' || ballPhase === 'falling') {
-      if (dy < -movementThreshold) {
-        // Ball is rising
-        ballPhase = 'rising';
-      } else if (dy > movementThreshold) {
-        ballPhase = 'falling';
-      }
-    }
-
-    // Detect bounce: ball was rising, now starts falling
-    // This is a FOOT TOUCH (the ball goes up after being kicked)
-    if (ballPhase === 'rising' && dy > movementThreshold && !touchCounted) {
-      registerTouch();
-      touchCounted = true;
-      ballPhase = 'falling';
-    }
-
-    // Reset touch debounce when ball starts rising again
-    if (ballPhase === 'falling' && dy < -movementThreshold) {
-      touchCounted = false;
-      ballPhase = 'rising';
-    }
+  // Count: ball was above the gate, now crosses down through it
+  if (lastBallSide === 'above' && currentSide === 'below') {
+    registerTouch();
   }
 
-  lastBallY = y;
+  // Update side with hysteresis to prevent jitter counts
+  if (currentSide !== lastBallSide) {
+    lastBallSide = currentSide;
+  }
 }
 
 function registerTouch() {
@@ -798,15 +809,22 @@ function processFrame() {
 
   if (frameCount % 2 === 0) {
     if (!ballColor) {
-      // Not calibrated yet — show target ring, don't try to detect
+      // Phase 1: Show target ring for calibration
       drawTargetRing();
     } else {
+      // Phase 2/3: Detect ball
       const ball = detectBall();
       if (ball) {
-        updateTracking(ball);
+        if (gateSet) {
+          updateTracking(ball);
+        }
         drawOverlay(ball);
       } else {
         drawOverlay(null);
+      }
+      // Always draw gate line on top if set
+      if (gateSet) {
+        drawGateLine();
       }
     }
   }
@@ -843,66 +861,59 @@ function drawOverlay(ball) {
   }
 }
 
-// ─── AUTO-CALIBRATION (find largest circular colored blob) ───
-function autoCalibrate() {
-  if (!video.videoWidth) return false;
-  lowResCtx.drawImage(video, 0, 0, PROC_W, procH);
-  const imgData = lowResCtx.getImageData(0, 0, PROC_W, procH);
-  const d = imgData.data;
-
-  // Build a color histogram (quantized hue) to find dominant non-gray color
-  const buckets = {};
-  for (let y = 0; y < procH; y++) {
-    for (let x = 0; x < PROC_W; x++) {
-      const i = (y * PROC_W + x) * 4;
-      const [h, s, v] = rgb2hsv(d[i], d[i+1], d[i+2]);
-      if (s < 0.25 || v < 0.2 || v > 0.95) continue; // skip gray/dark/white
-      const hb = Math.round(h / 20) * 20; // 18-degree hue buckets
-      if (!buckets[hb]) buckets[hb] = { hSum:0, sSum:0, vSum:0, count:0 };
-      buckets[hb].hSum += h; buckets[hb].sSum += s; buckets[hb].vSum += v; buckets[hb].count++;
-    }
-  }
-
-  // Find the bucket with the most pixels that's a reasonable blob size
-  let best = null;
-  for (const k in buckets) {
-    const b = buckets[k];
-    if (b.count > 200 && b.count < 3000) {
-      if (!best || b.count > best.count) best = b;
-    }
-  }
-  if (!best) return false;
-
-  ballColor = [best.hSum/best.count, best.sSum/best.count, best.vSum/best.count];
-  return true;
-}
-
 // ─── CONTROLS ───────────────────────────────────────
 resetBtn.addEventListener('click', () => {
   juggleCount = 0;
   counterEl.textContent = '0';
-  touchCounted = false;
-  ballPhase = 'idle';
-  lastBallY = null;
-  // Keep calibration — only reset the count
+  lastBallSide = null;
   msgEl.textContent = 'Reset! Start juggling ⚽';
   if (navigator.vibrate) navigator.vibrate(50);
 });
 
 calibBtn.addEventListener('click', () => {
-  if (calibrateFromCenterRing()) {
-    msgEl.textContent = 'Ball locked! Start juggling ⚽';
-    msgEl.classList.remove('error');
-    lastBallY = null;
-    ballPhase = 'idle';
-    touchCounted = false;
-    document.getElementById('calibLabel').textContent = 'Recalibrate';
-    if (navigator.vibrate) navigator.vibrate(30);
+  if (!ballColor) {
+    // Phase 1 → 2: Calibrate color from center ring
+    if (calibrateFromCenterRing()) {
+      msgEl.textContent = 'Color locked! Tap screen at juggling height to set gate';
+      msgEl.classList.remove('error');
+      document.getElementById('calibLabel').textContent = 'Set Gate';
+      if (navigator.vibrate) navigator.vibrate(30);
+    } else {
+      msgEl.textContent = 'Calibration failed — hold ball in the ring and try again';
+      msgEl.classList.add('error');
+    }
   } else {
-    msgEl.textContent = 'Calibration failed — hold ball in the ring and try again';
-    msgEl.classList.add('error');
+    // Already calibrated — recalibrate color
+    if (calibrateFromCenterRing()) {
+      msgEl.textContent = 'Re-calibrated! Tap screen to set gate';
+      msgEl.classList.remove('error');
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
   }
 });
+
+// ─── TAP TO SET GATE ────────────────────────────────
+function handleOverlayTap(clientY) {
+  if (!ballColor) return; // must calibrate color first
+  const rect = overlay.getBoundingClientRect();
+  const touchY = clientY - rect.top;
+  gateY = overlayYToProc(touchY);
+  gateSet = true;
+  lastBallSide = null;
+  document.getElementById('calibLabel').textContent = 'Recalibrate';
+  msgEl.textContent = 'Gate set! Start juggling ⚽';
+  if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+}
+
+overlay.addEventListener('click', (e) => handleOverlayTap(e.clientY));
+overlay.style.pointerEvents = 'auto';
+
+overlay.addEventListener('touchend', (e) => {
+  if (e.changedTouches.length > 0) {
+    e.preventDefault();
+    handleOverlayTap(e.changedTouches[0].clientY);
+  }
+}, { passive: false });
 
 })();
 </script>
