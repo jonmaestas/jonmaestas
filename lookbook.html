@@ -4,245 +4,715 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Room Addition — Reference Lookbook</title>
+<title>Room Addition — Reference Board</title>
 <style>
-  :root {
-    --bg: #fafaf8;
-    --card: #ffffff;
-    --border: #e2e0dc;
-    --text: #1a1a1a;
-    --muted: #6b6b6b;
-    --accent: #c8531a;
-    --tag-bg: #f0ede8;
-    --tag-text: #5a5a5a;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    -webkit-text-size-adjust: 100%;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
   }
-  header {
-    background: var(--card);
-    border-bottom: 2px solid var(--border);
-    padding: 1.5rem 1rem;
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  header h1 {
-    font-size: 1.4rem;
-    font-weight: 700;
-  }
-  header p {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
-  }
-  .meta-bar {
-    background: var(--tag-bg);
-    padding: 0.5rem 1rem;
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--tag-text);
-    border-bottom: 1px solid var(--border);
-  }
-  .meta-bar strong { color: var(--text); }
 
-  /* Filter tabs */
-  .filters {
+  /* Toolbar */
+  .toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #16213e;
+    border-bottom: 1px solid #0f3460;
+    padding: 0.5rem 1rem;
     display: flex;
+    align-items: center;
     gap: 0.5rem;
-    padding: 1rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    justify-content: center;
+    z-index: 1000;
     flex-wrap: wrap;
   }
-  .filter-btn {
-    padding: 0.4rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: var(--card);
-    color: var(--muted);
-    font-size: 0.85rem;
-    cursor: pointer;
+  .toolbar h1 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #e94560;
+    margin-right: auto;
     white-space: nowrap;
-    transition: all 0.15s;
   }
-  .filter-btn.active, .filter-btn:hover {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
+  .toolbar select, .toolbar button {
+    background: #0f3460;
+    color: #e0e0e0;
+    border: 1px solid #1a3a6b;
+    border-radius: 4px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .toolbar select:hover, .toolbar button:hover { background: #1a4a8b; }
+  .toolbar button.active { background: #e94560; border-color: #e94560; }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #555;
+    display: inline-block;
+  }
+  .status-dot.connected { background: #4caf50; }
+  .status-dot.disconnected { background: #f44336; }
+  .status-text { font-size: 0.7rem; color: #888; }
+
+  /* Canvas */
+  #canvas {
+    position: absolute;
+    top: 48px;
+    left: 0; right: 0; bottom: 0;
+    overflow: auto;
+    cursor: grab;
+    background:
+      radial-gradient(circle, #1a1a3e 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  #canvas.pasting { cursor: crosshair; }
+  #canvas.dragging { cursor: grabbing; }
+
+  .canvas-inner {
+    position: relative;
+    width: 4000px;
+    height: 3000px;
   }
 
-  /* Grid */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    padding: 0 1rem 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
+  /* Cards on canvas */
+  .item {
+    position: absolute;
+    background: #16213e;
+    border: 2px solid #0f3460;
     border-radius: 8px;
     overflow: hidden;
-    transition: box-shadow 0.15s;
+    min-width: 200px;
+    max-width: 350px;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-  .card-image {
+  .item:hover { border-color: #e94560; box-shadow: 0 4px 20px rgba(233,69,96,0.2); }
+  .item.selected { border-color: #e94560; box-shadow: 0 0 0 2px rgba(233,69,96,0.5); }
+
+  .item-img {
     width: 100%;
-    aspect-ratio: 4/3;
+    max-height: 250px;
     object-fit: cover;
-    background: #f5f5f3;
     display: block;
+    pointer-events: none;
+    background: #0a0a1a;
   }
-  .card-placeholder {
+  .item-img-placeholder {
     width: 100%;
-    aspect-ratio: 4/3;
-    background: #f0ede8;
+    height: 120px;
+    background: #0a0a1a;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #bbb;
+    color: #555;
     font-size: 0.8rem;
   }
-  .card-body {
-    padding: 0.75rem 1rem 1rem;
-  }
-  .card-tag {
+
+  .item-body { padding: 0.5rem 0.75rem 0.75rem; }
+  .item-cat {
     display: inline-block;
-    background: var(--tag-bg);
-    color: var(--tag-text);
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    padding: 0.2rem 0.6rem;
-    border-radius: 10px;
-    margin-bottom: 0.5rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 8px;
+    margin-bottom: 0.35rem;
   }
-  .card-title {
-    font-size: 1rem;
+  .cat-windows { background: #1b3a5b; color: #6cb0ff; }
+  .cat-doors { background: #3a2b1b; color: #ffaa6c; }
+  .cat-plumbing { background: #1b3a3a; color: #6cffe6; }
+  .cat-cabinetry { background: #3a1b3a; color: #e06cff; }
+  .cat-flooring { background: #2b3a1b; color: #b0ff6c; }
+  .cat-lighting { background: #3a3a1b; color: #ffe66c; }
+  .cat-appliances { background: #3a1b1b; color: #ff6c6c; }
+  .cat-finishes { background: #1b2b3a; color: #6c9bff; }
+  .cat-other { background: #2a2a2a; color: #aaa; }
+
+  .item-title {
+    font-size: 0.9rem;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+    color: #fff;
+    margin-bottom: 0.15rem;
+    outline: none;
   }
-  .card-location {
+  .item-title[contenteditable]:focus {
+    background: rgba(233,69,96,0.1);
+    border-radius: 3px;
+  }
+  .item-location {
+    font-size: 0.75rem;
+    color: #e94560;
+    outline: none;
+    margin-bottom: 0.3rem;
+  }
+  .item-location[contenteditable]:focus {
+    background: rgba(233,69,96,0.1);
+    border-radius: 3px;
+  }
+  .item-notes {
     font-size: 0.8rem;
-    color: var(--accent);
-    font-weight: 500;
-    margin-bottom: 0.4rem;
+    color: #aaa;
+    line-height: 1.35;
+    outline: none;
   }
-  .card-notes {
-    font-size: 0.85rem;
-    color: var(--muted);
-    line-height: 1.4;
+  .item-notes[contenteditable]:focus {
+    background: rgba(233,69,96,0.1);
+    border-radius: 3px;
   }
 
-  /* Section headers */
-  .section-header {
-    grid-column: 1 / -1;
-    font-size: 1.1rem;
+  .item-delete {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 24px; height: 24px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    border-radius: 50%;
+    color: #ff4444;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .item:hover .item-delete, .item.selected .item-delete { display: flex; }
+  .item-delete:hover { background: #e94560; color: #fff; }
+
+  .item-resize {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 16px; height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, #0f3460 50%);
+    border-radius: 0 0 8px 0;
+  }
+
+  /* Category zones — colored background sections */
+  .zone {
+    position: absolute;
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+  .zone-label {
+    position: absolute;
+    top: 0.5rem; left: 0.75rem;
+    font-size: 1rem;
     font-weight: 700;
-    padding-top: 1rem;
-    border-bottom: 2px solid var(--border);
-    padding-bottom: 0.5rem;
-    margin-top: 0.5rem;
-  }
-  .section-header:first-child { margin-top: 0; }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--muted);
-  }
-  .empty-state h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
-
-  footer {
-    text-align: center;
-    padding: 2rem 1rem;
-    color: var(--muted);
-    font-size: 0.8rem;
-    border-top: 1px solid var(--border);
+    opacity: 0.3;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    pointer-events: none;
   }
 
-  @media (max-width: 600px) {
-    .grid { grid-template-columns: 1fr; }
-    header h1 { font-size: 1.2rem; }
+  /* Mobile */
+  @media (max-width: 768px) {
+    .toolbar { padding: 0.4rem 0.5rem; gap: 0.3rem; }
+    .toolbar h1 { font-size: 0.75rem; }
+    .toolbar select, .toolbar button { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    #canvas { top: 42px; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Room Addition — Reference Lookbook</h1>
-  <p>Visual reference for materials, fixtures, and finishes</p>
-</header>
-
-<div class="meta-bar">
-  <strong>Location:</strong> 70 Richard Scott Ct, Wright City, MO &nbsp;|&nbsp;
-  <strong>Updated:</strong> August 2026
+<div class="toolbar">
+  <h1>🏠 Room Addition Board</h1>
+  <span class="status-dot" id="statusDot"></span>
+  <span class="status-text" id="statusText">connecting…</span>
+  <select id="filterSelect">
+    <option value="all">All Categories</option>
+    <option value="windows">Windows</option>
+    <option value="doors">Doors</option>
+    <option value="plumbing">Plumbing</option>
+    <option value="cabinetry">Cabinetry</option>
+    <option value="flooring">Flooring</option>
+    <option value="lighting">Lighting</option>
+    <option value="appliance">Appliances</option>
+    <option value="finishes">Finishes</option>
+    <option value="other">Other</option>
+  </select>
+  <button id="addCardBtn">+ Add Note</button>
+  <button id="pasteModeBtn">📋 Paste Image</button>
+  <button id="helpBtn">?</button>
 </div>
 
-<div class="filters" id="filters">
-  <button class="filter-btn active" data-filter="all">All</button>
-  <button class="filter-btn" data-filter="windows">Windows</button>
-  <button class="filter-btn" data-filter="doors">Doors</button>
-  <button class="filter-btn" data-filter="plumbing">Plumbing Fixtures</button>
-  <button class="filter-btn" data-filter="cabinetry">Cabinetry</button>
-  <button class="filter-btn" data-filter="flooring">Flooring</button>
-  <button class="filter-btn" data-filter="lighting">Lighting</button>
-  <button class="filter-btn" data-filter="appliances">Appliances</button>
-  <button class="filter-btn" data-filter="finishes">Finishes</button>
-  <button class="filter-btn" data-filter="other">Other</button>
-</div>
-
-<div class="grid" id="grid">
-
-  <!-- WINDOWS -->
-  <div class="section-header">Windows</div>
-
-  <div class="card" data-category="windows">
-    <img class="card-image" src="lookbook/kitchen-window.jpg" alt="Black grid window over farmhouse sink">
-    <div class="card-body">
-      <span class="card-tag">Windows</span>
-      <div class="card-title">Black Grid Window — 12 Lite</div>
-      <div class="card-location">Above Kitchen Sink</div>
-      <div class="card-notes">
-        Large picture window with black frame, 3×4 grid (12 panes). Sits above farmhouse sink.
-        Note: black exterior frame, white subway tile backsplash around it. We like this style.
-      </div>
-    </div>
+<div id="canvas">
+  <div class="canvas-inner" id="canvasInner">
+    <!-- Items rendered dynamically -->
   </div>
-
 </div>
 
-<footer>
-  Questions? Contact Jon Maestas — (636) 235-6304
-</footer>
-
+<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gun/lib/webrtc.js"></script>
 <script>
-  // Filter
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.dataset.filter;
-      document.querySelectorAll('.card').forEach(card => {
-        if (filter === 'all' || card.dataset.category === filter) {
-          card.style.display = '';
-        } else {
-          card.style.display = 'none';
+(function() {
+  // ---- Gun setup ----
+  // Primary: local relay. Fallback: public relay.
+  var peers = [
+    'http://localhost:4200/gun',
+    'https://gun-manhattan.herokuapp.com/gun',
+    'https://peer.wallie.io/gun'
+  ];
+
+  var gun = Gun({ peers: peers, localStorage: false });
+  var board = gun.get('maestas-room-addition-board');
+
+  var canvas = document.getElementById('canvas');
+  var canvasInner = document.getElementById('canvasInner');
+  var items = {}; // id -> { el, data }
+  var dragState = null;
+  var pasteMode = false;
+
+  // ---- Status indicator ----
+  function setConnected(connected) {
+    var dot = document.getElementById('statusDot');
+    var text = document.getElementById('statusText');
+    if (connected) {
+      dot.className = 'status-dot connected';
+      text.textContent = 'synced';
+    } else {
+      dot.className = 'status-dot disconnected';
+      text.textContent = 'offline — changes saved locally';
+    }
+  }
+
+  // Heuristic: if we get any data within 3s, we're connected
+  var connectedTimer = setTimeout(function() {
+    setConnected(false);
+  }, 3000);
+
+  // ---- Data sync via Gun ----
+  board.map().on(function(data, id) {
+    clearTimeout(connectedTimer);
+    setConnected(true);
+
+    if (!data || data._deleted) {
+      removeItemEl(id);
+      return;
+    }
+
+    if (items[id]) {
+      updateItemEl(id, data);
+    } else {
+      createItemEl(id, data);
+    }
+  }, { change: true });
+
+  function saveItem(id, data) {
+    board.get(id).put(data);
+  }
+
+  function deleteItem(id) {
+    board.get(id).put({ _deleted: true, title: '', notes: '', location: '', category: '', img: '', x: 0, y: 0, w: 0, h: 0 });
+  }
+
+  // ---- Item rendering ----
+  function createItemEl(id, data) {
+    var el = document.createElement('div');
+    el.className = 'item';
+    el.dataset.id = id;
+    el.dataset.category = data.category || 'other';
+    el.innerHTML =
+      '<button class="item-delete" title="Delete">✕</button>' +
+      '<div class="item-img-wrap"></div>' +
+      '<div class="item-body">' +
+        '<span class="item-cat"></span>' +
+        '<div class="item-title" data-field="title"></div>' +
+        '<div class="item-location" data-field="location"></div>' +
+        '<div class="item-notes" data-field="notes"></div>' +
+      '</div>' +
+      '<div class="item-resize"></div>';
+
+    canvasInner.appendChild(el);
+    items[id] = { el: el, data: data };
+    updateItemEl(id, data);
+    attachItemEvents(id);
+  }
+
+  function updateItemEl(id, data) {
+    if (!items[id]) return;
+    var obj = items[id];
+    obj.data = data;
+    var el = obj.el;
+
+    // Position & size
+    el.style.left = (data.x || 50) + 'px';
+    el.style.top = (data.y || 50) + 'px';
+    if (data.w) el.style.width = data.w + 'px';
+
+    // Category
+    var cat = data.category || 'other';
+    el.dataset.category = cat;
+    var catEl = el.querySelector('.item-cat');
+    catEl.className = 'item-cat cat-' + cat;
+    catEl.textContent = cat;
+
+    // Text fields — only update if not actively editing
+    ['title', 'location', 'notes'].forEach(function(field) {
+      var fieldEl = el.querySelector('[data-field="' + field + '"]');
+      if (document.activeElement !== fieldEl) {
+        fieldEl.textContent = data[field] || (field === 'title' ? 'Untitled' : field === 'location' ? '' : '');
+      }
+      fieldEl.setAttribute('contenteditable', 'true');
+    });
+
+    // Image
+    var imgWrap = el.querySelector('.item-img-wrap');
+    if (data.img) {
+      if (imgWrap.querySelector('img')) {
+        imgWrap.querySelector('img').src = data.img;
+      } else {
+        var img = document.createElement('img');
+        img.className = 'item-img';
+        imgWrap.innerHTML = '';
+        imgWrap.appendChild(img);
+        img.src = data.img;
+      }
+    } else {
+      imgWrap.innerHTML = '<div class="item-img-placeholder">No image — click to paste URL</div>';
+      imgWrap.style.cursor = 'pointer';
+      imgWrap.onclick = function(e) {
+        e.stopPropagation();
+        var url = prompt('Image URL:');
+        if (url) {
+          saveItem(id, Object.assign({}, obj.data, { img: url }));
+        }
+      };
+    }
+
+    // Apply filter
+    applyFilter(el);
+  }
+
+  function removeItemEl(id) {
+    if (items[id]) {
+      items[id].el.remove();
+      delete items[id];
+    }
+  }
+
+  // ---- Dragging items ----
+  function attachItemEvents(id) {
+    var el = items[id].el;
+
+    el.addEventListener('mousedown', function(e) {
+      if (e.target.classList.contains('item-delete') ||
+          e.target.classList.contains('item-resize') ||
+          e.target.isContentEditable ||
+          e.target.tagName === 'IMG') return;
+
+      dragState = {
+        id: id,
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: items[id].data.x || 0,
+        origY: items[id].data.y || 0
+      };
+      el.classList.add('selected');
+      canvas.classList.add('dragging');
+      e.preventDefault();
+    });
+
+    // Delete button
+    el.querySelector('.item-delete').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (confirm('Delete this item?')) deleteItem(id);
+    });
+
+    // Editable fields — save on blur
+    ['title', 'location', 'notes'].forEach(function(field) {
+      var fieldEl = el.querySelector('[data-field="' + field + '"]');
+      fieldEl.addEventListener('blur', function() {
+        var newVal = fieldEl.textContent.trim();
+        if (newVal !== items[id].data[field]) {
+          var updated = Object.assign({}, items[id].data);
+          updated[field] = newVal;
+          saveItem(id, updated);
         }
       });
+      fieldEl.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    });
+
+    // Category cycle — click the category badge
+    el.querySelector('.item-cat').addEventListener('click', function(e) {
+      e.stopPropagation();
+      var cats = ['windows', 'doors', 'plumbing', 'cabinetry', 'flooring', 'lighting', 'appliance', 'finishes', 'other'];
+      var current = items[id].data.category || 'other';
+      var idx = cats.indexOf(current);
+      var nextCat = cats[(idx + 1) % cats.length];
+      var updated = Object.assign({}, items[id].data);
+      updated.category = nextCat;
+      saveItem(id, updated);
+    });
+
+    // Resize handle
+    var resizeEl = el.querySelector('.item-resize');
+    resizeEl.addEventListener('mousedown', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      dragState = {
+        id: id,
+        type: 'resize',
+        startX: e.clientX,
+        startW: el.offsetWidth
+      };
+    });
+  }
+
+  // Global mouse move/up for dragging
+  document.addEventListener('mousemove', function(e) {
+    if (!dragState) return;
+    var obj = items[dragState.id];
+    if (!obj) return;
+
+    if (dragState.type === 'resize') {
+      var newW = Math.max(180, dragState.startW + (e.clientX - dragState.startX));
+      obj.el.style.width = newW + 'px';
+    } else {
+      var dx = e.clientX - dragState.startX;
+      var dy = e.clientY - dragState.startY;
+      var newX = dragState.origX + dx;
+      var newY = dragState.origY + dy;
+      obj.el.style.left = newX + 'px';
+      obj.el.style.top = newY + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', function(e) {
+    if (!dragState) return;
+    var obj = items[dragState.id];
+    if (obj) {
+      var updated = Object.assign({}, obj.data);
+      if (dragState.type === 'resize') {
+        updated.w = parseInt(obj.el.style.width);
+      } else {
+        updated.x = parseInt(obj.el.style.left);
+        updated.y = parseInt(obj.el.style.top);
+      }
+      saveItem(dragState.id, updated);
+      obj.el.classList.remove('selected');
+    }
+    dragState = null;
+    canvas.classList.remove('dragging');
+  });
+
+  // ---- Touch support for mobile dragging ----
+  function attachTouchDrag(el, id) {
+    el.addEventListener('touchstart', function(e) {
+      if (e.target.isContentEditable || e.target.classList.contains('item-delete')) return;
+      var touch = e.touches[0];
+      var rect = canvas.getBoundingClientRect();
+      dragState = {
+        id: id,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        origX: items[id].data.x || 0,
+        origY: items[id].data.y || 0
+      };
+      e.preventDefault();
+    }, { passive: false });
+  }
+
+  document.addEventListener('touchmove', function(e) {
+    if (!dragState) return;
+    var touch = e.touches[0];
+    var obj = items[dragState.id];
+    if (!obj) return;
+    var dx = touch.clientX - dragState.startX;
+    var dy = touch.clientY - dragState.startY;
+    obj.el.style.left = (dragState.origX + dx) + 'px';
+    obj.el.style.top = (dragState.origY + dy) + 'px';
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (!dragState) return;
+    var obj = items[dragState.id];
+    if (obj) {
+      var updated = Object.assign({}, obj.data);
+      updated.x = parseInt(obj.el.style.left);
+      updated.y = parseInt(obj.el.style.top);
+      saveItem(dragState.id, updated);
+    }
+    dragState = null;
+  });
+
+  // ---- Add note ----
+  document.getElementById('addCardBtn').addEventListener('click', function() {
+    var id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    // Place at center of current scroll
+    var cx = canvas.scrollLeft + window.innerWidth / 2 - 100;
+    var cy = canvas.scrollTop + 50;
+    saveItem(id, {
+      title: 'New Item',
+      location: '',
+      notes: 'Click to edit. Click category badge to cycle.',
+      category: 'other',
+      img: '',
+      x: Math.max(20, cx),
+      y: Math.max(20, cy),
+      w: 280
     });
   });
+
+  // ---- Paste image mode ----
+  var pasteBtn = document.getElementById('pasteModeBtn');
+  pasteBtn.addEventListener('click', function() {
+    pasteMode = !pasteMode;
+    if (pasteMode) {
+      pasteBtn.classList.add('active');
+      canvas.classList.add('pasting');
+      alert('Paste mode ON.\n\nClick anywhere on the board to drop a pinned image.\nOr paste from clipboard (Ctrl+V) with an image copied.\n\nClick the button again to turn off.');
+    } else {
+      pasteBtn.classList.remove('active');
+      canvas.classList.remove('pasting');
+    }
+  });
+
+  // Click to place in paste mode
+  canvas.addEventListener('click', function(e) {
+    if (!pasteMode) return;
+    if (e.target.closest('.item')) return;
+    var rect = canvasInner.getBoundingClientRect();
+    var x = e.clientX - rect.left + canvas.scrollLeft - canvasInner.offsetLeft;
+    var y = e.clientY - rect.top + canvas.scrollTop - canvasInner.offsetTop;
+
+    var url = prompt('Paste image URL:');
+    if (url) {
+      var id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      saveItem(id, {
+        title: 'New Item',
+        location: 'Click to edit location',
+        notes: '',
+        category: 'other',
+        img: url,
+        x: x - 140,
+        y: y - 50,
+        w: 280
+      });
+    }
+    pasteMode = false;
+    pasteBtn.classList.remove('active');
+    canvas.classList.remove('pasting');
+  });
+
+  // Clipboard paste
+  document.addEventListener('paste', function(e) {
+    var items_clip = e.clipboardData.items;
+    for (var i = 0; i < items_clip.length; i++) {
+      if (items_clip[i].type.indexOf('image') !== -1) {
+        var blob = items_clip[i].getAsFile();
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          var cx = canvas.scrollLeft + window.innerWidth / 2 - 140;
+          var cy = canvas.scrollTop + 50;
+          saveItem(id, {
+            title: 'Pasted Image',
+            location: 'Click to edit',
+            notes: '',
+            category: 'other',
+            img: ev.target.result,
+            x: cx,
+            y: cy,
+            w: 280
+          });
+        };
+        reader.readAsDataURL(blob);
+        e.preventDefault();
+        return;
+      }
+    }
+  });
+
+  // ---- Filter ----
+  function applyFilter(el) {
+    var filter = document.getElementById('filterSelect').value;
+    if (filter === 'all' || el.dataset.category === filter) {
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  document.getElementById('filterSelect').addEventListener('change', function() {
+    document.querySelectorAll('.item').forEach(applyFilter);
+  });
+
+  // ---- Pan canvas (drag background) ----
+  var panState = null;
+  canvas.addEventListener('mousedown', function(e) {
+    if (e.target !== canvasInner && e.target !== canvas) return;
+    if (pasteMode) return;
+    panState = { startX: e.clientX, startY: e.clientY, scrollX: canvas.scrollLeft, scrollY: canvas.scrollTop };
+    canvas.classList.add('dragging');
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!panState) return;
+    canvas.scrollLeft = panState.scrollX - (e.clientX - panState.startX);
+    canvas.scrollTop = panState.scrollY - (e.clientY - panState.startY);
+  });
+
+  document.addEventListener('mouseup', function() {
+    panState = null;
+    canvas.classList.remove('dragging');
+  });
+
+  // ---- Help ----
+  document.getElementById('helpBtn').addEventListener('click', function() {
+    alert(
+      'ROOM ADDITION BOARD\n\n' +
+      'HOW TO USE:\n\n' +
+      '• + Add Note — creates a new card at center of screen\n' +
+      '• Click any text to edit it directly\n' +
+      '• Click the category badge to cycle categories\n' +
+      '• Drag cards to move them\n' +
+      '• Drag bottom-right corner to resize\n' +
+      '• Paste Image mode — click board, enter URL\n' +
+      '• Ctrl+V / Cmd+V — paste image from clipboard\n' +
+      '• Filter dropdown — show only one category\n' +
+      '• Drag empty space to pan\n\n' +
+      'All changes sync in real-time via Gun.js.\n' +
+      'Data persists on the relay server.\n\n' +
+      'GC: just use the filter to find what you need.'
+    );
+  });
+
+  // ---- Touch drag for each item (called after create) ----
+  var origCreate = createItemEl;
+  createItemEl = function(id, data) {
+    origCreate(id, data);
+    attachTouchDrag(items[id].el, id);
+  };
+
+  // ---- Seed: if board is empty after 5s, seed with existing window item ----
+  setTimeout(function() {
+    if (Object.keys(items).length === 0) {
+      var id = 'item_seed_window';
+      saveItem(id, {
+        title: 'Black Grid Window — 12 Lite',
+        location: 'Above Kitchen Sink',
+        notes: 'Large picture window with black frame, 3×4 grid (12 panes). Sits above farmhouse sink. Black exterior frame. We like this style.',
+        category: 'windows',
+        img: 'lookbook/kitchen-window.jpg',
+        x: 100,
+        y: 100,
+        w: 300
+      });
+    }
+  }, 5000);
+
+})();
 </script>
 
 </body>
