@@ -256,14 +256,12 @@
 <script>
 (function() {
   // ---- Gun setup ----
-  // Primary: local relay. Fallback: public relay.
+  // Jon's Gun relay (also used by Pocket Golf)
   var peers = [
-    'http://localhost:4200/gun',
-    'https://gun-manhattan.herokuapp.com/gun',
-    'https://peer.wallie.io/gun'
+    'https://gun-relay.jonmaestas.com/gun'
   ];
 
-  var gun = Gun({ peers: peers, localStorage: false });
+  var gun = Gun({ peers: peers, localStorage: true });
   var board = gun.get('maestas-room-addition-board');
 
   var canvas = document.getElementById('canvas');
