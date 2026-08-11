@@ -744,15 +744,16 @@ const AIM_DRAG_SCALE = 2; // 2× — arrow past thumb, less travel for full powe
 
 // ====================================================================
 // CLUBS — simple. Each club has a flat max range and hard terrain rules.
-//   Driver (6): tee box + fairway only
-//   Iron   (4): rough + sand (the recovery club)
-//   Putter (2): green only
+//   Driver (10): tee box + fairway only
+//   Iron   (6):  rough + sand + fairway
+//   Putter (3):  green only
+// Ball rolls forward after landing (club × landing terrain).
 // No multipliers. No randomness. You see exactly where it lands.
 // ====================================================================
 const CLUBS = {
-  driver: { name:"Driver", max:6, short:"D" },
-  iron:   { name:"Iron",   max:4, short:"I" },
-  putter: { name:"Putter", max:2, short:"P" }
+  driver: { name:"Driver", max:10, short:"D" },
+  iron:   { name:"Iron",   max:6,  short:"I" },
+  putter: { name:"Putter", max:3,  short:"P" }
 };
 const CLUB_ORDER = ["driver","iron","putter"]; // highest → lowest max
 
@@ -761,6 +762,14 @@ const CLUB_TERRAIN = {
   driver: [T.FAIRWAY],               // tee box sits on FAIRWAY
   iron:   [T.ROUGH, T.SAND, T.FAIRWAY],
   putter: [T.GREEN]
+};
+
+// Ball roll after landing: extra cells the ball travels forward.
+// Indexed by [club][landing_terrain]. 0 = sticks, missing = 0.
+const CLUB_ROLL = {
+  driver: { [T.FAIRWAY]:3, [T.GREEN]:3, [T.ROUGH]:1, [T.SAND]:0 },
+  iron:   { [T.FAIRWAY]:2, [T.GREEN]:2, [T.ROUGH]:0, [T.SAND]:0 },
+  putter: { [T.FAIRWAY]:0, [T.GREEN]:0, [T.ROUGH]:0, [T.SAND]:0 }  // putter doesn't roll
 };
 
 // Club allowed on this terrain?
@@ -3265,3 +3274,4 @@ if (params.get("infinite") === "1" || params.get("mode") === "infinite") {
 </script>
 </body>
 </html>
+mktemp: mkstemp failed on /var/folders/rr/_hhm_d8j0191l210y9lc3fkr0000gn/T/hermes-snap-12855f8ab9db.sh.tmp.wOjKOZOSdQ: No space left on device
