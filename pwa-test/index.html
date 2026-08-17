@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PWA Test Bench</title>
+<meta name="description" content="Device-agnostic PWA install-flow test: one URL, one-click install when not installed, app page when installed." />
+<meta name="robots" content="noindex" />
+<meta name="theme-color" content="#0b1020" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="PWA Test" />
+<style>
+  :root {
+    --bg: #0b1020; --card: #141b31; --card2: #101627; --line: #232c4a;
+    --text: #e8ecf8; --dim: #8b95b3; --accent: #6366f1; --accent2: #06b6d4;
+    --ok: #22c55e; --warn: #f59e0b; --bad: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    min-height: 100dvh; display: flex; flex-direction: column;
+  }
+  header {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: max(14px, env(safe-area-inset-top)) 16px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: #fff; }
+  header h1 { font-size: 17px; font-weight: 700; letter-spacing: .2px; }
+  .chip { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); color: var(--dim); }
+  .chip.ok { color: var(--ok); border-color: rgba(34,197,94,.4); }
+  .chip.bad { color: var(--bad); border-color: rgba(239,68,68,.4); }
+  .chip.acc { color: var(--accent2); border-color: rgba(6,182,212,.4); }
+  main { flex: 1; padding: 20px 16px 8px; width: 100%; max-width: 860px; margin: 0 auto; }
+  footer { padding: 14px 16px max(14px, env(safe-area-inset-bottom)); text-align: center; color: var(--dim); font-size: 12px; }
+  .hidden { display: none !important; }
+
+  /* ---------- install view ---------- */
+  .install-card { max-width: 420px; margin: 4vh auto 0; text-align: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 30px 22px 22px; }
+  .app-icon { width: 84px; height: 84px; border-radius: 20px; margin: 0 auto 14px;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 26px; color: #fff; box-shadow: 0 10px 30px rgba(79,70,229,.35); }
+  .install-card h2 { font-size: 22px; margin-bottom: 6px; }
+  .install-card .sub { color: var(--dim); font-size: 14px; margin-bottom: 22px; }
+  .big-btn {
+    width: 100%; padding: 16px; font-size: 17px; font-weight: 700; color: #fff; border: 0; cursor: pointer;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4); border-radius: 14px; transition: transform .08s ease, filter .15s;
+  }
+  .big-btn:active { transform: scale(.98); }
+  .big-btn.dimmed { filter: saturate(.5) brightness(.85); }
+  .status { margin-top: 12px; font-size: 13px; color: var(--dim); min-height: 20px; }
+  .status.ok { color: var(--ok); }
+  .steps { text-align: left; background: var(--card2); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin-top: 14px; font-size: 14px; }
+  .steps ol { padding-left: 20px; display: grid; gap: 6px; }
+  .steps .steps-title { font-weight: 700; margin-bottom: 6px; font-size: 13px; color: var(--accent2); text-transform: uppercase; letter-spacing: .5px; }
+  .peek { display: inline-block; margin-top: 16px; color: var(--accent2); font-size: 13px; text-decoration: none; }
+
+  /* ---------- app view ---------- */
+  .hero { text-align: center; margin-bottom: 18px; }
+  .hero .big-ok { font-size: 34px; }
+  .hero p { color: var(--dim); font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--accent2); margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 14px; }
+  .row .k { color: var(--dim); }
+  .row .v { text-align: right; word-break: break-word; }
+  .v.ok { color: var(--ok); } .v.bad { color: var(--bad); } .v.warn { color: var(--warn); }
+  .mini-btn { margin-top: 10px; width: 100%; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text);
+    background: var(--card2); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+  .mini-btn:active { filter: brightness(1.3); }
+  .ua { font-size: 11px; color: var(--dim); margin-top: 6px; word-break: break-all; }
+  .linkish { background: none; border: 0; color: var(--accent2); font-size: 12px; cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">PW</span>
+  <h1>PWA Test Bench</h1>
+  <span class="chip" id="modeChip">…</span>
+  <span class="chip" id="netChip">…</span>
+</header>
+
+<main>
+  <!-- ============ INSTALL VIEW (not installed) ============ -->
+  <section id="installView" class="hidden">
+    <div class="install-card">
+      <div class="app-icon">📲</div>
+      <h2>PWA Test Bench</h2>
+      <p class="sub">Same URL as the app. Install once —<br/>next open launches straight to the app page.</p>
+      <button id="installBtn" class="big-btn" type="button">📲 Install App</button>
+      <p class="status" id="installStatus">Checking this device…</p>
+      <div class="steps hidden" id="manualSteps"></div>
+      <a href="#" class="peek" id="peekLink">Preview the app page →</a>
+    </div>
+  </section>
+
+  <!-- ============ APP VIEW (installed) ============ -->
+  <section id="appView" class="hidden">
+    <div class="hero">
+      <div class="big-ok">✅</div>
+      <p id="heroLine">Installed — this is the app page.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h3>Install / Display</h3>
+        <div class="row"><span class="k">display-mode</span><span class="v" id="tMode">…</span></div>
+        <div class="row"><span class="k">navigator.standalone</span><span class="v" id="tStandalone">…</span></div>
+        <div class="row"><span class="k">launch context</span><span class="v" id="tCtx">…</span></div>
+      </div>
+      <div class="card">
+        <h3>Platform</h3>
+        <div class="row"><span class="k">OS · browser</span><span class="v" id="tOs">…</span></div>
+        <div class="row"><span class="k">language</span><span class="v" id="tLang">…</span></div>
+        <p class="ua" id="tUa"></p>
+      </div>
+      <div class="card">
+        <h3>Screen</h3>
+        <div class="row"><span class="k">screen</span><span class="v" id="tScreen">…</span></div>
+        <div class="row"><span class="k">viewport</span><span class="v" id="tViewport">…</span></div>
+        <div class="row"><span class="k">pixel ratio</span><span class="v" id="tDpr">…</span></div>
+      </div>
+      <div class="card">
+        <h3>Network</h3>
+        <div class="row"><span class="k">status</span><span class="v" id="tNet">…</span></div>
+        <div class="row"><span class="k">effective type</span><span class="v" id="tNetType">…</span></div>
+      </div>
+      <div class="card">
+        <h3>Notifications</h3>
+        <div class="row"><span class="k">permission</span><span class="v" id="tNotifPerm">…</span></div>
+        <div class="row"><span class="k">last test</span><span class="v" id="tNotifResult">—</span></div>
+        <button class="mini-btn" id="notifBtn" type="button">🔔 Send test notification</button>
+      </div>
+      <div class="card">
+        <h3>Storage</h3>
+        <div class="row"><span class="k">localStorage</span><span class="v" id="tLs">not run</span></div>
+        <div class="row"><span class="k">quota</span><span class="v" id="tQuota">…</span></div>
+        <button class="mini-btn" id="lsBtn" type="button">💾 Run storage test</button>
+      </div>
+      <div class="card">
+        <h3>Haptics</h3>
+        <div class="row"><span class="k">navigator.vibrate</span><span class="v" id="tVibSupport">…</span></div>
+        <div class="row"><span class="k">last test</span><span class="v" id="tVibResult">—</span></div>
+        <button class="mini-btn" id="vibBtn" type="button">📳 Vibrate</button>
+      </div>
+      <div class="card">
+        <h3>Web Share</h3>
+        <div class="row"><span class="k">navigator.share</span><span class="v" id="tShareSupport">…</span></div>
+        <div class="row"><span class="k">last test</span><span class="v" id="tShareResult">—</span></div>
+        <button class="mini-btn" id="shareBtn" type="button">📤 Open share sheet</button>
+      </div>
+      <div class="card">
+        <h3>App / Cache</h3>
+        <div class="row"><span class="k">build</span><span class="v" id="tBuild">…</span></div>
+        <div class="row"><span class="k">service worker</span><span class="v" id="tSw">…</span></div>
+        <div class="row"><span class="k">remote build</span><span class="v" id="tRemote">…</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <button class="linkish" id="toggleView" type="button">↔ toggle install / app view (testing)</button>
+  <div id="verLine"></div>
+</footer>
+
+<script>
+window.__PWA_TEST_BUILD__ = "v1-20260817001548";
+
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var deferredPrompt = null;
+  var swReg = null;
+  var swStatusText = "…";
+  var forceView = null; // null = auto; "app" | "install" for testing
+
+  /* ---------------- platform detect ---------------- */
+  function detectPlatform() {
+    var ua = navigator.userAgent || "";
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/i.test(ua);
+    var os = isIOS ? "iOS/iPadOS" : isAndroid ? "Android" :
+      /Windows/i.test(ua) ? "Windows" : /Mac OS X/i.test(ua) ? "macOS" :
+      /Linux|X11/i.test(ua) ? "Linux" : "Unknown";
+    var browser = "Unknown";
+    if (/Edg\//.test(ua) || /EdgiOS/.test(ua)) browser = "Edge";
+    else if (/SamsungBrowser/.test(ua)) browser = "Samsung Internet";
+    else if (/CriOS/.test(ua)) browser = "Chrome (iOS)";
+    else if (/FxiOS/.test(ua)) browser = "Firefox (iOS)";
+    else if (/Firefox\//.test(ua)) browser = "Firefox";
+    else if (/OPR\//.test(ua)) browser = "Opera";
+    else if (/Chrome\//.test(ua)) browser = "Chrome";
+    else if (/Safari\//.test(ua) && /Version\//.test(ua)) browser = "Safari";
+    return { os: os, browser: browser, isIOS: isIOS, isAndroid: isAndroid, ua: ua };
+  }
+  var platform = detectPlatform();
+
+  /* ---------------- installed? ---------------- */
+  function displayMode() {
+    var modes = ["standalone", "minimal-ui", "fullscreen", "window-controls-overlay"];
+    for (var i = 0; i < modes.length; i++) {
+      if (window.matchMedia && matchMedia("(display-mode: " + modes[i] + ")").matches) return modes[i];
+    }
+    return "browser";
+  }
+  function isInstalled() {
+    try {
+      if (displayMode() !== "browser") return true;
+      if (navigator.standalone === true) return true;
+    } catch (_) {}
+    return false;
+  }
+
+  /* ---------------- view switching ---------------- */
+  function render() {
+    var app = forceView ? forceView === "app" : isInstalled();
+    $("installView").classList.toggle("hidden", app);
+    $("appView").classList.toggle("hidden", !app);
+    var chip = $("modeChip");
+    chip.textContent = app ? "APP" : "WEB";
+    chip.className = "chip " + (app ? "ok" : "");
+    if (app) fillCards(); else updateInstallUI();
+  }
+
+  /* ---------------- install view ---------------- */
+  function stepsHTML(platform) {
+    if (platform.isIOS) {
+      return '<div class="steps-title">iPhone / iPad — Safari</div><ol>' +
+        "<li>Tap the <b>Share</b> button <b>⬆︎</b> in the toolbar</li>" +
+        "<li>Scroll down → <b>Add to Home Screen</b></li>" +
+        "<li>Tap <b>Add</b> — then launch from your Home Screen</li></ol>";
+    }
+    if (platform.os === "macOS" && platform.browser === "Safari") {
+      return '<div class="steps-title">macOS — Safari</div><ol>' +
+        "<li>Menu bar → <b>File</b></li>" +
+        "<li><b>Add to Dock…</b></li>" +
+        "<li>Tap <b>Add</b> — the app appears in your Dock</li></ol>";
+    }
+    if (platform.browser === "Firefox") {
+      return '<div class="steps-title">Firefox</div><ol>' +
+        "<li>Firefox does not support PWA install</li>" +
+        "<li>Open <b>jonmaestas.com/pwa-test/</b> in <b>Chrome</b> or <b>Edge</b> instead</li></ol>";
+    }
+    return '<div class="steps-title">' + platform.browser + " · " + platform.os + "</div><ol>" +
+      "<li>Tap the <b>⊕</b> / install icon in the address bar</li>" +
+      "<li>Or open the browser menu <b>⋮</b> → <b>Install app</b> / <b>Add to Home screen</b></li></ol>";
+  }
+  function updateInstallUI() {
+    var btn = $("installBtn"), st = $("installStatus"), steps = $("manualSteps");
+    // iOS check FIRST: all iOS browsers are WebKit and never support one-click
+    // (deferredPrompt on an iOS UA would be a phantom — ignore it there).
+    if (platform.isIOS) {
+      btn.textContent = "📲 Show install steps";
+      st.textContent = "iOS doesn't allow one-click — 3 quick steps";
+      st.className = "status";
+      steps.innerHTML = stepsHTML(platform);
+      steps.classList.remove("hidden");
+      btn.classList.remove("dimmed");
+      return;
+    }
+    if (platform.os === "macOS" && platform.browser === "Safari") {
+      btn.textContent = "📲 Show install steps";
+      st.textContent = "Safari: Add to Dock (2 clicks)";
+      st.className = "status";
+      steps.innerHTML = stepsHTML(platform);
+      steps.classList.remove("hidden");
+      btn.classList.remove("dimmed");
+      return;
+    }
+    if (platform.browser === "Firefox") {
+      btn.textContent = "📲 Show install steps";
+      st.textContent = "Firefox has no PWA install support";
+      st.className = "status";
+      steps.innerHTML = stepsHTML(platform);
+      steps.classList.remove("hidden");
+      btn.classList.remove("dimmed");
+      return;
+    }
+    var oneClick = !!deferredPrompt;
+    btn.classList.toggle("dimmed", !oneClick);
+    if (oneClick) {
+      btn.textContent = "📲 Install App";
+      st.textContent = "One-click install supported on this device ✓";
+      st.className = "status ok";
+      steps.classList.add("hidden");
+    } else {
+      btn.textContent = "📲 Install App";
+      st.textContent = "Waiting for browser install signal… (or use the steps below)";
+      st.className = "status";
+      steps.innerHTML = stepsHTML(platform);
+      steps.classList.remove("hidden");
+    }
+  }
+  $("installBtn").addEventListener("click", async function () {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      var st = $("installStatus");
+      try {
+        var res = await deferredPrompt.userChoice;
+        if (res && res.outcome === "accepted") { st.textContent = "Installing… ✓"; st.className = "status ok"; }
+        else { st.textContent = "Dismissed — install anytime"; st.className = "status"; }
+      } catch (_) {}
+      deferredPrompt = null;
+      updateInstallUI();
+      return;
+    }
+    var steps = $("manualSteps");
+    steps.classList.remove("hidden");
+    if (steps.scrollIntoView) steps.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+  $("peekLink").addEventListener("click", function (e) { e.preventDefault(); forceView = "app"; render(); });
+  $("toggleView").addEventListener("click", function () {
+    forceView = (forceView === "app" || (!forceView && isInstalled())) ? "install" : "app";
+    render();
+  });
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!forceView || forceView === "install") updateInstallUI();
+  });
+  window.addEventListener("appinstalled", function () {
+    var st = $("installStatus");
+    st.textContent = "Installed ✓ — switching to the app page";
+    st.className = "status ok";
+    forceView = "app";
+    render();
+  });
+
+  /* ---------------- app view fill ---------------- */
+  function set(id, text, cls) {
+    var el = $(id); if (!el) return;
+    el.textContent = text;
+    el.className = "v" + (cls ? " " + cls : "");
+  }
+  function updateNetwork() {
+    var online = navigator.onLine;
+    set("tNet", online ? "online" : "offline", online ? "ok" : "bad");
+    var nc = $("netChip");
+    nc.textContent = online ? "online" : "offline";
+    nc.className = "chip " + (online ? "ok" : "bad");
+    var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    set("tNetType", c && c.effectiveType ? c.effectiveType : "n/a");
+  }
+  function fillCards() {
+    var dm = displayMode();
+    set("tMode", dm, dm === "browser" ? "warn" : "ok");
+    set("tStandalone", navigator.standalone === undefined ? "n/a" : String(navigator.standalone));
+    var ctx = isInstalled() ? "home screen / app ✓" : "browser tab (preview)";
+    set("tCtx", ctx, isInstalled() ? "ok" : "warn");
+    set("tOs", platform.os + " · " + platform.browser);
+    set("tLang", navigator.language || "n/a");
+    $("tUa").textContent = platform.ua;
+    set("tScreen", screen.width + "×" + screen.height);
+    set("tViewport", innerWidth + "×" + innerHeight);
+    set("tDpr", (window.devicePixelRatio || 1) + "×");
+    updateNetwork();
+    set("tNotifPerm", window.Notification ? Notification.permission : "unsupported");
+    set("tVibSupport", navigator.vibrate ? "supported" : "unsupported",
+      navigator.vibrate ? "ok" : "warn");
+    set("tShareSupport", navigator.share ? "supported" : "unsupported",
+      navigator.share ? "ok" : "warn");
+    set("tBuild", window.__PWA_TEST_BUILD__);
+    set("tSw", swStatusText, swStatusText.indexOf("active") >= 0 ? "ok" : "");
+    $("heroLine").textContent = isInstalled()
+      ? "Installed — this is the app page."
+      : "Preview mode (browser tab). Installed launches land here automatically.";
+    $("verLine").textContent = window.__PWA_TEST_BUILD__ + " · " + swStatusText;
+  }
+
+  /* ---------------- test actions ---------------- */
+  $("notifBtn").addEventListener("click", async function () {
+    if (!window.Notification) { set("tNotifResult", "unsupported", "bad"); return; }
+    var perm = Notification.permission;
+    if (perm === "default") perm = await Notification.requestPermission();
+    set("tNotifPerm", perm, perm === "granted" ? "ok" : "bad");
+    if (perm !== "granted") { set("tNotifResult", "blocked", "bad"); return; }
+    var title = "PWA Test ✓";
+    var opts = {
+      body: "Local notification at " + new Date().toLocaleTimeString(),
+      icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: "pwa-test"
+    };
+    try {
+      if (swReg && swReg.showNotification) await swReg.showNotification(title, opts);
+      else new Notification(title, opts);
+      set("tNotifResult", "shown ✓", "ok");
+    } catch (e) { set("tNotifResult", "error", "bad"); }
+  });
+  $("lsBtn").addEventListener("click", function () {
+    try {
+      var k = "pwa_test_ls", v = "ok-" + Date.now();
+      localStorage.setItem(k, v);
+      var got = localStorage.getItem(k);
+      localStorage.removeItem(k);
+      var clean = localStorage.getItem(k) === null;
+      set("tLs", got === v && clean ? "write→read→delete ✓" : "mismatch ✗", got === v && clean ? "ok" : "bad");
+    } catch (e) { set("tLs", "FAIL", "bad"); }
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(function (est) {
+        set("tQuota", (est.usage / 1048576).toFixed(1) + " MB / " + (est.quota / 1073741824).toFixed(2) + " GB");
+      }).catch(function () { set("tQuota", "n/a"); });
+    } else set("tQuota", "n/a");
+  });
+  $("vibBtn").addEventListener("click", function () {
+    if (navigator.vibrate) { navigator.vibrate([90, 60, 90]); set("tVibResult", "called ✓", "ok"); }
+    else set("tVibResult", "unsupported (iOS)", "warn");
+  });
+  $("shareBtn").addEventListener("click", async function () {
+    if (!navigator.share) { set("tShareResult", "unsupported", "warn"); return; }
+    try {
+      await navigator.share({ title: "PWA Test Bench", text: "PWA test bench", url: location.origin + "/pwa-test/" });
+      set("tShareResult", "shared ✓", "ok");
+    } catch (e) {
+      set("tShareResult", e && e.name === "AbortError" ? "cancelled" : "error", e && e.name === "AbortError" ? "" : "bad");
+    }
+  });
+  window.addEventListener("online", updateNetwork);
+  window.addEventListener("offline", updateNetwork);
+  window.addEventListener("resize", function () {
+    if (!$("appView").classList.contains("hidden")) {
+      set("tViewport", innerWidth + "×" + innerHeight);
+    }
+  });
+  if (window.matchMedia) {
+    try {
+      matchMedia("(display-mode: standalone)").addEventListener("change", function () { if (!forceView) render(); });
+    } catch (_) {}
+  }
+
+  /* ---------------- service worker (auto-update recipe) ---------------- */
+  async function registerSW() {
+    if (!("serviceWorker" in navigator)) { swStatusText = "unsupported"; return; }
+    try {
+      swReg = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
+      swReg.update().catch(function () {});
+      var refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (refreshing) return;
+        refreshing = true;
+        location.reload();
+      });
+      swReg.addEventListener("updatefound", function () {
+        var nw = swReg.installing;
+        if (!nw) return;
+        nw.addEventListener("statechange", function () {
+          if (nw.state === "installed" && swReg.waiting) swReg.waiting.postMessage("SKIP_WAITING");
+        });
+      });
+      if (swReg.waiting && navigator.serviceWorker.controller) swReg.waiting.postMessage("SKIP_WAITING");
+      swStatusText = navigator.serviceWorker.controller ? "active ✓" : "activating…";
+    } catch (e) { swStatusText = "error"; }
+  }
+
+  /* ---------------- build self-check (cache bust) ---------------- */
+  async function checkBuild() {
+    try {
+      var res = await fetch("build.json", { cache: "no-store" });
+      var data = await res.json();
+      var remote = data && data.build;
+      if (!$("appView").classList.contains("hidden")) set("tRemote", remote || "?", remote === window.__PWA_TEST_BUILD__ ? "ok" : "warn");
+      if (!remote || remote === window.__PWA_TEST_BUILD__) return;
+      var params = new URLSearchParams(location.search);
+      if (params.get("v") === remote) return; // already tried this build — no loop
+      var u = new URL(location.href);
+      u.searchParams.set("v", remote);
+      location.replace(u.toString());
+    } catch (_) {}
+  }
+
+  /* ---------------- boot ---------------- */
+  render();
+  registerSW().then(function () {
+    fillCardsSafe();
+    checkBuild();
+  });
+  function fillCardsSafe() { if (!$("appView").classList.contains("hidden")) fillCards(); }
+  setTimeout(function () {
+    // if BIP never fires, refresh the install UI copy once
+    if ($("installView") && !$("installView").classList.contains("hidden")) updateInstallUI();
+  }, 4000);
+})();
+</script>
+</body>
+</html>
