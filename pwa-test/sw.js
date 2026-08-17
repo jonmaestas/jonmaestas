@@ -1,5 +1,5 @@
 // pwa-test service worker — scoped to /pwa-test/ only (shared-origin GH Pages)
-const CACHE_VER = "v1-20260817001548"; // rewritten by scripts/bump-pwa-test-build.sh
+const CACHE_VER = "v1-20260817002828"; // rewritten by scripts/bump-pwa-test-build.sh
 const CACHE = "pwa-test-" + CACHE_VER;
 // NOTE: self.registration is NOT reliable here (threw during eval AND in the
 // fetch handler — verified by bisect + console capture). Use self.location

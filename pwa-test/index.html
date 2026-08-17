@@ -101,6 +101,7 @@
       <p class="sub">Same URL as the app. Install once —<br/>next open launches straight to the app page.</p>
       <button id="installBtn" class="big-btn" type="button">📲 Install App</button>
       <p class="status" id="installStatus">Checking this device…</p>
+      <button id="copyLinkBtn" class="mini-btn hidden" type="button">🔗 Copy app link</button>
       <div class="steps hidden" id="manualSteps"></div>
       <a href="#" class="peek" id="peekLink">Preview the app page →</a>
     </div>
@@ -176,7 +177,7 @@
 </footer>
 
 <script>
-window.__PWA_TEST_BUILD__ = "v1-20260817001548";
+window.__PWA_TEST_BUILD__ = "v1-20260817002828";
 
 (function () {
   "use strict";
@@ -204,7 +205,10 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
     else if (/OPR\//.test(ua)) browser = "Opera";
     else if (/Chrome\//.test(ua)) browser = "Chrome";
     else if (/Safari\//.test(ua) && /Version\//.test(ua)) browser = "Safari";
-    return { os: os, browser: browser, isIOS: isIOS, isAndroid: isAndroid, ua: ua };
+    // in-app webviews (Telegram, Instagram, FB, etc.) — PWAs cannot install from here
+    var inApp = /Telegram|FBAN|FBAV|Instagram|Messenger|Snapchat|TikTok|Twitter/i.test(ua) ||
+      (isIOS && ua.indexOf("Safari") === -1);
+    return { os: os, browser: browser, isIOS: isIOS, isAndroid: isAndroid, ua: ua, inApp: inApp };
   }
   var platform = detectPlatform();
 
@@ -259,7 +263,18 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
       "<li>Or open the browser menu <b>⋮</b> → <b>Install app</b> / <b>Add to Home screen</b></li></ol>";
   }
   function updateInstallUI() {
-    var btn = $("installBtn"), st = $("installStatus"), steps = $("manualSteps");
+    var btn = $("installBtn"), st = $("installStatus"), steps = $("manualSteps"), copyBtn = $("copyLinkBtn");
+    steps.classList.add("hidden"); // steps only appear after a tap on "Show install steps"
+    copyBtn.classList.add("hidden");
+    // In-app webview (Telegram/Instagram/FB in-app browser): no install possible.
+    // Best move: copy the link so they can open it in a real browser.
+    if (platform.inApp) {
+      btn.textContent = "🔗 Copy app link";
+      st.textContent = "You're in " + (platform.isIOS ? "an in-app browser — open in Safari to install" : "an in-app browser — open in Chrome to install");
+      st.className = "status";
+      copyBtn.classList.remove("hidden");
+      return;
+    }
     // iOS check FIRST: all iOS browsers are WebKit and never support one-click
     // (deferredPrompt on an iOS UA would be a phantom — ignore it there).
     if (platform.isIOS) {
@@ -267,8 +282,6 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
       st.textContent = "iOS doesn't allow one-click — 3 quick steps";
       st.className = "status";
       steps.innerHTML = stepsHTML(platform);
-      steps.classList.remove("hidden");
-      btn.classList.remove("dimmed");
       return;
     }
     if (platform.os === "macOS" && platform.browser === "Safari") {
@@ -276,8 +289,6 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
       st.textContent = "Safari: Add to Dock (2 clicks)";
       st.className = "status";
       steps.innerHTML = stepsHTML(platform);
-      steps.classList.remove("hidden");
-      btn.classList.remove("dimmed");
       return;
     }
     if (platform.browser === "Firefox") {
@@ -285,8 +296,6 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
       st.textContent = "Firefox has no PWA install support";
       st.className = "status";
       steps.innerHTML = stepsHTML(platform);
-      steps.classList.remove("hidden");
-      btn.classList.remove("dimmed");
       return;
     }
     var oneClick = !!deferredPrompt;
@@ -295,16 +304,36 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
       btn.textContent = "📲 Install App";
       st.textContent = "One-click install supported on this device ✓";
       st.className = "status ok";
-      steps.classList.add("hidden");
     } else {
       btn.textContent = "📲 Install App";
-      st.textContent = "Waiting for browser install signal… (or use the steps below)";
+      st.textContent = "Waiting for browser install signal… (tap for manual steps)";
       st.className = "status";
       steps.innerHTML = stepsHTML(platform);
-      steps.classList.remove("hidden");
     }
   }
+  var lastLinkCopy = 0;
+  async function copyAppLink() {
+    var url = location.origin + "/pwa-test/";
+    var ok = false;
+    try { await navigator.clipboard.writeText(url); ok = true; } catch (_) {}
+    if (!ok) {
+      // webview fallback: temp input + execCommand
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (_) {}
+    }
+    var st = $("installStatus");
+    if (ok) { st.textContent = "Link copied ✓ — open it in " + (platform.isIOS ? "Safari" : "your browser") + " to install"; st.className = "status ok"; }
+    else { st.textContent = url; st.className = "status"; }
+  }
   $("installBtn").addEventListener("click", async function () {
+    if (platform.inApp) { await copyAppLink(); return; }
     if (deferredPrompt) {
       deferredPrompt.prompt();
       var st = $("installStatus");
@@ -321,6 +350,7 @@ window.__PWA_TEST_BUILD__ = "v1-20260817001548";
     steps.classList.remove("hidden");
     if (steps.scrollIntoView) steps.scrollIntoView({ behavior: "smooth", block: "center" });
   });
+  $("copyLinkBtn").addEventListener("click", copyAppLink);
   $("peekLink").addEventListener("click", function (e) { e.preventDefault(); forceView = "app"; render(); });
   $("toggleView").addEventListener("click", function () {
     forceView = (forceView === "app" || (!forceView && isInstalled())) ? "install" : "app";
