@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <title>Motion Lab — SPEC-VID-001</title>
 <script>
-window.__PG_BUILD__ = "50c8009-20260907150758";
+window.__PG_BUILD__ = "ffb64cc-20260907151958";
 (function () {
   var BUILD = window.__PG_BUILD__;
   var checking = false;
@@ -77,7 +77,7 @@ window.__PG_BUILD__ = "50c8009-20260907150758";
     width: 100%; height: 100%; object-fit: cover;
   }
   #video { transform: scaleX(-1); }
-  #overlay { transform: scaleX(-1); pointer-events: none; z-index: 2; }
+  #overlay { pointer-events: none; z-index: 2; }
   .msg {
     position: absolute; bottom: 8px; left: 50%;
     transform: translateX(-50%); z-index: 10;
@@ -160,7 +160,7 @@ window.__PG_BUILD__ = "50c8009-20260907150758";
     <div class="msg" id="msg">Front camera. Nothing leaves this phone.</div>
     <div class="start-overlay" id="startOverlay">
       <h1>Motion Lab</h1>
-      <p>SPEC-VID-001 prototype. Switch modes to see each filter. One camera — no stereo depth.</p>
+      <p>SPEC-VID-001 prototype. Switch modes to see each filter. Depth is monocular (one camera), not stereo.</p>
       <p>If the camera is blocked, open this page in Safari.</p>
       <button class="start-btn" id="startBtn">Open Camera</button>
     </div>
@@ -188,7 +188,7 @@ window.__PG_BUILD__ = "50c8009-20260907150758";
         <button id="blur3">Blur 3</button>
         <button id="blur5" class="on">Blur 5</button>
       </div>
-      <p class="note">Phone is one camera. Approach / recede uses radial flow only. Depth map is not in this prototype.</p>
+      <p class="note">Phone is one camera. Depth is a monocular portrait estimate, not stereo Z = (f·B)/d. Radial: red = toward you, cyan = away.</p>
     </div>
   </div>
 </div>
@@ -215,9 +215,10 @@ var MODES = [
   { id: "bg", label: "Background" },
   { id: "flow", label: "Flow" },
   { id: "radial", label: "Radial" },
+  { id: "depth", label: "Depth" },
   { id: "fusion", label: "Fusion" }
 ];
-var REPLACE = { blur: 1, diff: 1, sqdiff: 1, bg: 1 };
+var REPLACE = { blur: 1, diff: 1, sqdiff: 1, bg: 1, depth: 1 };
 
 var video = document.getElementById("video");
 var overlay = document.getElementById("overlay");
@@ -292,6 +293,7 @@ modesEl.addEventListener("click", function (e) {
   Array.prototype.forEach.call(modesEl.children, function (el) {
     el.classList.toggle("active", el === b);
   });
+  if (mode === "depth") ensureDepth();
 });
 
 document.getElementById("cfgBtn").addEventListener("click", function () {
@@ -481,7 +483,11 @@ function drawProcCover() {
   var scale = Math.max(ovW / PROC_W, ovH / procH);
   var dw = PROC_W * scale, dh = procH * scale;
   var ox = (ovW - dw) / 2, oy = (ovH - dh) / 2;
+  ctx.save();
+  ctx.translate(ovW, 0);
+  ctx.scale(-1, 1);
   ctx.drawImage(procCanvas, ox, oy, dw, dh);
+  ctx.restore();
 }
 
 function procToOverlay(px, py) {
@@ -490,7 +496,10 @@ function procToOverlay(px, py) {
   var dispW = PROC_W * scale, dispH = procH * scale;
   var offsetX = (ovW - dispW) / 2;
   var offsetY = (ovH - dispH) / 2;
-  return { x: offsetX + px * scale, y: offsetY + py * scale, scale: scale };
+  var sx = offsetX + px * scale;
+  var sy = offsetY + py * scale;
+  sx = ovW - sx;
+  return { x: sx, y: sy, scale: scale };
 }
 
 function lucasKanade(step) {
@@ -546,6 +555,18 @@ function drawArrows(pts, radial) {
     ctx.lineTo(b.x, b.y);
     ctx.stroke();
   }
+}
+
+function drawRadialLegend() {
+  ctx.font = "bold 14px -apple-system, system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(10,14,20,0.72)";
+  ctx.fillRect(8, 8, 168, 52);
+  ctx.fillStyle = "#f87171";
+  ctx.fillText("TOWARD you", 16, 14);
+  ctx.fillStyle = "#22d3ee";
+  ctx.fillText("AWAY from you", 16, 36);
 }
 
 function labelRegions() {
@@ -619,17 +640,20 @@ function classify(regions, pts) {
 function drawRegions(regions) {
   ctx.font = "bold 13px -apple-system, system-ui, sans-serif";
   ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
   var colors = { approach: "#f87171", recede: "#22d3ee", lateral: "#facc15", static: "#6b7689" };
   for (var i = 0; i < regions.length; i++) {
     var g = regions[i];
     var a = procToOverlay(g.minx, g.miny);
     var b = procToOverlay(g.maxx, g.maxy);
+    var x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+    var x1 = Math.max(a.x, b.x), y1 = Math.max(a.y, b.y);
     ctx.strokeStyle = colors[g.cls] || "#fff";
     ctx.lineWidth = 2;
-    ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+    ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
     var c = procToOverlay(g.cx, g.cy);
     ctx.fillStyle = colors[g.cls] || "#fff";
-    ctx.fillText(g.cls.toUpperCase(), c.x, Math.max(16, a.y - 6));
+    ctx.fillText(g.cls.toUpperCase(), c.x, Math.max(18, y0 - 4));
   }
 }
 
@@ -643,6 +667,106 @@ function drawMaskOverlay() {
   }
   procCtx.putImageData(id, 0, 0);
   drawProcCover();
+}
+
+var depthEstimator = null;
+var depthLoading = false;
+var depthReady = false;
+var depthFail = false;
+var depthBusy = false;
+var depthHasFrame = false;
+
+function loadScript(src) {
+  return new Promise(function (res, rej) {
+    var s = document.createElement("script");
+    s.src = src;
+    s.async = true;
+    s.onload = function () { res(); };
+    s.onerror = function () { rej(new Error("script " + src)); };
+    document.head.appendChild(s);
+  });
+}
+
+function turboColor(t, out, o) {
+  t = Math.max(0, Math.min(1, t));
+  var r = Math.max(0, Math.min(1, 0.135 + t * (4.615 - t * (42.66 - t * (132.13 - t * (150.56 - t * 59.21))))));
+  var g = Math.max(0, Math.min(1, 0.091 + t * (2.14 + t * (4.77 - t * (14.1 - t * 7.03)))));
+  var b = Math.max(0, Math.min(1, 0.106 + t * (12.58 - t * (60.54 - t * (96.34 - t * 47.53)))));
+  out[o] = (r * 255) | 0;
+  out[o + 1] = (g * 255) | 0;
+  out[o + 2] = (b * 255) | 0;
+  out[o + 3] = 255;
+}
+
+function colorizeDepthSource(src) {
+  tmpCanvas.width = PROC_W;
+  tmpCanvas.height = procH;
+  tmpCtx.drawImage(src, 0, 0, PROC_W, procH);
+  var img = tmpCtx.getImageData(0, 0, PROC_W, procH);
+  var d = img.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var t = 1 - d[i] / 255;
+    turboColor(t, d, i);
+  }
+  procCtx.putImageData(img, 0, 0);
+  depthHasFrame = true;
+}
+
+function drawDepthLegend() {
+  ctx.font = "bold 13px -apple-system, system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "rgba(10,14,20,0.72)";
+  ctx.fillRect(8, 8, 150, 52);
+  ctx.fillStyle = "#facc15";
+  ctx.fillText("NEAR (warm)", 16, 14);
+  ctx.fillStyle = "#3b82f6";
+  ctx.fillText("FAR (cool)", 16, 36);
+}
+
+async function ensureDepth() {
+  if (depthReady || depthFail || depthLoading) return;
+  depthLoading = true;
+  setMsg("Loading depth model… first tap can take a bit.");
+  try {
+    if (typeof tf === "undefined") {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js");
+    }
+    if (typeof depthEstimation === "undefined") {
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.4/dist/depth-estimation.min.js");
+    }
+    if (tf && tf.setBackend) {
+      await tf.setBackend("webgl");
+      await tf.ready();
+    }
+    var model = depthEstimation.SupportedModels.ARPortraitDepth;
+    var create = depthEstimation.createEstimator || depthEstimation.createDetector;
+    depthEstimator = await create.call(depthEstimation, model);
+    depthReady = true;
+    setMsg("Depth: warm = near, cool = far. Portrait model, not stereo.");
+  } catch (err) {
+    depthFail = true;
+    setMsg("Depth model failed: " + (err.message || err), true);
+  }
+  depthLoading = false;
+}
+
+function tickDepth() {
+  if (!depthReady || depthBusy || !depthEstimator || !video.videoWidth) return;
+  depthBusy = true;
+  var run = depthEstimator.estimateDepth(video, { minDepth: 0, maxDepth: 1 });
+  Promise.resolve(run).then(function (depthMap) {
+    if (!depthMap) throw new Error("no depth");
+    if (depthMap.toCanvasImageSource) return depthMap.toCanvasImageSource();
+    if (depthMap.toCanvas) return depthMap.toCanvas();
+    throw new Error("no canvas export");
+  }).then(function (src) {
+    colorizeDepthSource(src);
+  }).catch(function (err) {
+    if (!depthFail) setMsg("Depth frame skipped: " + (err && err.message ? err.message : "ok"), false);
+  }).then(function () {
+    depthBusy = false;
+  });
 }
 
 async function startCamera() {
@@ -721,6 +845,11 @@ function loop() {
     if (pts) drawArrows(pts, false);
   } else if (mode === "radial") {
     if (pts) drawArrows(pts, true);
+    drawRadialLegend();
+  } else if (mode === "depth") {
+    if (depthReady) tickDepth();
+    if (depthHasFrame) drawProcCover();
+    drawDepthLegend();
   } else if (mode === "fusion") {
     drawMaskOverlay();
     var regions = labelRegions();
