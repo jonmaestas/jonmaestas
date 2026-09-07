@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <title>Motion Lab — SPEC-VID-001</title>
 <script>
-window.__PG_BUILD__ = "88113d6-20260907152610";
+window.__PG_BUILD__ = "1ee922f-20260907154023";
 (function () {
   var BUILD = window.__PG_BUILD__;
   var checking = false;
@@ -675,6 +675,9 @@ var depthReady = false;
 var depthFail = false;
 var depthBusy = false;
 var depthHasFrame = false;
+var lastDepthAt = 0;
+var DEPTH_W = 96;
+var DEPTH_MIN_MS = 450;
 var depthInCanvas = document.createElement("canvas");
 var depthInCtx = depthInCanvas.getContext("2d");
 
@@ -782,12 +785,23 @@ async function ensureDepth() {
     if (mod.env) {
       mod.env.allowLocalModels = false;
       mod.env.useBrowserCache = true;
+      if (mod.env.backends && mod.env.backends.onnx && mod.env.backends.onnx.wasm) {
+        mod.env.backends.onnx.wasm.proxy = true;
+        mod.env.backends.onnx.wasm.numThreads = 1;
+      }
     }
-    depthPipe = await mod.pipeline("depth-estimation", "onnx-community/depth-anything-v2-small", {
-      device: "wasm"
-    });
+    try {
+      depthPipe = await mod.pipeline("depth-estimation", "onnx-community/depth-anything-v2-small", {
+        device: "wasm",
+        dtype: "q8"
+      });
+    } catch (e1) {
+      depthPipe = await mod.pipeline("depth-estimation", "onnx-community/depth-anything-v2-small", {
+        device: "wasm"
+      });
+    }
     depthReady = true;
-    setMsg("Depth: warm = near, cool = far. Monocular, not stereo.");
+    setMsg("Depth: warm = near, cool = far. Updates a few times a second.");
   } catch (err) {
     depthFail = true;
     depthReady = false;
@@ -799,10 +813,14 @@ async function ensureDepth() {
 
 function tickDepth() {
   if (!depthReady || depthBusy || !depthPipe || !video.videoWidth) return;
+  var now = performance.now();
+  if (now - lastDepthAt < DEPTH_MIN_MS) return;
+  lastDepthAt = now;
   depthBusy = true;
-  depthInCanvas.width = PROC_W;
-  depthInCanvas.height = procH;
-  depthInCtx.drawImage(video, 0, 0, PROC_W, procH);
+  var dh = Math.round(DEPTH_W * video.videoHeight / video.videoWidth) || 72;
+  depthInCanvas.width = DEPTH_W;
+  depthInCanvas.height = dh;
+  depthInCtx.drawImage(video, 0, 0, DEPTH_W, dh);
   Promise.resolve(depthPipe(depthInCanvas)).then(applyDepthResult).catch(function (err) {
     setMsg("Depth frame: " + errText(err), true);
   }).then(function () {
@@ -851,21 +869,23 @@ function loop() {
   requestAnimationFrame(loop);
   if (!video.videoWidth) return;
 
-  procCtx.drawImage(video, 0, 0, PROC_W, procH);
-  toGray(procCtx.getImageData(0, 0, PROC_W, procH));
-  blurGray();
-  if (frameCount > 0) {
-    computeDiff();
-    pushWindow();
-    computeBackground();
-  } else {
-    pushWindow();
-    computeBackground();
-  }
-
+  var skipVision = mode === "live" || mode === "depth";
   var pts = null;
-  var needFlow = mode === "flow" || mode === "radial" || mode === "fusion";
-  if (needFlow && frameCount > 1) pts = lucasKanade(10);
+  if (!skipVision) {
+    procCtx.drawImage(video, 0, 0, PROC_W, procH);
+    toGray(procCtx.getImageData(0, 0, PROC_W, procH));
+    blurGray();
+    if (frameCount > 0) {
+      computeDiff();
+      pushWindow();
+      computeBackground();
+    } else {
+      pushWindow();
+      computeBackground();
+    }
+    var needFlow = mode === "flow" || mode === "radial" || mode === "fusion";
+    if (needFlow && frameCount > 1) pts = lucasKanade(10);
+  }
 
   ctx.clearRect(0, 0, overlay.width, overlay.height);
   video.style.visibility = REPLACE[mode] ? "hidden" : "visible";
@@ -901,7 +921,7 @@ function loop() {
     drawRegions(regions);
   }
 
-  prevBlur.set(blurG);
+  if (!skipVision && prevBlur && blurG) prevBlur.set(blurG);
   frameCount++;
   fpsN++;
   var now = performance.now();
