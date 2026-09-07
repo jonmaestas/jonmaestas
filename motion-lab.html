@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <title>Motion Lab — SPEC-VID-001</title>
 <script>
-window.__PG_BUILD__ = "ffb64cc-20260907151958";
+window.__PG_BUILD__ = "88113d6-20260907152610";
 (function () {
   var BUILD = window.__PG_BUILD__;
   var checking = false;
@@ -669,22 +669,21 @@ function drawMaskOverlay() {
   drawProcCover();
 }
 
-var depthEstimator = null;
+var depthPipe = null;
 var depthLoading = false;
 var depthReady = false;
 var depthFail = false;
 var depthBusy = false;
 var depthHasFrame = false;
+var depthInCanvas = document.createElement("canvas");
+var depthInCtx = depthInCanvas.getContext("2d");
 
-function loadScript(src) {
-  return new Promise(function (res, rej) {
-    var s = document.createElement("script");
-    s.src = src;
-    s.async = true;
-    s.onload = function () { res(); };
-    s.onerror = function () { rej(new Error("script " + src)); };
-    document.head.appendChild(s);
-  });
+function errText(err) {
+  if (err == null) return "unknown";
+  if (typeof err === "string") return err;
+  if (err.message) return String(err.message);
+  try { return JSON.stringify(err); } catch (e1) {}
+  return String(err);
 }
 
 function turboColor(t, out, o) {
@@ -712,6 +711,55 @@ function colorizeDepthSource(src) {
   depthHasFrame = true;
 }
 
+function colorizeDepthTensor(data, w, h) {
+  var n = w * h;
+  if (!data || data.length < n) throw new Error("depth tensor size " + (data && data.length));
+  var min = Infinity, max = -Infinity, i, v;
+  for (i = 0; i < n; i++) {
+    v = data[i];
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  var span = (max - min) || 1;
+  var id = procCtx.createImageData(PROC_W, procH);
+  var d = id.data;
+  for (var y = 0; y < procH; y++) {
+    var sy = Math.min(h - 1, (y * h / procH) | 0);
+    for (var x = 0; x < PROC_W; x++) {
+      var sx = Math.min(w - 1, (x * w / PROC_W) | 0);
+      var t = (data[sy * w + sx] - min) / span;
+      turboColor(1 - t, d, (y * PROC_W + x) * 4);
+    }
+  }
+  procCtx.putImageData(id, 0, 0);
+  depthHasFrame = true;
+}
+
+function applyDepthResult(out) {
+  if (!out) throw new Error("empty depth result");
+  if (out.depth) {
+    var img = out.depth;
+    if (typeof img.toCanvas === "function") {
+      colorizeDepthSource(img.toCanvas());
+      return;
+    }
+    if (img.data && img.width && img.height) {
+      colorizeDepthTensor(img.data, img.width, img.height);
+      return;
+    }
+  }
+  if (out.predicted_depth) {
+    var t = out.predicted_depth;
+    var data = t.data;
+    var dims = t.dims;
+    if (!data && t.cpuData) data = t.cpuData;
+    if (!dims || !data) throw new Error("no depth tensor");
+    colorizeDepthTensor(data, dims[dims.length - 1], dims[dims.length - 2]);
+    return;
+  }
+  throw new Error("depth keys: " + Object.keys(out).join(","));
+}
+
 function drawDepthLegend() {
   ctx.font = "bold 13px -apple-system, system-ui, sans-serif";
   ctx.textAlign = "left";
@@ -725,45 +773,38 @@ function drawDepthLegend() {
 }
 
 async function ensureDepth() {
-  if (depthReady || depthFail || depthLoading) return;
+  if (depthReady || depthLoading) return;
+  depthFail = false;
   depthLoading = true;
-  setMsg("Loading depth model… first tap can take a bit.");
+  setMsg("Loading depth model… first time ~25MB, then cached.");
   try {
-    if (typeof tf === "undefined") {
-      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js");
+    var mod = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/+esm");
+    if (mod.env) {
+      mod.env.allowLocalModels = false;
+      mod.env.useBrowserCache = true;
     }
-    if (typeof depthEstimation === "undefined") {
-      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/depth-estimation@0.0.4/dist/depth-estimation.min.js");
-    }
-    if (tf && tf.setBackend) {
-      await tf.setBackend("webgl");
-      await tf.ready();
-    }
-    var model = depthEstimation.SupportedModels.ARPortraitDepth;
-    var create = depthEstimation.createEstimator || depthEstimation.createDetector;
-    depthEstimator = await create.call(depthEstimation, model);
+    depthPipe = await mod.pipeline("depth-estimation", "onnx-community/depth-anything-v2-small", {
+      device: "wasm"
+    });
     depthReady = true;
-    setMsg("Depth: warm = near, cool = far. Portrait model, not stereo.");
+    setMsg("Depth: warm = near, cool = far. Monocular, not stereo.");
   } catch (err) {
     depthFail = true;
-    setMsg("Depth model failed: " + (err.message || err), true);
+    depthReady = false;
+    depthPipe = null;
+    setMsg("Depth model failed: " + errText(err), true);
   }
   depthLoading = false;
 }
 
 function tickDepth() {
-  if (!depthReady || depthBusy || !depthEstimator || !video.videoWidth) return;
+  if (!depthReady || depthBusy || !depthPipe || !video.videoWidth) return;
   depthBusy = true;
-  var run = depthEstimator.estimateDepth(video, { minDepth: 0, maxDepth: 1 });
-  Promise.resolve(run).then(function (depthMap) {
-    if (!depthMap) throw new Error("no depth");
-    if (depthMap.toCanvasImageSource) return depthMap.toCanvasImageSource();
-    if (depthMap.toCanvas) return depthMap.toCanvas();
-    throw new Error("no canvas export");
-  }).then(function (src) {
-    colorizeDepthSource(src);
-  }).catch(function (err) {
-    if (!depthFail) setMsg("Depth frame skipped: " + (err && err.message ? err.message : "ok"), false);
+  depthInCanvas.width = PROC_W;
+  depthInCanvas.height = procH;
+  depthInCtx.drawImage(video, 0, 0, PROC_W, procH);
+  Promise.resolve(depthPipe(depthInCanvas)).then(applyDepthResult).catch(function (err) {
+    setMsg("Depth frame: " + errText(err), true);
   }).then(function () {
     depthBusy = false;
   });
