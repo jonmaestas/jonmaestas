@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Motion Lab — SPEC-VID-001</title>
+<script>
+window.__PG_BUILD__ = "50c8009-20260907150758";
+(function () {
+  var BUILD = window.__PG_BUILD__;
+  var checking = false;
+  function apply(remote) {
+    var u = new URL(location.href);
+    if (remote && remote !== BUILD) {
+      if (u.searchParams.get("v") === remote) return;
+      u.searchParams.set("v", remote);
+      location.replace(u.pathname + u.search + u.hash);
+      return;
+    }
+    if (u.searchParams.get("v") !== BUILD) {
+      u.searchParams.set("v", BUILD);
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    }
+  }
+  function check() {
+    if (checking) return;
+    checking = true;
+    fetch("motion-lab-build.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { apply(j && j.b); })
+      .catch(function () { apply(BUILD); })
+      .then(function () { checking = false; });
+  }
+  check();
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") check();
+  });
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) check();
+  });
+})();
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    height: 100%; overflow: hidden;
+    background: #0a0e14; color: #e8e8e8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    touch-action: manipulation; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  .shell { display: flex; flex-direction: column; height: 100dvh; width: 100%; }
+  .top-bar {
+    flex-shrink: 0; padding: 8px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #10141c; border-bottom: 1px solid #1e2430;
+    padding-top: max(8px, env(safe-area-inset-top));
+    gap: 8px;
+  }
+  .brand { font-size: 13px; font-weight: 700; letter-spacing: 0.4px; }
+  .brand span { color: #4ade80; }
+  .hud {
+    font-size: 11px; color: #9ca3af; font-variant-numeric: tabular-nums;
+    text-align: right; line-height: 1.3;
+  }
+  .hud .flag { color: #facc15; font-weight: 700; }
+  .hud .flag.approach { color: #f87171; }
+  .hud .flag.recede { color: #22d3ee; }
+  .hud .flag.lateral { color: #facc15; }
+  .cam-area {
+    flex: 1; min-height: 0; position: relative;
+    background: #000; overflow: hidden;
+  }
+  #video, #overlay {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  #video { transform: scaleX(-1); }
+  #overlay { transform: scaleX(-1); pointer-events: none; z-index: 2; }
+  .msg {
+    position: absolute; bottom: 8px; left: 50%;
+    transform: translateX(-50%); z-index: 10;
+    background: rgba(10,14,20,0.85); backdrop-filter: blur(8px);
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 12px; color: #9ca3af; white-space: nowrap;
+    max-width: 92%; overflow: hidden; text-overflow: ellipsis;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .msg.error { color: #f87171; }
+  .bottom {
+    flex-shrink: 0; background: #10141c; border-top: 1px solid #1e2430;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .modes {
+    display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 8px 10px 6px; scrollbar-width: none;
+  }
+  .modes::-webkit-scrollbar { display: none; }
+  .mode {
+    flex-shrink: 0; border: none; border-radius: 999px;
+    padding: 8px 12px; background: #1c2230; color: #9ca3af;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .mode.active { background: #4ade80; color: #0a0e14; }
+  .row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 0 10px 8px;
+  }
+  .ctrl-btn {
+    flex: 1; padding: 10px 8px; border: none; border-radius: 12px;
+    background: #1c2230; color: #e8e8e8; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  .ctrl-btn.primary { background: #4ade80; color: #0a0e14; }
+  .ctrl-btn:active { transform: scale(0.97); }
+  .cfg {
+    display: none; padding: 0 12px 10px;
+    border-top: 1px solid #1e2430;
+  }
+  .cfg.open { display: block; }
+  .cfg label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: #9ca3af; margin-top: 8px;
+  }
+  .cfg input[type=range] { width: 100%; margin-top: 4px; }
+  .cfg .toggles { display: flex; gap: 6px; margin-top: 8px; }
+  .cfg .toggles button {
+    flex: 1; padding: 8px; border: none; border-radius: 10px;
+    background: #1c2230; color: #9ca3af; font-size: 12px; font-weight: 700;
+  }
+  .cfg .toggles button.on { background: #4ade80; color: #0a0e14; }
+  .note { font-size: 11px; color: #6b7689; margin-top: 8px; line-height: 1.4; }
+  .start-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    background: #0a0e14; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    padding: 30px; text-align: center;
+  }
+  .start-overlay.hidden { display: none; }
+  .start-overlay h1 { font-size: 26px; font-weight: 800; color: #4ade80; }
+  .start-overlay p { font-size: 14px; color: #9ca3af; line-height: 1.5; max-width: 340px; }
+  .start-btn {
+    padding: 16px 40px; border: none; border-radius: 16px;
+    background: #4ade80; color: #0a0e14; font-size: 18px; font-weight: 800;
+  }
+  .start-btn:active { transform: scale(0.97); }
+  .start-btn[disabled] { opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top-bar">
+    <div class="brand">MOTION <span>LAB</span></div>
+    <div class="hud" id="hud">—</div>
+  </div>
+  <div class="cam-area" id="camArea">
+    <video id="video" playsinline muted autoplay></video>
+    <canvas id="overlay"></canvas>
+    <div class="msg" id="msg">Front camera. Nothing leaves this phone.</div>
+    <div class="start-overlay" id="startOverlay">
+      <h1>Motion Lab</h1>
+      <p>SPEC-VID-001 prototype. Switch modes to see each filter. One camera — no stereo depth.</p>
+      <p>If the camera is blocked, open this page in Safari.</p>
+      <button class="start-btn" id="startBtn">Open Camera</button>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="modes" id="modes"></div>
+    <div class="row">
+      <button class="ctrl-btn" id="cfgBtn">Config</button>
+      <button class="ctrl-btn" id="resetBgBtn">Reset BG</button>
+    </div>
+    <div class="cfg" id="cfg">
+      <label>Change threshold <span id="thrVal">22</span></label>
+      <input type="range" id="thr" min="4" max="80" value="22" />
+      <label>Temporal window N <span id="nVal">5</span></label>
+      <input type="range" id="nLen" min="3" max="15" value="5" />
+      <label>Flag hold M <span id="mVal">3</span></label>
+      <input type="range" id="mHold" min="1" max="8" value="3" />
+      <label>Min region pixels <span id="minVal">80</span></label>
+      <input type="range" id="minPix" min="20" max="400" value="80" />
+      <div class="toggles">
+        <button id="bgMedian" class="on">Median BG</button>
+        <button id="bgMean">Mean BG</button>
+      </div>
+      <div class="toggles">
+        <button id="blur3">Blur 3</button>
+        <button id="blur5" class="on">Blur 5</button>
+      </div>
+      <p class="note">Phone is one camera. Approach / recede uses radial flow only. Depth map is not in this prototype.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+"use strict";
+
+document.addEventListener("gesturestart", function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener("gesturechange", function (e) { e.preventDefault(); }, { passive: false });
+document.addEventListener("gestureend", function (e) { e.preventDefault(); }, { passive: false });
+var lastTouchEnd = 0;
+document.addEventListener("touchend", function (e) {
+  var now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+var MODES = [
+  { id: "live", label: "Live" },
+  { id: "blur", label: "Blur" },
+  { id: "diff", label: "Diff" },
+  { id: "sqdiff", label: "Sq Diff" },
+  { id: "mask", label: "Mask" },
+  { id: "bg", label: "Background" },
+  { id: "flow", label: "Flow" },
+  { id: "radial", label: "Radial" },
+  { id: "fusion", label: "Fusion" }
+];
+var REPLACE = { blur: 1, diff: 1, sqdiff: 1, bg: 1 };
+
+var video = document.getElementById("video");
+var overlay = document.getElementById("overlay");
+var ctx = overlay.getContext("2d");
+var camArea = document.getElementById("camArea");
+var msgEl = document.getElementById("msg");
+var hudEl = document.getElementById("hud");
+var startOverlay = document.getElementById("startOverlay");
+var startBtn = document.getElementById("startBtn");
+var modesEl = document.getElementById("modes");
+var cfgEl = document.getElementById("cfg");
+
+var PROC_W = 160;
+var procH = 120;
+var procCanvas = document.createElement("canvas");
+var procCtx = procCanvas.getContext("2d", { willReadFrequently: true });
+var tmpCanvas = document.createElement("canvas");
+var tmpCtx = tmpCanvas.getContext("2d");
+
+var running = false;
+var mode = "live";
+var stream = null;
+var wakeLock = null;
+var npix = 0;
+
+var cfg = {
+  N: 5,
+  M: 3,
+  threshold: 22,
+  blur: 5,
+  bgMode: "median",
+  minPix: 80
+};
+
+var gray = null, blurG = null, prevBlur = null, bg = null;
+var tmpH = null, tmpV = null;
+var absDiff = null, sqDiff = null, mask = null;
+var windowBuf = [];
+var winPos = 0;
+var bgReady = false;
+var frameCount = 0;
+var lastFps = 0, fpsT = 0, fpsN = 0;
+var holdClass = "static";
+var holdCount = 0;
+var eventFlag = null;
+
+function setMsg(t, err) {
+  msgEl.textContent = t;
+  msgEl.classList.toggle("error", !!err);
+}
+
+function resizeOverlay() {
+  overlay.width = camArea.clientWidth;
+  overlay.height = camArea.clientHeight;
+}
+window.addEventListener("resize", resizeOverlay);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", resizeOverlay);
+}
+
+MODES.forEach(function (m) {
+  var b = document.createElement("button");
+  b.className = "mode" + (m.id === mode ? " active" : "");
+  b.textContent = m.label;
+  b.dataset.mode = m.id;
+  modesEl.appendChild(b);
+});
+modesEl.addEventListener("click", function (e) {
+  var b = e.target.closest(".mode");
+  if (!b) return;
+  mode = b.dataset.mode;
+  Array.prototype.forEach.call(modesEl.children, function (el) {
+    el.classList.toggle("active", el === b);
+  });
+});
+
+document.getElementById("cfgBtn").addEventListener("click", function () {
+  cfgEl.classList.toggle("open");
+});
+document.getElementById("resetBgBtn").addEventListener("click", resetBackground);
+
+function bindRange(id, key, labelId) {
+  var el = document.getElementById(id);
+  el.addEventListener("input", function () {
+    cfg[key] = parseInt(el.value, 10);
+    document.getElementById(labelId).textContent = cfg[key];
+    if (key === "N") resetBackground();
+  });
+}
+bindRange("thr", "threshold", "thrVal");
+bindRange("nLen", "N", "nVal");
+bindRange("mHold", "M", "mVal");
+bindRange("minPix", "minPix", "minVal");
+
+document.getElementById("bgMedian").addEventListener("click", function () {
+  cfg.bgMode = "median";
+  document.getElementById("bgMedian").classList.add("on");
+  document.getElementById("bgMean").classList.remove("on");
+});
+document.getElementById("bgMean").addEventListener("click", function () {
+  cfg.bgMode = "mean";
+  document.getElementById("bgMean").classList.add("on");
+  document.getElementById("bgMedian").classList.remove("on");
+});
+document.getElementById("blur3").addEventListener("click", function () {
+  cfg.blur = 3;
+  document.getElementById("blur3").classList.add("on");
+  document.getElementById("blur5").classList.remove("on");
+});
+document.getElementById("blur5").addEventListener("click", function () {
+  cfg.blur = 5;
+  document.getElementById("blur5").classList.add("on");
+  document.getElementById("blur3").classList.remove("on");
+});
+
+function allocBuffers() {
+  npix = PROC_W * procH;
+  gray = new Uint8Array(npix);
+  blurG = new Uint8Array(npix);
+  prevBlur = new Uint8Array(npix);
+  bg = new Uint8Array(npix);
+  tmpH = new Uint16Array(npix);
+  tmpV = new Uint8Array(npix);
+  absDiff = new Uint8Array(npix);
+  sqDiff = new Uint8Array(npix);
+  mask = new Uint8Array(npix);
+  procCanvas.width = PROC_W;
+  procCanvas.height = procH;
+  tmpCanvas.width = PROC_W;
+  tmpCanvas.height = procH;
+  resetBackground();
+}
+
+function resetBackground() {
+  windowBuf = [];
+  winPos = 0;
+  bgReady = false;
+  holdClass = "static";
+  holdCount = 0;
+  eventFlag = null;
+  setMsg("Warming background…");
+}
+
+function toGray(img) {
+  var d = img.data;
+  for (var i = 0, p = 0; i < d.length; i += 4, p++) {
+    gray[p] = (d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29) >> 8;
+  }
+}
+
+function clampX(x) { return x < 0 ? 0 : x >= PROC_W ? PROC_W - 1 : x; }
+
+function blurGray() {
+  var w = PROC_W, h = procH, k = cfg.blur;
+  var src = gray, dst = blurG;
+  var y, x, row, i;
+  if (k === 3) {
+    for (y = 0; y < h; y++) {
+      row = y * w;
+      for (x = 0; x < w; x++) {
+        tmpH[row + x] = src[row + clampX(x - 1)] + (src[row + x] << 1) + src[row + clampX(x + 1)];
+      }
+    }
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) {
+        i = y * w + x;
+        var ym = ((y ? y - 1 : 0) * w) + x;
+        var yp = (((y < h - 1) ? y + 1 : h - 1) * w) + x;
+        dst[i] = (tmpH[ym] + (tmpH[i] << 1) + tmpH[yp]) >> 4;
+      }
+    }
+    return;
+  }
+  for (y = 0; y < h; y++) {
+    row = y * w;
+    for (x = 0; x < w; x++) {
+      tmpH[row + x] =
+        src[row + clampX(x - 2)] +
+        (src[row + clampX(x - 1)] << 2) +
+        src[row + x] * 6 +
+        (src[row + clampX(x + 1)] << 2) +
+        src[row + clampX(x + 2)];
+    }
+  }
+  for (y = 0; y < h; y++) {
+    for (x = 0; x < w; x++) {
+      i = y * w + x;
+      var y0 = ((y > 1 ? y - 2 : 0) * w) + x;
+      var y1 = ((y ? y - 1 : 0) * w) + x;
+      var y2 = i;
+      var y3 = (((y < h - 1) ? y + 1 : h - 1) * w) + x;
+      var y4 = (((y < h - 2) ? y + 2 : h - 1) * w) + x;
+      dst[i] = (tmpH[y0] + (tmpH[y1] << 2) + tmpH[y2] * 6 + (tmpH[y3] << 2) + tmpH[y4]) >> 8;
+    }
+  }
+}
+
+function pushWindow() {
+  var N = cfg.N;
+  var copy = new Uint8Array(blurG);
+  if (windowBuf.length < N) windowBuf.push(copy);
+  else {
+    windowBuf[winPos % N] = copy;
+    winPos++;
+  }
+  if (windowBuf.length >= Math.min(3, N)) bgReady = true;
+}
+
+function computeBackground() {
+  var n = windowBuf.length;
+  if (!n) return;
+  var i, k, v, a, b;
+  if (cfg.bgMode === "median") {
+    var tmp = new Uint8Array(n);
+    for (i = 0; i < npix; i++) {
+      if (bgReady && mask[i]) continue;
+      for (k = 0; k < n; k++) tmp[k] = windowBuf[k][i];
+      for (a = 1; a < n; a++) {
+        v = tmp[a]; b = a;
+        while (b > 0 && tmp[b - 1] > v) { tmp[b] = tmp[b - 1]; b--; }
+        tmp[b] = v;
+      }
+      bg[i] = tmp[n >> 1];
+    }
+  } else {
+    var wsum = (n * (n + 1)) >> 1;
+    for (i = 0; i < npix; i++) {
+      if (bgReady && mask[i]) continue;
+      var acc = 0;
+      for (k = 0; k < n; k++) acc += windowBuf[k][i] * (k + 1);
+      bg[i] = (acc / wsum) | 0;
+    }
+  }
+}
+
+function computeDiff() {
+  var thr = cfg.threshold;
+  for (var i = 0; i < npix; i++) {
+    var d = blurG[i] - bg[i];
+    if (d < 0) d = -d;
+    absDiff[i] = d > 255 ? 255 : d;
+    var sq = d * d;
+    sqDiff[i] = sq > 255 ? 255 : sq;
+    mask[i] = d >= thr ? 1 : 0;
+  }
+}
+
+function grayToProc(src) {
+  var id = procCtx.createImageData(PROC_W, procH);
+  var d = id.data;
+  for (var i = 0; i < src.length; i++) {
+    var g = src[i];
+    var o = i * 4;
+    d[o] = g; d[o + 1] = g; d[o + 2] = g; d[o + 3] = 255;
+  }
+  procCtx.putImageData(id, 0, 0);
+}
+
+function drawProcCover() {
+  var ovW = overlay.width, ovH = overlay.height;
+  var scale = Math.max(ovW / PROC_W, ovH / procH);
+  var dw = PROC_W * scale, dh = procH * scale;
+  var ox = (ovW - dw) / 2, oy = (ovH - dh) / 2;
+  ctx.drawImage(procCanvas, ox, oy, dw, dh);
+}
+
+function procToOverlay(px, py) {
+  var ovW = overlay.width, ovH = overlay.height;
+  var scale = Math.max(ovW / PROC_W, ovH / procH);
+  var dispW = PROC_W * scale, dispH = procH * scale;
+  var offsetX = (ovW - dispW) / 2;
+  var offsetY = (ovH - dispH) / 2;
+  return { x: offsetX + px * scale, y: offsetY + py * scale, scale: scale };
+}
+
+function lucasKanade(step) {
+  var w = PROC_W, h = procH;
+  var pts = [];
+  var half = 3;
+  var y, x, wy, wx, i, Ix, Iy, It, A11, A12, A22, Bx, By, det, u, v;
+  for (y = step; y < h - step; y += step) {
+    for (x = step; x < w - step; x += step) {
+      A11 = 0; A12 = 0; A22 = 0; Bx = 0; By = 0;
+      for (wy = -half; wy <= half; wy++) {
+        for (wx = -half; wx <= half; wx++) {
+          i = (y + wy) * w + (x + wx);
+          var il = i - 1, ir = i + 1, iu = i - w, id = i + w;
+          Ix = (blurG[ir] - blurG[il]) * 0.5;
+          Iy = (blurG[id] - blurG[iu]) * 0.5;
+          It = blurG[i] - prevBlur[i];
+          A11 += Ix * Ix;
+          A12 += Ix * Iy;
+          A22 += Iy * Iy;
+          Bx += Ix * It;
+          By += Iy * It;
+        }
+      }
+      det = A11 * A22 - A12 * A12;
+      if (det < 80) continue;
+      u = (-A22 * Bx + A12 * By) / det;
+      v = (A12 * Bx - A11 * By) / det;
+      if (u * u + v * v < 0.04) continue;
+      var dx = x - w / 2, dy = y - h / 2;
+      var rlen = Math.sqrt(dx * dx + dy * dy) || 1;
+      var rad = (u * dx + v * dy) / rlen;
+      pts.push({ x: x, y: y, u: u, v: v, rad: rad });
+    }
+  }
+  return pts;
+}
+
+function drawArrows(pts, radial) {
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  for (var i = 0; i < pts.length; i++) {
+    var p = pts[i];
+    var a = procToOverlay(p.x, p.y);
+    var b = procToOverlay(p.x + p.u * 6, p.y + p.v * 6);
+    if (radial) {
+      ctx.strokeStyle = p.rad > 0.15 ? "#f87171" : p.rad < -0.15 ? "#22d3ee" : "#facc15";
+    } else {
+      ctx.strokeStyle = "#4ade80";
+    }
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+}
+
+function labelRegions() {
+  var w = PROC_W, h = procH;
+  var seen = new Uint8Array(npix);
+  var regions = [];
+  var stack = new Int32Array(npix);
+  var i, x, y, p, sp, count, minx, miny, maxx, maxy, sumx, sumy;
+  for (i = 0; i < npix; i++) {
+    if (!mask[i] || seen[i]) continue;
+    sp = 0; stack[sp++] = i; seen[i] = 1;
+    count = 0; sumx = 0; sumy = 0;
+    minx = w; miny = h; maxx = 0; maxy = 0;
+    while (sp) {
+      p = stack[--sp];
+      x = p % w; y = (p / w) | 0;
+      count++; sumx += x; sumy += y;
+      if (x < minx) minx = x; if (x > maxx) maxx = x;
+      if (y < miny) miny = y; if (y > maxy) maxy = y;
+      if (x > 0 && mask[p - 1] && !seen[p - 1]) { seen[p - 1] = 1; stack[sp++] = p - 1; }
+      if (x < w - 1 && mask[p + 1] && !seen[p + 1]) { seen[p + 1] = 1; stack[sp++] = p + 1; }
+      if (y > 0 && mask[p - w] && !seen[p - w]) { seen[p - w] = 1; stack[sp++] = p - w; }
+      if (y < h - 1 && mask[p + w] && !seen[p + w]) { seen[p + w] = 1; stack[sp++] = p + w; }
+    }
+    if (count >= cfg.minPix) {
+      regions.push({ count: count, minx: minx, miny: miny, maxx: maxx, maxy: maxy, cx: sumx / count, cy: sumy / count });
+    }
+  }
+  return regions;
+}
+
+function classify(regions, pts) {
+  var classes = [];
+  for (var r = 0; r < regions.length; r++) {
+    var g = regions[r];
+    var sumRad = 0, sumMag = 0, n = 0;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      if (p.x >= g.minx && p.x <= g.maxx && p.y >= g.miny && p.y <= g.maxy) {
+        sumRad += p.rad;
+        sumMag += Math.sqrt(p.u * p.u + p.v * p.v);
+        n++;
+      }
+    }
+    var meanRad = n ? sumRad / n : 0;
+    var meanMag = n ? sumMag / n : 0;
+    var cls = "lateral";
+    if (meanRad > 0.2) cls = "approach";
+    else if (meanRad < -0.2) cls = "recede";
+    else if (meanMag < 0.25) cls = "static";
+    g.cls = cls;
+    g.meanRad = meanRad;
+    classes.push(cls);
+  }
+  var vote = "static";
+  if (classes.length) {
+    var counts = { approach: 0, recede: 0, lateral: 0, static: 0 };
+    for (var c = 0; c < classes.length; c++) counts[classes[c]]++;
+    vote = "lateral";
+    var best = -1;
+    ["approach", "recede", "lateral", "static"].forEach(function (k) {
+      if (counts[k] > best) { best = counts[k]; vote = k; }
+    });
+  }
+  if (vote === holdClass) holdCount++;
+  else { holdClass = vote; holdCount = 1; }
+  eventFlag = (holdCount >= cfg.M && vote !== "static") ? vote : null;
+  return regions;
+}
+
+function drawRegions(regions) {
+  ctx.font = "bold 13px -apple-system, system-ui, sans-serif";
+  ctx.textAlign = "center";
+  var colors = { approach: "#f87171", recede: "#22d3ee", lateral: "#facc15", static: "#6b7689" };
+  for (var i = 0; i < regions.length; i++) {
+    var g = regions[i];
+    var a = procToOverlay(g.minx, g.miny);
+    var b = procToOverlay(g.maxx, g.maxy);
+    ctx.strokeStyle = colors[g.cls] || "#fff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(a.x, a.y, b.x - a.x, b.y - a.y);
+    var c = procToOverlay(g.cx, g.cy);
+    ctx.fillStyle = colors[g.cls] || "#fff";
+    ctx.fillText(g.cls.toUpperCase(), c.x, Math.max(16, a.y - 6));
+  }
+}
+
+function drawMaskOverlay() {
+  var id = procCtx.createImageData(PROC_W, procH);
+  var d = id.data;
+  for (var i = 0; i < npix; i++) {
+    var o = i * 4;
+    if (mask[i]) { d[o] = 248; d[o + 1] = 113; d[o + 2] = 113; d[o + 3] = 140; }
+    else { d[o + 3] = 0; }
+  }
+  procCtx.putImageData(id, 0, 0);
+  drawProcCover();
+}
+
+async function startCamera() {
+  try {
+    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await new Promise(function (r) {
+      if (video.readyState >= 2) r();
+      else video.onloadedmetadata = r;
+    });
+    await video.play();
+    resizeOverlay();
+    procH = Math.round(PROC_W * video.videoHeight / video.videoWidth) || 120;
+    allocBuffers();
+    startOverlay.classList.add("hidden");
+    setMsg("Walk toward the phone. Switch modes.");
+    running = true;
+    if (navigator.wakeLock) {
+      try { wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
+    }
+    requestAnimationFrame(loop);
+  } catch (err) {
+    setMsg("Camera error: " + (err.message || "denied"), true);
+    startBtn.disabled = false;
+    startBtn.textContent = "Open Camera";
+  }
+}
+
+startBtn.addEventListener("click", function () {
+  startBtn.disabled = true;
+  startBtn.textContent = "Starting…";
+  startCamera();
+});
+
+function loop() {
+  if (!running) return;
+  requestAnimationFrame(loop);
+  if (!video.videoWidth) return;
+
+  procCtx.drawImage(video, 0, 0, PROC_W, procH);
+  toGray(procCtx.getImageData(0, 0, PROC_W, procH));
+  blurGray();
+  if (frameCount > 0) {
+    computeDiff();
+    pushWindow();
+    computeBackground();
+  } else {
+    pushWindow();
+    computeBackground();
+  }
+
+  var pts = null;
+  var needFlow = mode === "flow" || mode === "radial" || mode === "fusion";
+  if (needFlow && frameCount > 1) pts = lucasKanade(10);
+
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  video.style.visibility = REPLACE[mode] ? "hidden" : "visible";
+
+  if (mode === "live") {
+    /* video only */
+  } else if (mode === "blur") {
+    grayToProc(blurG); drawProcCover();
+  } else if (mode === "diff") {
+    grayToProc(absDiff); drawProcCover();
+  } else if (mode === "sqdiff") {
+    grayToProc(sqDiff); drawProcCover();
+  } else if (mode === "bg") {
+    grayToProc(bg); drawProcCover();
+  } else if (mode === "mask") {
+    drawMaskOverlay();
+  } else if (mode === "flow") {
+    if (pts) drawArrows(pts, false);
+  } else if (mode === "radial") {
+    if (pts) drawArrows(pts, true);
+  } else if (mode === "fusion") {
+    drawMaskOverlay();
+    var regions = labelRegions();
+    if (pts) {
+      classify(regions, pts);
+      drawArrows(pts, true);
+    }
+    drawRegions(regions);
+  }
+
+  prevBlur.set(blurG);
+  frameCount++;
+  fpsN++;
+  var now = performance.now();
+  if (!fpsT) fpsT = now;
+  if (now - fpsT >= 1000) {
+    lastFps = fpsN;
+    fpsN = 0;
+    fpsT = now;
+  }
+  var flagTxt = eventFlag ? eventFlag.toUpperCase() + " ×" + holdCount : (bgReady ? "no flag" : "warming");
+  hudEl.innerHTML = mode.toUpperCase() + " · " + lastFps + " fps<br><span class=\"flag " + (eventFlag || "") + "\">" + flagTxt + "</span>";
+}
+
+document.addEventListener("visibilitychange", function () {
+  if (document.visibilityState === "visible" && running && video.srcObject) video.play().catch(function () {});
+});
+})();
+</script>
+</body>
+</html>
