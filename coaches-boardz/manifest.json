@@ -1,0 +1,21 @@
+{
+  "name": "CoachesBoardz - 7v7 Soccer Tactical Board",
+  "short_name": "CoachesBoardz",
+  "description": "Full screen 7v7 soccer tactical coaching board in locked portrait orientation",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen"],
+  "orientation": "portrait-primary",
+  "background_color": "#0b190e",
+  "theme_color": "#0b190e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

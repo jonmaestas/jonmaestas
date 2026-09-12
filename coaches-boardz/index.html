@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CoachesBoardz">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0b190e">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <title>CoachesBoardz - 7v7 Soccer Tactical Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="./manifest.json">
+  <script type="module" crossorigin src="./assets/index-BnS4XZA_.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DFIfW5vF.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- Top Bar with all controls fitting cleanly across 428px iPhone width -->
+    <header class="top-bar">
+      <div class="top-bar-scroll-track" id="topBarTrack">
+        <!-- Coaching Tactics: Stretch (Get Big) vs Squeeze -->
+        <div class="tactics-toggles" role="group" aria-label="Team Shape Tactics">
+          <button id="stretchBtn" class="tactic-btn stretch-btn" title="Stretch / Get Big (Offense)" aria-label="Get Big">
+            <span class="btn-text">GET BIG</span>
+          </button>
+          <button id="squeezeBtn" class="tactic-btn squeeze-btn" title="Squeeze In (Defense)" aria-label="Squeeze">
+            <span class="btn-text">SQUEEZE</span>
+          </button>
+        </div>
+
+        <!-- Quick Mode Toggle (Move vs Draw vs Clear) -->
+        <div class="mode-toggles" role="group" aria-label="Tool mode">
+          <button id="modeMoveBtn" class="mode-btn active" title="Move Mode" aria-label="Move">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 9-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>
+            <span class="mode-label">Move</span>
+          </button>
+          <button id="modeDrawBtn" class="mode-btn" title="Draw Mode" aria-label="Draw">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span class="mode-label">Draw</span>
+          </button>
+          <button id="modeEraseBtn" class="mode-btn erase-btn" title="Clear Telestrator Drawings" aria-label="Clear">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            <span class="mode-label">Clear</span>
+          </button>
+        </div>
+
+        <!-- Quick Actions (Formation, Reset, Fullscreen) -->
+        <div class="top-actions">
+          <button id="formationModalBtn" class="action-pill-btn" title="Change Formations" aria-label="Formation">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button id="resetPositionsBtn" class="icon-action-btn" title="Reset to Formations" aria-label="Reset">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <button id="fullscreenBtn" class="icon-action-btn" title="Toggle Fullscreen" aria-label="Fullscreen">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    <!-- Drawing Settings Overlay Bar (visible when Draw mode is active) -->
+    <div id="drawToolbar" class="draw-toolbar hidden">
+      <div class="color-picker-group" role="radiogroup" aria-label="Pen Color">
+        <button class="color-chip active" data-color="#FFFF00" style="--chip-color: #FFFF00;" aria-label="Yellow Pen"></button>
+        <button class="color-chip" data-color="#FFFFFF" style="--chip-color: #FFFFFF;" aria-label="White Pen"></button>
+        <button class="color-chip" data-color="#EF4444" style="--chip-color: #EF4444;" aria-label="Red Pen"></button>
+        <button class="color-chip" data-color="#3B82F6" style="--chip-color: #3B82F6;" aria-label="Blue Pen"></button>
+        <button class="color-chip" data-color="#10B981" style="--chip-color: #10B981;" aria-label="Green Pen"></button>
+        <button class="color-chip" data-color="#000000" style="--chip-color: #000000;" aria-label="Black Pen"></button>
+      </div>
+      <div class="line-style-group">
+        <button id="lineSolidBtn" class="line-btn active" title="Solid Line">Solid</button>
+        <button id="lineDottedBtn" class="line-btn" title="Dashed / Pass Line">Pass</button>
+        <button id="lineArrowBtn" class="line-btn active" title="Arrowhead on End">Arrow</button>
+      </div>
+      <button id="undoDrawBtn" class="draw-util-btn" title="Undo last line" aria-label="Undo">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+      </button>
+    </div>
+
+    <!-- Main Tactical Pitch Board Area -->
+    <main class="board-wrapper" id="boardWrapper">
+      <div class="pitch-container" id="pitchContainer">
+        <!-- SVG Soccer Field Background: Vertical Portrait (650x1000) -->
+        <svg id="pitchSvg" class="pitch-svg" viewBox="0 0 650 1000" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1b5e20"/>
+              <stop offset="50%" stop-color="#2e7d32"/>
+              <stop offset="100%" stop-color="#1b5e20"/>
+            </linearGradient>
+            <pattern id="stripes" width="650" height="100" patternUnits="userSpaceOnUse">
+              <rect width="650" height="50" fill="#256e29" opacity="0.35"/>
+              <rect y="50" width="650" height="50" fill="#2e7d32" opacity="0.35"/>
+            </pattern>
+          </defs>
+
+          <rect width="650" height="1000" fill="url(#grassGrad)"/>
+          <rect width="650" height="1000" fill="url(#stripes)"/>
+
+          <!-- Outer Touchlines (25px margin) -->
+          <rect x="25" y="25" width="600" height="950" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+
+          <!-- Halfway Line & Center Circle (Double size r=150) -->
+          <line x1="25" y1="500" x2="625" y2="500" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <circle cx="325" cy="500" r="150" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <circle cx="325" cy="500" r="4" fill="#FFFFFF"/>
+
+          <!-- Top Side (Away - Red) -->
+          <rect x="165" y="25" width="320" height="150" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <rect x="245" y="25" width="160" height="50" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.95"/>
+          <circle cx="325" cy="130" r="4" fill="#FFFFFF"/>
+          <path d="M 270,175 A 75 75 0 0 0 380,175" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <rect x="275" y="8" width="100" height="17" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4,3" opacity="0.8"/>
+          <!-- Away Buildout Line (y=320) -->
+          <line x1="25" y1="320" x2="625" y2="320" stroke="#FACC15" stroke-width="3.5" stroke-dasharray="10,8" opacity="0.9"/>
+
+          <!-- Bottom Side (Home - Blue) -->
+          <rect x="165" y="825" width="320" height="150" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <rect x="245" y="925" width="160" height="50" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.95"/>
+          <circle cx="325" cy="870" r="4" fill="#FFFFFF"/>
+          <path d="M 270,825 A 75 75 0 0 1 380,825" fill="none" stroke="#FFFFFF" stroke-width="3" opacity="0.95"/>
+          <rect x="275" y="975" width="100" height="17" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4,3" opacity="0.8"/>
+          <!-- Home Buildout Line (y=680) -->
+          <line x1="25" y1="680" x2="625" y2="680" stroke="#FACC15" stroke-width="3.5" stroke-dasharray="10,8" opacity="0.9"/>
+
+          <!-- Corner Arcs -->
+          <path d="M 45,25 A 20 20 0 0 0 25,45" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+          <path d="M 605,25 A 20 20 0 0 1 625,45" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+          <path d="M 45,975 A 20 20 0 0 1 25,955" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+          <path d="M 605,975 A 20 20 0 0 0 625,955" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+        </svg>
+
+        <!-- Unit Line Guides & Drag Handles Layer (650x1000) -->
+        <svg id="unitLinesSvg" class="unit-lines-svg" viewBox="0 0 650 1000" preserveAspectRatio="none"></svg>
+
+        <!-- Telestrator Canvas Overlay for Drawing -->
+        <canvas id="drawingCanvas" class="drawing-canvas"></canvas>
+
+        <!-- Interactive Pucks Container (DOM Nodes for max responsiveness & touch precision) -->
+        <div id="pucksLayer" class="pucks-layer"></div>
+      </div>
+    </main>
+
+    <!-- Bottom Mobile Quick Bar -->
+    <footer class="bottom-bar">
+      <!-- Team Legend & Formation display -->
+      <div class="team-badge-pill home" id="homeBadgeBtn">
+        <span class="team-dot home-dot"></span>
+        <span class="team-name">OUR TEAM</span>
+        <span class="formation-tag" id="homeFormationTag">1-2-3-1</span>
+      </div>
+
+      <!-- Center Ball Quick Center Button -->
+      <button id="centerBallBtn" class="ball-quick-btn" aria-label="Center Ball">
+        <span class="soccer-icon">⚽</span>
+        <span class="btn-micro-text">BALL</span>
+      </button>
+
+      <!-- Away Team Formation display -->
+      <div class="team-badge-pill away" id="awayBadgeBtn">
+        <span class="formation-tag" id="awayFormationTag">1-3-2-1</span>
+        <span class="team-name">OPPONENT</span>
+        <span class="team-dot away-dot"></span>
+      </div>
+    </footer>
+
+    <!-- Formations Modal Dialog -->
+    <div id="formationModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modalTitle" class="modal-title">7v7 Formations & Setup</h2>
+          <button id="closeModalBtn" class="close-modal-btn" aria-label="Close dialog">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Our Team Setup -->
+          <div class="formation-section">
+            <div class="section-title-row">
+              <span class="team-dot home-dot"></span>
+              <h3>Our Team (Blue / Home)</h3>
+            </div>
+            
+            <div class="notation-input-group">
+              <label for="homeFormationInput">Notation (e.g. 1-2-2-2 or 1-2-3-1):</label>
+              <div class="input-with-action">
+                <input type="text" id="homeFormationInput" class="notation-input" value="1-2-2-2" placeholder="1-2-2-2" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button id="applyHomeCustomBtn" class="btn-apply">Set</button>
+              </div>
+            </div>
+
+            <div class="presets-label">Popular 7v7 Formations:</div>
+            <div class="preset-buttons" id="homePresets">
+              <button class="preset-btn active" data-formation="1-2-2-2">1-2-2-2 (Box / Balanced)</button>
+              <button class="preset-btn" data-formation="1-2-3-1">1-2-3-1 (Midfield Overload)</button>
+              <button class="preset-btn" data-formation="1-3-2-1">1-3-2-1 (Solid Defense)</button>
+              <button class="preset-btn" data-formation="1-3-1-2">1-3-1-2 (Two Strikers)</button>
+              <button class="preset-btn" data-formation="1-2-1-3">1-2-1-3 (Attacking Wingers)</button>
+            </div>
+          </div>
+
+          <!-- Opponent Team Setup -->
+          <div class="formation-section">
+            <div class="section-title-row">
+              <span class="team-dot away-dot"></span>
+              <h3>Opponent Team (Red / Away)</h3>
+            </div>
+
+            <div class="notation-input-group">
+              <label for="awayFormationInput">Notation (e.g. 1-2-2-2 or 1-3-2-1):</label>
+              <div class="input-with-action">
+                <input type="text" id="awayFormationInput" class="notation-input" value="1-2-2-2" placeholder="1-2-2-2" maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button id="applyAwayCustomBtn" class="btn-apply">Set</button>
+              </div>
+            </div>
+
+            <div class="presets-label">Popular 7v7 Formations:</div>
+            <div class="preset-buttons" id="awayPresets">
+              <button class="preset-btn active" data-formation="1-2-2-2">1-2-2-2 (Box / Balanced)</button>
+              <button class="preset-btn" data-formation="1-2-3-1">1-2-3-1 (Midfield Overload)</button>
+              <button class="preset-btn" data-formation="1-3-2-1">1-3-2-1 (Solid Defense)</button>
+              <button class="preset-btn" data-formation="1-3-1-2">1-3-1-2 (Two Strikers)</button>
+              <button class="preset-btn" data-formation="1-2-1-3">1-2-1-3 (Attacking Wingers)</button>
+            </div>
+          </div>
+
+          <!-- Quick Puck Label Options -->
+          <div class="formation-section">
+            <h3>Puck Numbers / Labels</h3>
+            <div class="label-toggle-group">
+              <button id="labelNumbersBtn" class="toggle-option-btn active">Jersey Numbers (1-7)</button>
+              <button id="labelPositionsBtn" class="toggle-option-btn">Positions (GK, CB, CM, ST)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="applyAndCloseModalBtn" class="btn-primary-block">Apply & Return to Board</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
