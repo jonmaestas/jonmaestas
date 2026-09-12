@@ -1,7 +1,7 @@
 {
-  "name": "CoachesBoardz - 7v7 Soccer Tactical Board",
-  "short_name": "CoachesBoardz",
-  "description": "Full screen 7v7 soccer tactical coaching board in locked portrait orientation",
+  "name": "Soccer Board",
+  "short_name": "Soccer Board",
+  "description": "7v7 soccer tactical coaching board",
   "id": "./",
   "start_url": "./",
   "scope": "./",

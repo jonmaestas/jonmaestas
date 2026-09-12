@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coaches-boardz-v3';
+const CACHE_NAME = 'soccer-board-v1';
 const APP_DIR = self.location.pathname.replace(/[^/]*$/, '');
 const ASSETS = [
   APP_DIR,
