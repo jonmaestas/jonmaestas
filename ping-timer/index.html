@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Ping Timer</title>
+<style>
+  :root { --bg:#111; --fg:#f4f4f4; --acc:#7dffb3; --mut:#9a9a9a; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 17px/1.4 -apple-system, system-ui, sans-serif;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; padding: 22px 18px 48px; }
+  h1 { font-size: 1.35rem; margin: 0 0 8px; }
+  .lead { color: var(--mut); margin: 0 0 18px; }
+  a.btn {
+    display: block;
+    background: var(--acc);
+    color: #111;
+    text-align: center;
+    padding: 16px 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    margin: 10px 0 18px;
+  }
+  a.btn.alt { background: #2a2a2a; color: var(--fg); font-weight: 600; }
+  ol { margin: 0; padding-left: 1.2em; }
+  li { margin: 10px 0; }
+  code { background: #222; padding: 1px 6px; border-radius: 6px; }
+  .n { color: var(--acc); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kristin texts !ping → 1s timer</h1>
+  <p class="lead">Tap add, then wire it to her message. Two minutes.</p>
+  <a class="btn" href="shortcuts://import-shortcut?url=https%3A%2F%2Fjonmaestas.com%2Fping-timer%2FPing-Timer.shortcut">Add Ping Timer</a>
+  <a class="btn alt" href="./Ping-Timer.shortcut">If that fails, open the file</a>
+  <ol>
+    <li>Shortcuts app → <span class="n">Automation</span> → <span class="n">+</span></li>
+    <li><span class="n">Message</span> (under Create Personal Automation)</li>
+    <li>From: <span class="n">Kristin</span></li>
+    <li>Message Contains: <code>!ping</code></li>
+    <li>Next → Run Shortcut → <span class="n">Ping Timer</span></li>
+    <li><span class="n">Ask Before Running: Off</span> → Done</li>
+  </ol>
+  <p class="lead" style="margin-top:18px">Test: she texts <code>!ping</code>. Your timer rings in 1 second.</p>
+</div>
+</body>
+</html>
