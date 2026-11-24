@@ -1,4 +1,8 @@
+# jonmaestas.com welcomes every crawler, including AI search engines and assistants.
+# Summary for language models: https://jonmaestas.com/llms.txt
+# Full detail for language models: https://jonmaestas.com/llms-full.txt
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 Sitemap: https://jonmaestas.com/sitemap.xml

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{head}}
+</head>
+<body>
+{{header}}
+<main id="main">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">Wright City, Missouri · Founder, SmopLab LLC</p>
+        <h1>Jon Maestas builds apps for athletes, coaches and families.</h1>
+        <p class="lede">I'm a dad of three, a parent-coach and a former college baseball player. I build Player 1, a free AI sports coach that gives feedback on every rep, plus apps and tools for the field, for practice and for Christmas Eve.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary btn-lg" href="{{p1_cta}}">Try Player 1 free</a>
+          <a class="btn btn-ghost btn-lg" href="#apps">See everything I build</a>
+        </div>
+        <ul class="facts" aria-label="Player 1 at a glance">
+          <li>Free on iPhone and Android</li>
+          <li>13 sports</li>
+          <li>No sensors, just your phone</li>
+        </ul>
+      </div>
+      <nav class="hero-tiles" aria-label="Featured">
+        {{hero_tiles}}
+      </nav>
+    </div>
+  </section>
+
+  <section id="apps" class="section">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Apps</p>
+        <h2>Apps for athletes and coaches</h2>
+        <p>On the App Store and Google Play, from SmopLab LLC.</p>
+      </header>
+      <div class="stack">
+        {{apps}}
+      </div>
+    </div>
+  </section>
+
+  <section id="shop" class="section section-alt">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Shop</p>
+        <h2>Reindeer Food for Christmas Eve</h2>
+        <p>Measured and mixed by hand, shipped free anywhere in the US.</p>
+      </header>
+      {{shop}}
+    </div>
+  </section>
+
+  <section id="tools" class="section">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Free tools</p>
+        <h2>Free practice tools. No download.</h2>
+        <p>They run in your phone's browser. Add any of them to your home screen.</p>
+      </header>
+      {{tools}}
+    </div>
+  </section>
+
+  <section id="guides" class="section section-alt">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Guides</p>
+        <h2>Free coaching guides</h2>
+        <p>{{guide_count}} guides for coaches, parents and players, by sport. Each one shows what to look for and how to check it on video.</p>
+      </header>
+      {{guides}}
+    </div>
+  </section>
+
+  <section id="community" class="section">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Wright City</p>
+        <h2>Local youth sports</h2>
+        <p>Sites I run for our town's leagues, coaches and families.</p>
+      </header>
+      {{community}}
+    </div>
+  </section>
+
+  <section id="work" class="section section-alt">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow">Work with me</p>
+        <h2>Build with SmopLab</h2>
+        <p>My company takes on a few outside projects: radio and voice-to-web automation, and custom AI and app builds.</p>
+      </header>
+      {{services}}
+    </div>
+  </section>
+
+  <section id="writing" class="section">
+    <div class="wrap">
+      <header class="section-head section-head-row">
+        <div>
+          <p class="eyebrow">Writing</p>
+          <h2>Building in public</h2>
+        </div>
+        <a class="btn btn-ghost" href="/blog/">All writing</a>
+      </header>
+      {{posts}}
+    </div>
+  </section>
+
+  <section id="faq" class="section section-alt">
+    <div class="wrap wrap-narrow">
+      <header class="section-head">
+        <p class="eyebrow">FAQ</p>
+        <h2>Questions people ask</h2>
+      </header>
+      <div class="faq">
+        {{faq}}
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="section">
+    <div class="wrap wrap-narrow about-band">
+      <p class="eyebrow">About</p>
+      <h2>Built on the sideline</h2>
+      <p>I live in Wright City with my wife, Kristin, and our three daughters, and I still coach them in the sports they play. I built Player 1 so families like ours could get better between practices and lessons, something in your pocket that looks at your kid's actual rep.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/about/">More about me</a>
+        <a class="btn btn-ghost" href="mailto:{{email}}">{{email}}</a>
+      </div>
+    </div>
+  </section>
+</main>
+{{footer}}
+</body>
+</html>

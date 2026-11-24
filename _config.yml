@@ -1,0 +1,6 @@
+# GitHub Pages runs Jekyll over this repo, but the site is plain static HTML that Jekyll only copies.
+# Keep the build inputs (python3 scripts/build.py) out of the published site.
+exclude:
+  - README.md
+  - data/
+  - scripts/

@@ -1,0 +1,296 @@
+{
+  "site": {
+    "url": "https://jonmaestas.com",
+    "name": "Jon Maestas",
+    "title": "Jon Maestas: Apps for Athletes, Coaches and Families",
+    "description": "Jon Maestas builds Player 1, the free AI sports coach app, plus Diamond Setup for baseball and softball fields, Reindeer Food Co., and free tools for coaches. Wright City, Missouri.",
+    "twitter": "@jonmaestas",
+    "utm": "utm_source=jonmaestas.com&utm_medium=referral&utm_campaign=portfolio"
+  },
+  "person": {
+    "name": "Jon Maestas",
+    "email": "jon@jonmaestas.com",
+    "jobTitle": "Founder",
+    "location": "Wright City, Missouri",
+    "summary": "Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.",
+    "bio": [
+      "I live in Wright City, Missouri with my wife, Kristin, and our three daughters. They play softball, basketball, soccer and gymnastics, and I still coach them, even in the sports I don't fully know.",
+      "In high school I played baseball, basketball and football. I earned a baseball scholarship to Culver-Stockton College in Canton, Missouri, which is where I met Kristin.",
+      "I build software through my company, SmopLab LLC. Player 1 started because I wanted something in my pocket that looks at my kids' actual reps, not a random YouTube tip, between practices and lessons.",
+      "I write about building in public, AI agents and Athletic Intelligence on the blog."
+    ],
+    "alumniOf": "Culver-Stockton College",
+    "knowsAbout": [
+      "AI sports coaching",
+      "Computer vision for sports video",
+      "Youth sports coaching",
+      "iOS and Android app development",
+      "Augmented reality",
+      "AI agents",
+      "Speech-to-text and radio transcription"
+    ],
+    "sameAs": [
+      "https://www.linkedin.com/in/jonmaestas/",
+      "https://github.com/jonmaestas"
+    ],
+    "links": [
+      { "name": "LinkedIn", "url": "https://www.linkedin.com/in/jonmaestas/" },
+      { "name": "GitHub", "url": "https://github.com/jonmaestas" }
+    ]
+  },
+  "organization": {
+    "name": "SmopLab LLC",
+    "url": "https://smoplab.com/",
+    "email": "hello@smoplab.com",
+    "location": "Wright City, Missouri"
+  },
+  "apps": [
+    {
+      "id": "player-1",
+      "name": "Player 1: Athletic Intelligence",
+      "shortName": "Player 1",
+      "tagline": "The free AI sports coach on your phone.",
+      "summary": "Record a rep or a whole practice. Player 1 finds each rep, tells you what to keep and what to fix next, and you can text your coach film or questions any time. Phone camera only: no bat sensor, launch monitor or wearable.",
+      "details": [
+        "13 sports on one account: baseball, softball, golf, football, basketball, soccer, tennis, volleyball, pickleball, disc golf, gymnastics, hockey, and track & field.",
+        "Training Sessions: film a full practice and the AI splits it into reps you can compare side by side.",
+        "Coach Chat: text your coach film or mechanics questions, 24/7.",
+        "Coach Styles from supportive to demanding, and X-Factor Focus on power, speed, accuracy, balance, timing and more.",
+        "Built for kids, parents and coaches, and it works for adult golf swings and rec players too."
+      ],
+      "pricing": "Free to start, no credit card: 5 reps without an account, 7 free reps every week with a free email sign-in. Pro is $9.99/month or $76/year for unlimited reps.",
+      "price": "0",
+      "platforms": ["iPhone", "iPad", "Android"],
+      "operatingSystem": "iOS, Android",
+      "category": "SportsApplication",
+      "url": "https://player1athlete.com/",
+      "appStore": "https://apps.apple.com/us/app/player-1-athlete/id6754611410",
+      "googlePlay": "https://play.google.com/store/apps/details?id=com.player1training.app",
+      "icon": "/images/apps/player-1-athlete.webp",
+      "sameAs": [
+        "https://www.facebook.com/player1athlete",
+        "https://www.instagram.com/player1athlete",
+        "https://x.com/player1athlete"
+      ],
+      "aliases": ["Player 1 Athlete", "Player One", "P1 AI", "Athletic Intelligence", "Player 1 Training (former name)"],
+      "redirectDomains": ["beplayer1.com", "athleticintelligence.ai", "player1athletics.com", "player1athletes.com", "player1trainer.com", "player1training.com", "playeronetraining.com", "p1.coach", "p1ai.co", "rep2.pro"],
+      "sports": [
+        { "name": "Baseball", "url": "https://player1athlete.com/baseball" },
+        { "name": "Softball", "url": "https://player1athlete.com/softball" },
+        { "name": "Golf", "url": "https://player1athlete.com/golf" },
+        { "name": "Basketball", "url": "https://player1athlete.com/basketball" },
+        { "name": "Soccer", "url": "https://player1athlete.com/soccer" },
+        { "name": "Football", "url": "https://player1athlete.com/football" },
+        { "name": "Volleyball", "url": "https://player1athlete.com/volleyball" },
+        { "name": "Tennis", "url": "https://player1athlete.com/tennis" },
+        { "name": "Pickleball", "url": "https://player1athlete.com/pickleball" },
+        { "name": "Disc golf", "url": "https://player1athlete.com/disc-golf" },
+        { "name": "Gymnastics", "url": "https://player1athlete.com/gymnastics" },
+        { "name": "Hockey", "url": "https://player1athlete.com/hockey" },
+        { "name": "Track & field", "url": "https://player1athlete.com/track-&-field" }
+      ]
+    },
+    {
+      "id": "diamond-setup",
+      "name": "Player 1: Diamond Setup",
+      "shortName": "Diamond Setup",
+      "badge": "New",
+      "tagline": "Lay out a baseball or softball field with your iPhone.",
+      "summary": "Point the phone at the ground and Diamond Setup draws home plate, the pitching rubber and the bases in AR at your league's distances. Set up a bullpen or a whole diamond without a tape measure, then put the real bases on the outlines.",
+      "details": [
+        "Bullpen layout for pitching practice, plus Full Field and Base by Base (beta).",
+        "Presets from 46′ Little League to 60′ 6″ high school and adult baseball, 35′ to 43′ fastpitch, slowpitch, or your own distances.",
+        "Mound height, feet or meters, and it works with no cell signal.",
+        "No account, no ads, no tracking. The camera view is never recorded or uploaded.",
+        "Any iPhone with iOS 18 or later. On LiDAR models the lines follow slopes in the ground."
+      ],
+      "pricing": "$4.99 one-time on the App Store (launch promo price). No subscription.",
+      "price": "4.99",
+      "priceNote": "launch promo",
+      "platforms": ["iPhone"],
+      "operatingSystem": "iOS 18 or later",
+      "category": "SportsApplication",
+      "url": "https://player1athlete.com/apps/diamondsetup",
+      "appStore": "https://apps.apple.com/us/app/player-1-diamond-setup/id6837315550",
+      "guide": { "name": "How to lay out a baseball or softball field", "url": "https://player1athlete.com/apps/diamondsetup/baseball-softball-field-layout" },
+      "icon": "/images/apps/diamond-setup.webp"
+    }
+  ],
+  "shop": [
+    {
+      "id": "reindeer-food",
+      "name": "Reindeer Food Co.",
+      "tagline": "Reindeer Food for Christmas Eve.",
+      "summary": "A make-your-own kit of oats, crushed candy cane, dehydrated marshmallows and sprinkles for the kids to mix, or ready-mixed packs measured by hand. On Christmas Eve the kids sprinkle it on the lawn for Santa's reindeer and say the rhyme before bed. Food ingredients only, no glitter.",
+      "offers": [
+        { "name": "Make-your-own kit", "price": "20", "url": "https://buy.stripe.com/00w5kEgj93Cvg3i9sl7N604?client_reference_id=jonmaestas" },
+        { "name": "Ready-mixed, 2 packs", "price": "14", "url": "https://buy.stripe.com/28E9AU2sj5KDdVa7kd7N605?client_reference_id=jonmaestas" },
+        { "name": "Ready-mixed, 3 packs", "price": "15", "url": "https://buy.stripe.com/7sY8wQaYP7SL7wM8oh7N606?client_reference_id=jonmaestas" }
+      ],
+      "pricing": "Make-your-own kit $20. Ready-mixed: 2 packs $14, 3 packs $15, extra packs $5 each. Free US shipping, tax included.",
+      "note": "Order by Tuesday, December 15 for Christmas delivery.",
+      "noteUntil": "2026-12-15",
+      "url": "https://reindeerfood.co/",
+      "recipe": { "name": "How to make Reindeer Food", "url": "https://reindeerfood.co/how-to-make-reindeer-food/" },
+      "image": "/images/products/reindeer-food-kit-800.webp",
+      "imageSmall": "/images/products/reindeer-food-kit-480.webp",
+      "imageAlt": "The Reindeer Food make-your-own kit: four clear bags of crushed candy cane, rolled oats, red and green sprinkles, and dehydrated marshmallows on a wooden table.",
+      "icon": "/images/products/reindeer-food.svg"
+    }
+  ],
+  "holiday": [
+    {
+      "id": "how-to-make-reindeer-food",
+      "live": false,
+      "name": "How to Make Reindeer Food",
+      "url": "https://howtomakereindeerfood.com/",
+      "summary": "Eight ways to make reindeer food: classic oats and candy cane, birdseed, no-glitter, toddler-safe, classroom batches, gift jars, color themes and allergy-aware, with printables."
+    },
+    {
+      "id": "north-pole-work-shop",
+      "live": false,
+      "name": "North Pole Work Shop",
+      "url": "https://northpolework.shop/",
+      "summary": "A free game where you're an elf: build toys on Santa's bench, wrap them and help around the workshop. Made for phones. No ads, no sign-up."
+    },
+    {
+      "id": "santas-reindeer-games",
+      "live": false,
+      "name": "Santa's Reindeer Games",
+      "url": "https://santasreindeergames.com/",
+      "summary": "Free browser games where you're one of Santa's reindeer: fly a snowy town at night, train a takeoff and land on rooftops. Made for phones."
+    },
+    {
+      "id": "how-to-catch-a-reindeer",
+      "live": false,
+      "name": "How to Catch a Reindeer",
+      "url": "https://howtocatchareindeer.com/",
+      "summary": "A satirical field manual on catching a reindeer, with a trap builder, a certification quiz and the real answer: you invite one."
+    }
+  ],
+  "tools": [
+    {
+      "id": "soccer-board",
+      "name": "Soccer Board",
+      "url": "/soccer-board/",
+      "icon": "/soccer-board/icon.svg",
+      "category": "SportsApplication",
+      "summary": "A 7v7 tactics board for coaches. Move players, draw runs, switch formations, and show Get Big vs. Squeeze."
+    },
+    {
+      "id": "drill-timer",
+      "name": "Soccer Drill Timer",
+      "url": "/drill-timer.html",
+      "glyph": "timer",
+      "category": "SportsApplication",
+      "summary": "45-second ball-mastery reps with self-paced rest. Say \"go\" to start the next rep, no hands needed."
+    },
+    {
+      "id": "juggle-tracker",
+      "name": "Juggle Tracker",
+      "url": "/juggle-tracker.html",
+      "glyph": "ball",
+      "category": "SportsApplication",
+      "summary": "Counts soccer juggles with your phone's camera, with milestones and a 0 to 100 progression guide."
+    },
+    {
+      "id": "pocket-golf",
+      "name": "Pocket Golf",
+      "url": "/pocket-golf.html",
+      "glyph": "flag",
+      "category": "GameApplication",
+      "summary": "Flick-to-swing golf you play against friends, one turn at a time. Driver, iron and putter, and no luck in the lies."
+    }
+  ],
+  "guides": [
+    {
+      "group": "Baseball & softball",
+      "sites": [
+        { "name": "Baseball Coach Pro", "url": "https://baseballcoach.pro/", "summary": "Practice plans, station rotations and age-by-age skill checkpoints for youth baseball teams." },
+        { "name": "Softball Coach Pro", "url": "https://softballcoach.pro/", "summary": "Fastpitch windmill pitching, slap hitting and practice plans for travel and high school softball." },
+        { "name": "Hitting Coach", "url": "https://hitting.coach/", "summary": "The six phases of the swing, the four faults that eat contact, and the tee and toss drills that fix each." },
+        { "name": "Pitching Analyzer", "url": "https://pitchinganalyzer.com/", "summary": "Six delivery checkpoints you can read from phone video, for the windup, stretch and windmill." }
+      ]
+    },
+    {
+      "group": "Basketball",
+      "sites": [
+        { "name": "Basketball Coach Pro", "url": "https://basketballcoach.pro/", "summary": "Practice plans, station drills and age-appropriate progressions for youth and high school coaches." },
+        { "name": "How to Fix My Shot", "url": "https://howtofixmyshot.com/", "summary": "Shooting faults by symptom, from a flat arc to a flying elbow, with the drill that fixes each." },
+        { "name": "Home Shot Lab", "url": "https://athomeshotanalyzer.com/", "summary": "Turn a driveway or backyard goal into a filmed shooting session you can review." }
+      ]
+    },
+    {
+      "group": "Golf",
+      "sites": [
+        { "name": "Golf Coach Pro", "url": "https://golfcoach.pro/", "summary": "What a golf coach checks in a lesson, the one priority that fixes your miss, and how to practice between lessons." },
+        { "name": "How to Fix My Slice", "url": "https://howtofixmyslice.com/", "summary": "Ball-flight laws, the cause of your slice, and three drills you can hit tonight." }
+      ]
+    },
+    {
+      "group": "Pickleball",
+      "sites": [
+        { "name": "Pickleball Coach Pro", "url": "https://pickleballcoach.pro/", "summary": "The 3.0 to 4.0 climb: the eight shots, a checklist for every level, and practice plans." },
+        { "name": "The Dink Coach", "url": "https://thedink.coach/", "summary": "Pickleball's soft game: dinks, kitchen-line position, resets and the third shot drop." }
+      ]
+    },
+    {
+      "group": "Volleyball & hockey",
+      "sites": [
+        { "name": "Volleyball Coach Pro", "url": "https://volleyballcoach.pro/", "summary": "Passing, setting, the spike approach and both serves for club and high school players." },
+        { "name": "Hockey Coach Pro", "url": "https://hockeycoach.pro/", "summary": "Wrist shot, slap shot and backhand mechanics, with off-ice drills and a four-week shooting plan." }
+      ]
+    },
+    {
+      "group": "Any sport",
+      "sites": [
+        { "name": "Practicing at Home", "url": "https://practicingathome.com/", "summary": "Small-space drills, weekly plans and cheap gear lists for 13 sports." },
+        { "name": "Swing Triage", "url": "https://howtofixmyswing.com/", "summary": "Pick your sport and your miss, get the likely cause and one fix to check on video." },
+        { "name": "Swing Analyzer", "url": "https://swinganalyzer.app/", "summary": "Phone video AI, bat sensors and launch monitors compared: what each can and can't judge." },
+        { "name": "Shot Analyzer", "url": "https://shotanalyzer.app/", "summary": "What an AI shot analyzer sees in a basketball, hockey or soccer shot, and how to film it." },
+        { "name": "Home Swing Station", "url": "https://athomeswinganalyzer.com/", "summary": "Build a garage or backyard swing station you can film: net, mat, tee and phone placement." }
+      ]
+    }
+  ],
+  "community": [
+    {
+      "id": "wright-city-sports",
+      "name": "Wright City Sports",
+      "url": "https://wrightcitysports.org/",
+      "summary": "Youth baseball, softball, T-ball, soccer, basketball and cheer in Wright City, Missouri, plus the Sports Closet for gear."
+    },
+    {
+      "id": "coachs-playbook",
+      "name": "Coach's Playbook",
+      "url": "https://coach.wrightcitysports.org/",
+      "summary": "Tips, practice plans, guides and videos for volunteer coaches. No experience required, and it installs like an app."
+    },
+    {
+      "id": "game-day-status",
+      "name": "Game Day Status",
+      "url": "https://gamedaystatus.com/",
+      "summary": "Field and game status for sports events at a glance, like whether the baseball fields are open tonight."
+    }
+  ],
+  "services": [
+    {
+      "id": "radio-to-web",
+      "name": "Radio-to-web and voice-to-web",
+      "url": "https://westplexcountrystore.com/",
+      "email": "radio@smoplab.com",
+      "summary": "Turn a live radio show or any spoken broadcast into a searchable website, automatically: capture, transcribe, structure with AI and publish minutes after sign-off. Built and proven on a tradio swap-shop program west of St. Louis.",
+      "details": [
+        "For tradio, swap-shop and classifieds call-in shows, talk radio, podcasts, and local news and sports call-ins.",
+        "AM, FM, streams and podcasts, with location-aware transcription for regional place names.",
+        "White-label: runs on your schedule and your content, published as your station's site or app."
+      ]
+    },
+    {
+      "id": "smoplab",
+      "name": "Custom AI and app builds",
+      "url": "https://smoplab.com/",
+      "email": "hello@smoplab.com",
+      "summary": "SmopLab LLC builds AI, apps and automation for problems without an off-the-shelf answer. Most projects start with a 72-hour prototype."
+    }
+  ]
+}

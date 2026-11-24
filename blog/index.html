@@ -1,68 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Blog — Jon Maestas</title>
-  <link rel="stylesheet" href="../index.css?v=20251007">
-  <meta name="description" content="Posts, notes, and experiments from Jon Maestas.">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing: Jon Maestas on Building in Public, AI and Athletic Intelligence</title>
+<meta name="description" content="Notes from Jon Maestas on building Player 1 in public, AI agents, Athletic Intelligence, and shipping real products from Wright City, Missouri.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<link rel="canonical" href="https://jonmaestas.com/blog/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Writing: Jon Maestas on Building in Public, AI and Athletic Intelligence">
+<meta property="og:description" content="Notes from Jon Maestas on building Player 1 in public, AI agents, Athletic Intelligence, and shipping real products from Wright City, Missouri.">
+<meta property="og:url" content="https://jonmaestas.com/blog/">
+<meta name="twitter:title" content="Writing: Jon Maestas on Building in Public, AI and Athletic Intelligence">
+<meta name="twitter:description" content="Notes from Jon Maestas on building Player 1 in public, AI agents, Athletic Intelligence, and shipping real products from Wright City, Missouri.">
+<link rel="stylesheet" href="/index.css?v=6a89d305ed">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<link rel="alternate" type="application/rss+xml" title="Jon Maestas: Writing" href="https://jonmaestas.com/blog/feed.xml">
+<link rel="alternate" type="text/plain" title="llms.txt" href="https://jonmaestas.com/llms.txt">
+<meta property="og:site_name" content="Jon Maestas">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://jonmaestas.com/images/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Jon Maestas: Player 1, Diamond Setup, Reindeer Food Co. and free tools for coaches.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@jonmaestas">
+<meta name="twitter:creator" content="@jonmaestas">
+<meta name="twitter:image" content="https://jonmaestas.com/images/og.png">
+<meta name="author" content="Jon Maestas">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://jonmaestas.com/#website",
+      "url": "https://jonmaestas.com/",
+      "name": "Jon Maestas",
+      "description": "Jon Maestas builds Player 1, the free AI sports coach app, plus Diamond Setup for baseball and softball fields, Reindeer Food Co., and free tools for coaches. Wright City, Missouri.",
+      "publisher": {
+        "@id": "https://jonmaestas.com/#person"
+      },
+      "inLanguage": "en-US"
+    },
+    {
+      "@type": "Person",
+      "@id": "https://jonmaestas.com/#person",
+      "name": "Jon Maestas",
+      "url": "https://jonmaestas.com/",
+      "email": "mailto:jon@jonmaestas.com",
+      "jobTitle": "Founder",
+      "description": "Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.",
+      "worksFor": {
+        "@id": "https://jonmaestas.com/#smoplab"
+      },
+      "homeLocation": {
+        "@type": "Place",
+        "name": "Wright City, Missouri"
+      },
+      "alumniOf": {
+        "@type": "CollegeOrUniversity",
+        "name": "Culver-Stockton College"
+      },
+      "knowsAbout": [
+        "AI sports coaching",
+        "Computer vision for sports video",
+        "Youth sports coaching",
+        "iOS and Android app development",
+        "Augmented reality",
+        "AI agents",
+        "Speech-to-text and radio transcription"
+      ],
+      "sameAs": [
+        "https://www.linkedin.com/in/jonmaestas/",
+        "https://github.com/jonmaestas"
+      ]
+    },
+    {
+      "@type": "Blog",
+      "@id": "https://jonmaestas.com/blog/#blog",
+      "url": "https://jonmaestas.com/blog/",
+      "name": "Jon Maestas: Writing",
+      "description": "Notes from Jon Maestas on building Player 1 in public, AI agents, Athletic Intelligence, and shipping real products from Wright City, Missouri.",
+      "author": {
+        "@id": "https://jonmaestas.com/#person"
+      },
+      "publisher": {
+        "@id": "https://jonmaestas.com/#person"
+      },
+      "blogPost": [
+        {
+          "@type": "BlogPosting",
+          "headline": "Using Pólya's \"How to Solve It\" to Make AI Agents Better",
+          "url": "https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html",
+          "datePublished": "2026-07-27",
+          "description": "How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence",
+          "url": "https://jonmaestas.com/blog/2026-07-09-training-sessions.html",
+          "datePublished": "2026-07-09",
+          "description": "New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Athletic Intelligence Means Knowing How to Get Better",
+          "url": "https://jonmaestas.com/blog/2026-06-03-athletic-intelligence-knowing-how-to-get-better.html",
+          "datePublished": "2026-06-03",
+          "description": "Athletic Intelligence is knowing how to get better: seeing your movement, understanding the mistake, and knowing what to fix on the next rep."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "The Player 1 Brand Architecture Funnel",
+          "url": "https://jonmaestas.com/blog/2026-05-25-player-1-brand-architecture-funnel.html",
+          "datePublished": "2026-05-25",
+          "description": "We didn't create two brands to confuse the market — we created one hero product surrounded by an unbreakable funnel of lifestyle CTAs and defensive domains."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Why Your AI Needs a Loop (And a Skill)",
+          "url": "https://jonmaestas.com/blog/2026-05-22-why-your-ai-needs-a-loop.html",
+          "datePublished": "2026-05-22",
+          "description": "The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "My Newest App Feature Cost Less Than a Cup of Coffee",
+          "url": "https://jonmaestas.com/blog/2026-05-20-less-than-a-cup-of-coffee.html",
+          "datePublished": "2026-05-20",
+          "description": "An accidental 4-second lag became Mirror Mode in Player 1 Training. Built and deployed for $1.50."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "The 4-Second Delay That Became a Feature",
+          "url": "https://jonmaestas.com/blog/2026-05-19-the-4-second-delay.html",
+          "datePublished": "2026-05-19",
+          "description": "An accidental projector lag in my barn turned into an instant replay feature for athletes."
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Building in Public",
+          "url": "https://jonmaestas.com/blog/2026-05-18-building-in-public.html",
+          "datePublished": "2026-05-18",
+          "description": "Moving my public writing off social media and onto my own site."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://jonmaestas.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Writing",
+          "item": "https://jonmaestas.com/blog/"
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
-  <main>
-    <header>
-      <p class="post-meta"><a href="../index.html">← Home</a></p>
-      <h1>Blog</h1>
-      <p>Product updates, experiments, and notes on building things.</p>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><img src="/favicon.svg" width="28" height="28" alt=""><span>Jon Maestas</span></a>
+    <nav class="site-nav" aria-label="Main"><a href="/#apps">Apps</a><a href="/#shop">Shop</a><a href="/#tools">Free tools</a><a href="/#guides">Guides</a><a href="/blog/">Writing</a><a href="/about/">About</a></nav>
+    <a class="btn btn-primary btn-sm header-cta" href="https://player1athlete.com/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=header">Get Player 1</a>
+  </div>
+</header>
+<main id="main" class="page">
+  <div class="wrap-prose">
+    <header class="post-header">
+      <p class="eyebrow">Writing</p>
+      <h1>Building in public</h1>
+      <p class="lede">Product updates, experiments and notes on building Player 1, AI agents and Athletic Intelligence. <a href="/blog/feed.xml">RSS</a></p>
     </header>
-
-    <section id="posts">
-      <ul class="post-list">
-        <li>
-          <a href="2026-07-27-how-to-solve-it-polya-ai-agents.html">Using Pólya's "How to Solve It" to Make AI Agents Better</a>
-          <span class="post-date">2026-07-27</span>
-          <p class="post-excerpt">How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.</p>
-        </li>
-        <li>
-          <a href="2026-07-09-training-sessions.html">Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence</a>
-          <span class="post-date">2026-07-09</span>
-          <p class="post-excerpt">New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis.</p>
-        </li>
-        <li>
-          <a href="2026-06-03-athletic-intelligence-knowing-how-to-get-better.html">Athletic Intelligence Means Knowing How to Get Better</a>
-          <span class="post-date">2026-06-03</span>
-          <p class="post-excerpt">Athletic Intelligence is knowing how to get better: seeing your movement, understanding the mistake, and knowing what to fix on the next rep.</p>
-        </li>
-        <li>
-          <a href="2026-05-25-player-1-brand-architecture-funnel.html">The Player 1 Brand Architecture Funnel</a>
-          <span class="post-date">2026-05-25</span>
-          <p class="post-excerpt">We didn't create two brands to confuse the market — we created one hero product surrounded by an unbreakable funnel of lifestyle CTAs and defensive domains.</p>
-        </li>
-        <li>
-          <a href="2026-05-22-why-your-ai-needs-a-loop.html">Why Your AI Needs a Loop (And a Skill)</a>
-          <span class="post-date">2026-05-22</span>
-          <p class="post-excerpt">The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.</p>
-        </li>
-        <li>
-          <a href="2026-05-20-less-than-a-cup-of-coffee.html">My Newest App Feature Cost Less Than a Cup of Coffee</a>
-          <span class="post-date">2026-05-20</span>
-          <p class="post-excerpt">An accidental 4-second lag became Mirror Mode in Player 1 Training. Built and deployed for $1.50.</p>
-        </li>
-        <li>
-          <a href="2026-05-19-the-4-second-delay.html">The 4-Second Delay That Became a Feature</a>
-          <span class="post-date">2026-05-19</span>
-          <p class="post-excerpt">An accidental projector lag in my barn turned into an instant replay feature for athletes.</p>
-        </li>
-        <li>
-          <a href="2026-05-18-building-in-public.html">Building in Public</a>
-          <span class="post-date">2026-05-18</span>
-          <p class="post-excerpt">Moving my public writing off social media and onto my own site.</p>
-        </li>
-      </ul>
-    </section>
-
-    <footer>
-      <small><em>Made by Jon</em></small>
-    </footer>
-  </main>
+    <ul class="post-list"><li>
+  <h2 class="post-title"><a href="/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html">Using Pólya&#x27;s &quot;How to Solve It&quot; to Make AI Agents Better</a></h2>
+  <p class="post-meta"><time datetime="2026-07-27">July 27, 2026</time> · 4 min read</p>
+  <p class="post-excerpt">How George Pólya&#x27;s 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-07-09-training-sessions.html">Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence</a></h2>
+  <p class="post-meta"><time datetime="2026-07-09">July 9, 2026</time> · 3 min read</p>
+  <p class="post-excerpt">New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-06-03-athletic-intelligence-knowing-how-to-get-better.html">Athletic Intelligence Means Knowing How to Get Better</a></h2>
+  <p class="post-meta"><time datetime="2026-06-03">June 3, 2026</time> · 5 min read</p>
+  <p class="post-excerpt">Athletic Intelligence is knowing how to get better: seeing your movement, understanding the mistake, and knowing what to fix on the next rep.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-05-25-player-1-brand-architecture-funnel.html">The Player 1 Brand Architecture Funnel</a></h2>
+  <p class="post-meta"><time datetime="2026-05-25">May 25, 2026</time> · 2 min read</p>
+  <p class="post-excerpt">We didn&#x27;t create two brands to confuse the market — we created one hero product surrounded by an unbreakable funnel of lifestyle CTAs and defensive domains.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-05-22-why-your-ai-needs-a-loop.html">Why Your AI Needs a Loop (And a Skill)</a></h2>
+  <p class="post-meta"><time datetime="2026-05-22">May 22, 2026</time> · 4 min read</p>
+  <p class="post-excerpt">The real magic of agentic AI: the AI iterates with itself so you don&#x27;t have to. One prompt in, one answer out, zero back-and-forth with you.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-05-20-less-than-a-cup-of-coffee.html">My Newest App Feature Cost Less Than a Cup of Coffee</a></h2>
+  <p class="post-meta"><time datetime="2026-05-20">May 20, 2026</time> · 1 min read</p>
+  <p class="post-excerpt">An accidental 4-second lag became Mirror Mode in Player 1 Training. Built and deployed for $1.50.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-05-19-the-4-second-delay.html">The 4-Second Delay That Became a Feature</a></h2>
+  <p class="post-meta"><time datetime="2026-05-19">May 19, 2026</time> · 1 min read</p>
+  <p class="post-excerpt">An accidental projector lag in my barn turned into an instant replay feature for athletes.</p>
+</li><li>
+  <h2 class="post-title"><a href="/blog/2026-05-18-building-in-public.html">Building in Public</a></h2>
+  <p class="post-meta"><time datetime="2026-05-18">May 18, 2026</time> · 1 min read</p>
+  <p class="post-excerpt">Moving my public writing off social media and onto my own site.</p>
+</li></ul>
+    <aside class="post-cta card" aria-label="Player 1">
+  <img class="app-icon" src="/images/apps/player-1-athlete.webp" width="64" height="64" alt="" loading="lazy">
+  <div>
+    <p class="eyebrow">What I build</p>
+    <h2>Player 1 is a free AI sports coach on your phone.</h2>
+    <p>Record a rep, get feedback in seconds on what to keep and what to fix next. 13 sports, no sensors.</p>
+    <div class="store-badges"><a class="store-badge" href="https://apps.apple.com/us/app/player-1-athlete/id6754611410"><img src="/images/badges/app-store.svg" width="120" height="40" alt="Download Player 1 on the App Store"></a><a class="store-badge" href="https://play.google.com/store/apps/details?id=com.player1training.app&amp;referrer=utm_source%3Djonmaestas.com%26utm_medium%3Dreferral%26utm_campaign%3Dportfolio%26utm_content%3Dpost-cta"><img src="/images/badges/google-play.png" width="134" height="40" alt="Get Player 1 on Google Play"></a></div>
+    <p class="small"><a href="/#apps">More apps and tools I build</a></p>
+  </div>
+</aside>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div><h2 class="footer-title">Apps</h2><ul><li><a href="https://player1athlete.com/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Player 1: Athletic Intelligence</a></li><li><a href="https://player1athlete.com/apps/diamondsetup?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Player 1: Diamond Setup</a></li></ul></div>
+    <div><h2 class="footer-title">Shop</h2><ul><li><a href="https://reindeerfood.co/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Reindeer Food Co.</a></li></ul></div>
+    <div><h2 class="footer-title">Free tools</h2><ul><li><a href="/soccer-board/">Soccer Board</a></li><li><a href="/drill-timer.html">Soccer Drill Timer</a></li><li><a href="/juggle-tracker.html">Juggle Tracker</a></li><li><a href="/pocket-golf.html">Pocket Golf</a></li></ul></div>
+    <div><h2 class="footer-title">Projects</h2><ul><li><a href="https://smoplab.com/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">SmopLab LLC</a></li><li><a href="https://westplexcountrystore.com/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Radio-to-web and voice-to-web</a></li><li><a href="https://wrightcitysports.org/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Wright City Sports</a></li><li><a href="https://coach.wrightcitysports.org/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Coach&#x27;s Playbook</a></li><li><a href="https://gamedaystatus.com/?utm_source=jonmaestas.com&amp;utm_medium=referral&amp;utm_campaign=portfolio&amp;utm_content=footer">Game Day Status</a></li></ul></div>
+    <div><h2 class="footer-title">Jon Maestas</h2><ul><li><a href="/blog/">Writing</a></li><li><a href="/about/">About</a></li><li><a href="mailto:jon@jonmaestas.com">Email Jon</a></li><li><a href="https://www.linkedin.com/in/jonmaestas/">LinkedIn</a></li><li><a href="https://github.com/jonmaestas">GitHub</a></li><li><a href="/blog/feed.xml">RSS</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+  </div>
+  <div class="wrap footer-base">
+    <p>© 2026 Jon Maestas · SmopLab LLC · Wright City, Missouri</p>
+  </div>
+</footer>
 </body>
 </html>

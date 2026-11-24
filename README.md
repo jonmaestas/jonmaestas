@@ -7,9 +7,10 @@ Engineer
 I enjoy learning new technologies. I'm always looking for new and better ways to do things and always trying to keep things as simple as possible.
 
 * 🌍  I'm based in Missouri
-* 🖥️  See my portfolio [here](http://jonmaestas.com)
-* ✉️  You can contact me at [jonathan.maestas@gmail.com](mailto:jonathan.maestas@gmail.com)
-* 🚀  I'm currently working on [Wright City Sports](https://wrightcitysports.org), a [Coaching Library of Knowledge](https://coach.wrightcitysports.org), & a [Field Status app](https://gamedaystatus.com).
+* 🖥️  See everything I build at [jonmaestas.com](https://jonmaestas.com)
+* ✉️  You can contact me at [jonathan.maestas@gmail.com](mailto:jonathan.maestas@gmail.com)
+* 🚀  I'm currently building [Player 1](https://player1athlete.com), a free AI sports coach ([iOS](https://apps.apple.com/us/app/player-1-athlete/id6754611410) · [Android](https://play.google.com/store/apps/details?id=com.player1training.app)), [Player 1: Diamond Setup](https://apps.apple.com/us/app/player-1-diamond-setup/id6837315550), an AR field layout app for baseball and softball, and [Reindeer Food Co.](https://reindeerfood.co)
+* 🏟️  I also run [Wright City Sports](https://wrightcitysports.org), the [Coach's Playbook](https://coach.wrightcitysports.org), and [Game Day Status](https://gamedaystatus.com).
 * 🏗️  I build cool stuff.
 
 <a href="https://www.github.com/jonmaestas" target="_blank" rel="noreferrer"><img

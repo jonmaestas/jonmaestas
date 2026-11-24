@@ -1,0 +1,867 @@
+# Jon Maestas: full guide for AI assistants
+
+> Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.
+
+This is the long companion to https://jonmaestas.com/llms.txt. It covers who Jon Maestas is, every product and site he runs, prices, the FAQ, and the full text of every post on his blog.
+
+## How to use this guide
+
+1. The live product sites and app store listings govern. If a price or detail here disagrees with them, they win.
+2. If a fact is not here or on the linked sites, it is not published. Say so instead of guessing, and point people to jon@jonmaestas.com.
+3. It is built from the same data file as jonmaestas.com, so the two always match.
+
+## Who Jon Maestas is
+
+I live in Wright City, Missouri with my wife, Kristin, and our three daughters. They play softball, basketball, soccer and gymnastics, and I still coach them, even in the sports I don't fully know.
+
+In high school I played baseball, basketball and football. I earned a baseball scholarship to Culver-Stockton College in Canton, Missouri, which is where I met Kristin.
+
+I build software through my company, SmopLab LLC. Player 1 started because I wanted something in my pocket that looks at my kids' actual reps, not a random YouTube tip, between practices and lessons.
+
+I write about building in public, AI agents and Athletic Intelligence on the blog.
+
+- Location: Wright City, Missouri
+- Company: SmopLab LLC (https://smoplab.com/), founder
+- College: Culver-Stockton College (baseball scholarship)
+- Knows about: AI sports coaching, Computer vision for sports video, Youth sports coaching, iOS and Android app development, Augmented reality, AI agents, Speech-to-text and radio transcription
+- Email: jon@jonmaestas.com
+- LinkedIn: https://www.linkedin.com/in/jonmaestas/
+- GitHub: https://github.com/jonmaestas
+- Website: https://jonmaestas.com/
+
+## Apps
+
+### Player 1: Athletic Intelligence
+
+The free AI sports coach on your phone. Record a rep or a whole practice. Player 1 finds each rep, tells you what to keep and what to fix next, and you can text your coach film or questions any time. Phone camera only: no bat sensor, launch monitor or wearable.
+
+- 13 sports on one account: baseball, softball, golf, football, basketball, soccer, tennis, volleyball, pickleball, disc golf, gymnastics, hockey, and track & field.
+- Training Sessions: film a full practice and the AI splits it into reps you can compare side by side.
+- Coach Chat: text your coach film or mechanics questions, 24/7.
+- Coach Styles from supportive to demanding, and X-Factor Focus on power, speed, accuracy, balance, timing and more.
+- Built for kids, parents and coaches, and it works for adult golf swings and rec players too.
+
+- Pricing: Free to start, no credit card: 5 reps without an account, 7 free reps every week with a free email sign-in. Pro is $9.99/month or $76/year for unlimited reps.
+- Platforms: iPhone, iPad, Android (iOS, Android)
+- Website: https://player1athlete.com/
+- App Store: https://apps.apple.com/us/app/player-1-athlete/id6754611410
+- Google Play: https://play.google.com/store/apps/details?id=com.player1training.app
+- Also called: Player 1 Athlete, Player One, P1 AI, Athletic Intelligence, Player 1 Training (former name)
+- These domains also lead to player1athlete.com: beplayer1.com, athleticintelligence.ai, player1athletics.com, player1athletes.com, player1trainer.com, player1training.com, playeronetraining.com, p1.coach, p1ai.co, rep2.pro
+- Sport pages:
+  - Baseball: https://player1athlete.com/baseball
+  - Softball: https://player1athlete.com/softball
+  - Golf: https://player1athlete.com/golf
+  - Basketball: https://player1athlete.com/basketball
+  - Soccer: https://player1athlete.com/soccer
+  - Football: https://player1athlete.com/football
+  - Volleyball: https://player1athlete.com/volleyball
+  - Tennis: https://player1athlete.com/tennis
+  - Pickleball: https://player1athlete.com/pickleball
+  - Disc golf: https://player1athlete.com/disc-golf
+  - Gymnastics: https://player1athlete.com/gymnastics
+  - Hockey: https://player1athlete.com/hockey
+  - Track & field: https://player1athlete.com/track-&-field
+- Social: https://www.facebook.com/player1athlete, https://www.instagram.com/player1athlete, https://x.com/player1athlete
+
+### Player 1: Diamond Setup
+
+Lay out a baseball or softball field with your iPhone. Point the phone at the ground and Diamond Setup draws home plate, the pitching rubber and the bases in AR at your league's distances. Set up a bullpen or a whole diamond without a tape measure, then put the real bases on the outlines.
+
+- Bullpen layout for pitching practice, plus Full Field and Base by Base (beta).
+- Presets from 46′ Little League to 60′ 6″ high school and adult baseball, 35′ to 43′ fastpitch, slowpitch, or your own distances.
+- Mound height, feet or meters, and it works with no cell signal.
+- No account, no ads, no tracking. The camera view is never recorded or uploaded.
+- Any iPhone with iOS 18 or later. On LiDAR models the lines follow slopes in the ground.
+
+- Pricing: $4.99 one-time on the App Store (launch promo price). No subscription.
+- Platforms: iPhone (iOS 18 or later)
+- Website: https://player1athlete.com/apps/diamondsetup
+- App Store: https://apps.apple.com/us/app/player-1-diamond-setup/id6837315550
+- How to lay out a baseball or softball field: https://player1athlete.com/apps/diamondsetup/baseball-softball-field-layout
+
+## Shop
+
+### Reindeer Food Co.
+
+Reindeer Food for Christmas Eve. A make-your-own kit of oats, crushed candy cane, dehydrated marshmallows and sprinkles for the kids to mix, or ready-mixed packs measured by hand. On Christmas Eve the kids sprinkle it on the lawn for Santa's reindeer and say the rhyme before bed. Food ingredients only, no glitter.
+
+- Make-your-own kit: $20
+- Ready-mixed, 2 packs: $14
+- Ready-mixed, 3 packs: $15
+- Make-your-own kit $20. Ready-mixed: 2 packs $14, 3 packs $15, extra packs $5 each. Free US shipping, tax included.
+- Order by Tuesday, December 15 for Christmas delivery.
+- Store: https://reindeerfood.co/
+- How to make Reindeer Food: https://reindeerfood.co/how-to-make-reindeer-food/
+- Details for AI assistants: https://reindeerfood.co/llms-full.txt
+
+## Free web tools
+
+Free, in the browser, no download or account.
+
+- [Soccer Board](https://jonmaestas.com/soccer-board/): A 7v7 tactics board for coaches. Move players, draw runs, switch formations, and show Get Big vs. Squeeze.
+- [Soccer Drill Timer](https://jonmaestas.com/drill-timer.html): 45-second ball-mastery reps with self-paced rest. Say "go" to start the next rep, no hands needed.
+- [Juggle Tracker](https://jonmaestas.com/juggle-tracker.html): Counts soccer juggles with your phone's camera, with milestones and a 0 to 100 progression guide.
+- [Pocket Golf](https://jonmaestas.com/pocket-golf.html): Flick-to-swing golf you play against friends, one turn at a time. Driver, iron and putter, and no luck in the lies.
+
+## Free coaching guides
+
+Guide sites Jon publishes for coaches, parents and players. Each one links to Player 1 for video feedback.
+
+### Baseball & softball
+
+- [Baseball Coach Pro](https://baseballcoach.pro/): Practice plans, station rotations and age-by-age skill checkpoints for youth baseball teams.
+- [Softball Coach Pro](https://softballcoach.pro/): Fastpitch windmill pitching, slap hitting and practice plans for travel and high school softball.
+- [Hitting Coach](https://hitting.coach/): The six phases of the swing, the four faults that eat contact, and the tee and toss drills that fix each.
+- [Pitching Analyzer](https://pitchinganalyzer.com/): Six delivery checkpoints you can read from phone video, for the windup, stretch and windmill.
+
+### Basketball
+
+- [Basketball Coach Pro](https://basketballcoach.pro/): Practice plans, station drills and age-appropriate progressions for youth and high school coaches.
+- [How to Fix My Shot](https://howtofixmyshot.com/): Shooting faults by symptom, from a flat arc to a flying elbow, with the drill that fixes each.
+- [Home Shot Lab](https://athomeshotanalyzer.com/): Turn a driveway or backyard goal into a filmed shooting session you can review.
+
+### Golf
+
+- [Golf Coach Pro](https://golfcoach.pro/): What a golf coach checks in a lesson, the one priority that fixes your miss, and how to practice between lessons.
+- [How to Fix My Slice](https://howtofixmyslice.com/): Ball-flight laws, the cause of your slice, and three drills you can hit tonight.
+
+### Pickleball
+
+- [Pickleball Coach Pro](https://pickleballcoach.pro/): The 3.0 to 4.0 climb: the eight shots, a checklist for every level, and practice plans.
+- [The Dink Coach](https://thedink.coach/): Pickleball's soft game: dinks, kitchen-line position, resets and the third shot drop.
+
+### Volleyball & hockey
+
+- [Volleyball Coach Pro](https://volleyballcoach.pro/): Passing, setting, the spike approach and both serves for club and high school players.
+- [Hockey Coach Pro](https://hockeycoach.pro/): Wrist shot, slap shot and backhand mechanics, with off-ice drills and a four-week shooting plan.
+
+### Any sport
+
+- [Practicing at Home](https://practicingathome.com/): Small-space drills, weekly plans and cheap gear lists for 13 sports.
+- [Swing Triage](https://howtofixmyswing.com/): Pick your sport and your miss, get the likely cause and one fix to check on video.
+- [Swing Analyzer](https://swinganalyzer.app/): Phone video AI, bat sensors and launch monitors compared: what each can and can't judge.
+- [Shot Analyzer](https://shotanalyzer.app/): What an AI shot analyzer sees in a basketball, hockey or soccer shot, and how to film it.
+- [Home Swing Station](https://athomeswinganalyzer.com/): Build a garage or backyard swing station you can film: net, mat, tee and phone placement.
+
+## Community
+
+- [Wright City Sports](https://wrightcitysports.org/): Youth baseball, softball, T-ball, soccer, basketball and cheer in Wright City, Missouri, plus the Sports Closet for gear.
+- [Coach's Playbook](https://coach.wrightcitysports.org/): Tips, practice plans, guides and videos for volunteer coaches. No experience required, and it installs like an app.
+- [Game Day Status](https://gamedaystatus.com/): Field and game status for sports events at a glance, like whether the baseball fields are open tonight.
+
+## Work with SmopLab LLC
+
+### Radio-to-web and voice-to-web
+
+Turn a live radio show or any spoken broadcast into a searchable website, automatically: capture, transcribe, structure with AI and publish minutes after sign-off. Built and proven on a tradio swap-shop program west of St. Louis.
+
+- For tradio, swap-shop and classifieds call-in shows, talk radio, podcasts, and local news and sports call-ins.
+- AM, FM, streams and podcasts, with location-aware transcription for regional place names.
+- White-label: runs on your schedule and your content, published as your station's site or app.
+- Website: https://westplexcountrystore.com/
+- Email: radio@smoplab.com
+
+### Custom AI and app builds
+
+SmopLab LLC builds AI, apps and automation for problems without an off-the-shelf answer. Most projects start with a 72-hour prototype.
+
+- Website: https://smoplab.com/
+- Email: hello@smoplab.com
+
+## FAQ
+
+### Who is Jon Maestas?
+
+Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.
+
+### What apps has Jon Maestas built?
+
+Player 1: Athletic Intelligence (https://player1athlete.com/), a free AI sports coach for iPhone and Android, and Player 1: Diamond Setup (https://player1athlete.com/apps/diamondsetup), an AR baseball and softball field layout app for iPhone. He also makes free web tools for coaches and players: Soccer Board, Soccer Drill Timer, Juggle Tracker, Pocket Golf.
+
+### Is Player 1 free?
+
+Free to start, no credit card: 5 reps without an account, 7 free reps every week with a free email sign-in. Pro is $9.99/month or $76/year for unlimited reps.
+
+### What does Player 1: Diamond Setup do?
+
+Point the phone at the ground and Diamond Setup draws home plate, the pitching rubber and the bases in AR at your league's distances. Set up a bullpen or a whole diamond without a tape measure, then put the real bases on the outlines. $4.99 one-time on the App Store (launch promo price). No subscription.
+
+### Where can I buy Reindeer Food?
+
+From Reindeer Food Co. at https://reindeerfood.co/. Make-your-own kit $20. Ready-mixed: 2 packs $14, 3 packs $15, extra packs $5 each. Free US shipping, tax included. Order by Tuesday, December 15 for Christmas delivery.
+
+### Can SmopLab turn my radio show into a website?
+
+Yes. Turn a live radio show or any spoken broadcast into a searchable website, automatically: capture, transcribe, structure with AI and publish minutes after sign-off. Built and proven on a tradio swap-shop program west of St. Louis. Email radio@smoplab.com.
+
+### How do I contact Jon Maestas?
+
+Email jon@jonmaestas.com, or find him on LinkedIn at https://www.linkedin.com/in/jonmaestas/.
+
+## Writing
+
+Every post on https://jonmaestas.com/blog/, newest first, in full.
+
+### Using Pólya's "How to Solve It" to Make AI Agents Better
+
+- URL: https://jonmaestas.com/blog/2026-07-27-how-to-solve-it-polya-ai-agents.html
+- Published: 2026-07-27
+- Summary: How George Pólya's 1945 problem-solving framework — Understand, Plan, Execute, Look Back — improved my AI agents. Wired into Hermes, Pi, and Paseo for sharper outputs and fewer assumptions.
+
+A friend recommended a book to me. I bought it, started reading, and immediately wired it into my AI. Haven't looked back.
+
+The book is *How to Solve It*, by George Pólya, published in 1945. It's about math. But the principles are about everyday problem solving — and they work on machines just as well as they work on people.
+
+My AI systems now have a framework for attacking problems and requests from me. Before, they'd jump straight to an answer. Now they take steps to understand the problem first. They assume less.
+
+#### The Four Steps
+
+Pólya broke problem solving into four steps.
+
+1. **Understand the problem.** Isolate the unknown, the data, the conditions. What are you trying to solve? What do you know? What constrains you?
+2. **Devise a plan.** Find the connection between the data and the unknown. Find an analogous problem. Solve a simpler version. Work backward. Decompose it into smaller parts.
+3. **Carry out the plan.** Execute each step. Check correctness at each step. Can you prove it?
+4. **Look back.** Audit the result. Can you check it? Can you derive it differently? Can you use this for other problems?
+
+Step four is where most people — and most AI — stop. They get an answer and move on. Pólya says: stop and look at what you just did. That's where one-off work turns into a repeatable process.
+
+#### Every Agent Runs It
+
+Each of my agents runs Pólya's system end to end, with every request.
+
+**Hermes** is my chief of staff. Runs on my Mac, manages my life, builds things — this blog post, a drill timer, a game called Pocket Golf. The Pólya framework lives in its system prompt.
+
+**Pi** is my coding agent. Deterministic work. HTML generation, filling templates, making commits.
+
+**Paseo** is a local daemon. Autonomous workflows that run without me watching.
+
+Different jobs. Same loop. Every time.
+
+#### The Agent Writing This Post Is Doing Step One
+
+The agent interviewing me to write this post is doing step one right now. It's asking me questions because its goal is to understand the problem first — not to fire off a guess and hope.
+
+That's the whole shift. The framework forces the AI to slow down before it speeds up.
+
+#### The Actual Prompt
+
+This is what's in my agent's system prompt. Not paraphrased. Not cleaned up. This is the actual text.
+
+```
+## How to Solve It
+
+[ UNDERSTAND ] ➔ Isolate the Unknown, the Data, and the Constraints
+↓
+[ DEVISE PLAN ] ➔ Find an Analogous Problem or Work Backward
+↓
+[ EXECUTE IT ]  ➔ Take Action and Verify the Logic of Each Step
+↓
+[ LOOK BACK ]   ➔ Audit the Outcome and Generalize the Lesson
+
+### 1. Understand the problem
+You cannot solve a problem if you do not know exactly what it is. Brutally isolate the core issue:
+- What is the unknown? Define what a perfect outcome looks like.
+- What are the data? List concrete, unchangeable facts, assets, and current realities.
+- What is the condition? Identify the rules or constraints tying data to the unknown.
+
+### 2. Devise a plan
+A plan is born when you find the connection between current data and the unknown outcome. If stuck:
+- Find an analogous problem — Have you, a friend, or a competitor faced something similar? Reuse their method or result.
+- Solve a simpler version — If the goal is a massive business, get one customer this weekend first.
+- Work backward — Imagine it already solved. Step back day by day to the milestones that made it so.
+- Decompose — Break the obstacle into independent chunks; solve them one by one.
+
+### 3. Carry out the plan
+Patience and strict focus. Avoid messy unforced errors.
+- Check each step — Verify each move is grounded in reality, not wishful thinking.
+- Can you prove it? — Can you clearly explain why this action moves toward the goal?
+
+### 4. Look back
+Most people stop when the fire is out. This is where wisdom is built.
+- Can you check the result? Did it fix the root cause, or only hide symptoms?
+- Can you derive it differently? Cleaner, cheaper, or faster path?
+- Can you use this for other problems? Turn the fix into a permanent rule, habit, checklist, skill, or memory.
+
+Default loop for strategy, product, code, family logistics, and content: understand → plan → execute with proof → look back and generalize.
+```
+
+Copy it. Paste it into your own system prompt. Adapt the examples to your domain. That's all I did.
+
+#### What Changed
+
+The biggest surprise has been the efficiency and the quality of outputs.
+
+The AI takes steps to understand the problem first. It assumes less. That alone changes what comes back.
+
+I haven't done a side-by-side — same prompt, with and without the framework — to measure the gap. That'd be interesting. For now, the difference is obvious enough that I'm not going back.
+
+If you're building with AI agents, give Pólya a read. The book is from 1945. It costs twelve dollars. It changed how my AI works more than any prompt engineering trick I've learned.
+
+[← Back to home](https://jonmaestas.com/index.html)
+
+### Training Sessions: Moving from Rep-by-Rep to Full-Session Intelligence
+
+- URL: https://jonmaestas.com/blog/2026-07-09-training-sessions.html
+- Published: 2026-07-09
+- Summary: New Training Sessions feature records full workouts, auto-identifies reps, enables side-by-side comparison and session-level AI questions. Switched to TwelveLabs Pegasus for consistent video analysis.
+
+Player 1 used to be a rep-by-rep tool. You hit record, did one rep, stopped, and got feedback on that single rep. Then you did it again. And again.
+
+It worked. It was also the slowest, most annoying part of training with the app — for you and for the model.
+
+#### The problem with rep-by-rep
+
+Recording every rep by hand meant you spent half your session playing camera operator. You missed reps because you forgot to hit record. You stopped and started so much you never found a rhythm. And when it was over, you had a pile of disconnected clips instead of an actual workout.
+
+The bigger problem was hiding behind that. Because the model only ever saw one rep at a time, it could only ever tell you about one rep at a time. It couldn’t tell you which reps were your best. It couldn’t tell you your mechanics fell apart in round four. It couldn’t see the session — because no session existed.
+
+#### What changed
+
+Training Sessions fixes that. You hit record once and train. While you work, the app watches the whole thing and finds every rep on its own — swings, throws, shots, runs, whatever the movement is.
+
+When you’re done, you don’t have a pile of clips. You have a session.
+
+The real unlock
+
+Once the model understands a whole session, you can ask about any scope — one rep, a few reps, or the whole thing — and get the same coach-level quality either way.
+
+That wasn’t possible before. A rep-by-rep tool can answer “what went wrong on that swing?” It cannot answer “which three reps were my best?” or “am I getting tired by the end?” Those are session questions. They need a model that sees across reps, not just within one.
+
+**The technical change that made it possible:** I switched the video model from Gemini to TwelveLabs Pegasus in June 2026.
+
+I tried to build this on Gemini first. It’s a strong model, but on longer video it couldn’t reliably identify reps, and its per-rep analysis drifted — same swing, different feedback on different days. The workarounds (frame-by-frame stitching, chunking) were fragile and slow.
+
+##### Gemini
+
+- Strong general model — not built for long video
+- Couldn’t reliably find reps inside a full session
+- Per-rep feedback drifted: same swing, different notes
+- Needed frame-by-frame workarounds (slow, fragile)
+
+##### TwelveLabs Pegasus
+
+- Native video model — ingests a whole clip as one piece
+- Finds every rep on its own
+- Coach-level accuracy, consistent across sessions
+- Faster and cheaper per session
+
+Pegasus is a native video model — built to take in a whole clip and reason about it as one continuous thing, not as a stack of frames. Side by side, it matched coach-level accuracy on individual reps and was more consistent, faster, and cheaper. And because it understands the entire video at once, the session layer finally became possible.
+
+#### What this means
+
+The old app could critique a rep. The new app can read a workout.
+
+That’s the foundation everything else builds on.
+
+### Athletic Intelligence Means Knowing How to Get Better
+
+- URL: https://jonmaestas.com/blog/2026-06-03-athletic-intelligence-knowing-how-to-get-better.html
+- Published: 2026-06-03
+- Summary: Athletic Intelligence is knowing how to get better: seeing your movement, understanding the mistake, and knowing what to fix on the next rep.
+
+I was trying to put simple words around **Athletic Intelligence** because it cannot just sound cool.
+
+If the phrase only works in a pitch deck, it is useless. It has to mean something to a parent sitting on a bucket. It has to mean something to a coach trying to help twenty kids in one practice. It has to mean something to a kid taking reps in the backyard, trying to figure out why the ball keeps sailing high or why the swing keeps getting long.
+
+So here is the plain English version:
+
+**Athletic Intelligence is knowing how to get better.**
+
+Not just wanting to get better. Not just training more. Knowing how to see what happened, understand why it happened, and make the next rep better.
+
+Player 1 definition
+
+Athletic Intelligence is the ability to see, understand, and improve how you move.
+
+#### Raw athleticism is not the whole thing
+
+Raw athleticism matters. Speed matters. Strength matters. Arm talent matters. Explosiveness matters. Nobody serious is pretending otherwise.
+
+But sports performance is not only who jumps highest or throws hardest. There is another layer that separates athletes who keep improving from athletes who just keep repeating the same mistake at full speed.
+
+That layer is Athletic Intelligence.
+
+##### Raw Athleticism
+
+Can do
+
+- Runs fast
+- Throws hard
+- Jumps high
+- Moves with power
+
+##### Athletic Intelligence
+
+Can adjust
+
+- Sees the mistake
+- Understands the pattern
+- Applies feedback
+- Improves the next rep
+
+The best athletes have both. They have the physical tools, and they have the awareness to sharpen those tools.
+
+They can feel when their timing is off. They can recognize when their front side is flying open. They can hear a coach say one specific thing and actually turn it into a different movement.
+
+#### Most young athletes do not need more vague advice
+
+A lot of kids are already working. They are taking swings. Taking shots. Throwing bullpens. Doing footwork. Going to lessons. Going to practice. Playing games on the weekend.
+
+The problem is not always effort.
+
+The problem is that the feedback is blurry.
+
+They hear:
+
+- “Just focus.”
+- “Be more athletic.”
+- “Stay smooth.”
+- “You’re rushing.”
+- “Do it again.”
+
+Sometimes that advice is true. It is just not specific enough to change the next rep.
+
+Young athletes need clearer feedback:
+
+- “Your elbow dropped.”
+- “Your knee is collapsing.”
+- “Your footwork is late.”
+- “Your release point changed.”
+- “Your head is pulling off before contact.”
+- “Here’s what to fix on the next rep.”
+
+That is the meat. That is the difference between a kid doing ten more reps and a kid learning from ten reps.
+
+#### The rep feedback loop
+
+Improvement is a loop. The athlete does something. The movement creates a result. The athlete or coach notices what happened. Then the athlete makes a specific adjustment.
+
+If that loop is broken, the athlete can work hard and still stay stuck.
+
+Player 1 is built around that loop.
+
+It is not just telling athletes to train more. It helps them see their mechanics, understand their mistakes, and know what to fix next.
+
+#### What Athletic Intelligence looks like in real life
+
+In baseball, it might be a hitter realizing the swing is not “bad” in some general way. The issue is the barrel is late because the front foot is getting down late. That is fixable. Now the next rep has a target.
+
+For a pitcher, it might be seeing that the release point changed when fatigue set in. The ball started missing arm-side, but the real issue was the body drifting and the arm trying to catch up.
+
+In basketball, it might be a player missing short because the base is narrow and the balance is fading. The answer is not “shoot better.” The answer is to fix the feet and hold the finish.
+
+In speed work, it might be noticing that the athlete is powerful but leaking force because the knee collapses on the cut. More effort will not solve that. Better awareness will.
+
+This is why Athletic Intelligence matters. It turns sports from a guessing game into a learning process.
+
+#### The parent version
+
+Parents do not need a science lecture. They need to know if the tool helps their kid get better.
+
+So the parent version is simple:
+
+**Your athlete does the rep. Player 1 helps show what happened. Then your athlete knows what to work on next.**
+
+That is useful in the backyard. That is useful in the cage. That is useful between lessons when nobody else is watching.
+
+#### The coach version
+
+Coaches already see a lot. Good coaches can spot patterns fast. But they cannot stand next to every athlete on every rep, rewind every movement, and explain every mechanical breakdown in real time.
+
+Athletic Intelligence gives coaches a cleaner language for what they are already trying to teach.
+
+Not motivation. Not hype. Specific movement feedback.
+
+“This is what your body did. This is why the result happened. This is the adjustment.”
+
+#### The athlete version
+
+For the kid, the whole thing has to be even simpler.
+
+**See it. Understand it. Fix it.**
+
+That is Athletic Intelligence.
+
+It is the difference between getting mad and getting information. It is the difference between blaming the bat, the ball, the rim, the mound, the shoes, or the weather — and actually learning what to change.
+
+Every rep is data if you know how to look at it.
+
+#### Why this definition matters
+
+When I was trying to define Athletic Intelligence, I kept coming back to the same rule: it has to survive contact with real people.
+
+A parent should understand it. A coach should respect it. A kid should be able to use it.
+
+That is why I like the plain English definition best.
+
+**Athletic Intelligence is knowing how to get better.**
+
+It is not raw athleticism. It is not just effort. It is not just more reps.
+
+It is seeing your movement, understanding the mistake, and knowing what to fix on the next rep.
+
+### The Player 1 Brand Architecture Funnel
+
+- URL: https://jonmaestas.com/blog/2026-05-25-player-1-brand-architecture-funnel.html
+- Published: 2026-05-25
+- Summary: We didn't create two brands to confuse the market — we created one hero product surrounded by an unbreakable funnel of lifestyle CTAs and defensive domains.
+
+When pitching the shift from "Player 1 Training" to "Athletic Intelligence," my investment partner pushed back: managing two separate brands (Player 1 as the app, Athletic Intelligence as the tech engine) would confuse customers and split marketing efforts. It felt like asking the market to hold two names in their heads at once.
+
+But I clarified that it wasn't a split brand — it was a masterclass in funneling.
+
+The problem with "Player 1 Training" was that the word "training" sounded like a generic local gym or batting cage. To signal premium, data-driven sports technology, the pivot was required. But instead of throwing away the engaging "Player 1" identity, we built a multi-tiered domain fortress that funnels everything into one unified product.
+
+##### The Vault (The Moat)
+
+athleticintelligence.ai
+
+player1athletics.com
+
+##### The CTA & Merch
+
+beplayer1.com
+
+↓↓↓
+
+##### The Rebrand & Main Hub
+
+player1athlete.com
+
+App Title: Player 1: Athletic Intelligence
+
+The strategy:
+
+1. **The App Title (The Hook):** "Player 1: Athletic Intelligence." "Player 1" is what the kids call it because it has main-character energy. "Athletic Intelligence" is the App Store subtitle that wins the search algorithms for coaches and parents looking for serious tech.
+2. **The Rebrand & Main Hub:** `player1athlete.com`. Singular, aspirational, and athlete-centric.
+3. **The CTA & Merch:** `beplayer1.com`. It's an active command. When slapped on the back of team warm-ups or rolling bags, it’s not just a URL — it’s a lifestyle brand that drives organic real-world traffic straight back to the app.
+4. **The Vault (The Moat):** `player1athletics.com` & `athleticintelligence.ai`. SmopLab LLC holds these to prevent competitors from siphoning traffic. They act as premium B2B redirects: if a coach searches for the "Athletic Intelligence" they saw in the App Store, the .ai domain catches them and drops them directly onto the Player 1 Athlete landing page.
+
+The result: There is only one horse. The app is Player 1 Athlete. The rest are just funnels, moats, and search-engine magnets feeding a single ecosystem.
+
+*We didn't create two brands to confuse the market — we created one hero product surrounded by an unbreakable funnel of lifestyle CTAs and defensive domains.*
+
+### Why Your AI Needs a Loop (And a Skill)
+
+- URL: https://jonmaestas.com/blog/2026-05-22-why-your-ai-needs-a-loop.html
+- Published: 2026-05-22
+- Summary: The real magic of agentic AI: the AI iterates with itself so you don't have to. One prompt in, one answer out, zero back-and-forth with you.
+
+You already know how to iterate with AI.
+
+You type a prompt. It gives you something close. You adjust. It gets better. You adjust again. Eventually it's right.
+
+That back-and-forth isn't new. You've been doing it since ChatGPT came out.
+
+But here's what most people miss: **that back-and-forth can happen without you.**
+
+#### The ChatGPT Dance
+
+This is what everyone does today. You and the AI volley until it's right:
+
+```
+
+You:  "How much revenue did we do last quarter?"
+
+AI:   "Here's a breakdown by month..."
+❌ (wrong — you needed by region)
+
+You:  "No, I need it broken down by region."
+
+AI:   "Here's Q3 revenue by region..."
+❌ (wrong — you said Q4)
+
+You:  "That's Q3. I said Q4."
+
+AI:   "Here's Q4 revenue by region..."
+✅ (finally right, after 3 tries)
+
+```
+
+Three prompts from you. Three responses from the AI. That's the standard experience.
+
+The user is driving the iteration. The user is the one saying "no, that's wrong, try again."
+
+#### Now Flip It
+
+What if instead of *you* doing that back-and-forth, the AI did it with itself?
+
+Same task. Same model. Same tools. But this time, **you send one prompt and walk away.**
+
+Inside the system, the AI generates a query, checks the result, realizes it's wrong, tries a different query, checks again, combines findings, validates, and only when it's satisfied does it return *one single answer* to you.
+
+```
+
+You:  "How much revenue did we do last quarter?"
+
+────────────────────────────────────────────────────
+AI goes to work — you do nothing
+────────────────────────────────────────────────────
+
+Query 1: by month → "Does this match the ask? No."
+Query 2: Q3 by region → "Does this match the ask? No."
+Query 3: Q4 by product → "Does this match the ask? No."
+Query 4: Q4 by region → "Does this match the ask? Yes. ✅"
+
+────────────────────────────────────────────────────
+
+AI:   "Here's Q4 revenue by region..."
+✅ Right on the first response to YOU
+
+```
+
+Fundamentally, it's the same thing. There's still iteration. There's still trial and error. There's still correction.
+
+But **the AI is doing the prompting, not you.** It's going back and forth with itself instead of with you.
+
+One prompt in. One answer out. Zero back-and-forth with a human.
+
+#### How the Loop Works
+
+All agents have a **finish reason**. It's a signal that says why the agent stopped: did it call a tool? Did it finish answering? Did it hit a limit?
+
+I used that finish reason to build a loop. The agent calls a tool, gets a result, checks if the result satisfies the original request, and uses the finish reason to decide whether to keep going or stop.
+
+Type a question. Get an answer. That's it.
+
+#### But Even Loops Fumble
+
+Here's the catch: even with a loop, the AI still has to figure out the right approach every single time.
+
+Ask it a SQL question today, it tries four queries before getting it right. Ask a similar question tomorrow, it tries four queries again.
+
+That's not intelligence. That's persistence.
+
+#### From Tools to Skills
+
+This is where the real leap happens.
+
+You can hand a carpenter some two-by-fours, a hammer, nails, a nail gun, and an air compressor. Those are **tools**.
+
+But until you teach them how to frame a wall, they're just holding equipment. Once they know the sequence, the spacing, the technique — it's now a **skill** they carry with them.
+
+🔨🧱🪵
+
+Tools
+
+Hammer, nails, lumber, nail gun, compressor. Equipment scattered on the ground.
+
+→
+
+Skill
+
+🧱
+
+Skill
+
+"Frame the wall." The carpenter knows the sequence. The result is immediate.
+
+Or think about IKEA furniture. You get pieces, fasteners, and tools. But you also get instructions. The instructions — the script — *that's the skill*.
+
+📦
+
+Pieces + Tools
+
+Screws, panels, Allen wrench. Just raw materials.
+
+→
+
+Instructions
+
+📚
+
+Skill
+
+Step 1, Step 2, Step 3... The manual IS the skill. Follow it, get the result.
+
+For an AI, tools are the functions it can call. Skills are the learned procedures that tell it which tools to use, in what order, and with what parameters — because it's already done the trial-and-error once.
+
+The first time, it might try four SQL queries before getting it right. The second time, with the skill captured, it knows which query pattern works for that type of question.
+
+```
+
+FIRST TIME (loop only, no skill)
+
+You:  "Q3 revenue by region?"
+↓
+Query 1 → wrong columns → retry
+Query 2 → wrong filter → retry
+Query 3 → wrong join → retry
+Query 4 → correct ✅
+↓
+4 iterations. You waited. It got there.
+
+SECOND TIME (skill applied)
+
+You:  "Q4 revenue by region?"
+↓
+SKILL: revenue_query_pattern
+↓
+Query 1 → correct ✅
+↓
+1 iteration. Instant.
+
+```
+
+The skill is the instruction manual built from real experience. Not generic documentation — the specific sequence that worked.
+
+#### What This Changes
+
+Most people think the next breakthrough in AI is a bigger model with more parameters.
+
+It's not.
+
+The breakthrough is architecture. One prompt in. The AI iterates with itself. One answer out. Then capture that iteration as a skill so it never has to relearn it.
+
+And I think it can go further: one-in, many-out. Many-in, one-out. Zero-in, many-out.
+
+The model doesn't change. The way you use it does.
+
+### My Newest App Feature Cost Less Than a Cup of Coffee
+
+- URL: https://jonmaestas.com/blog/2026-05-20-less-than-a-cup-of-coffee.html
+- Published: 2026-05-20
+- Summary: An accidental 4-second lag became Mirror Mode in Player 1 Training. Built and deployed for $1.50.
+
+My newest app feature cost less than a cup of coffee.
+
+The idea happened completely by accident.
+
+I was out in the barn with my daughter practicing.
+
+We accidentally created a 4-second video lag on the projector while recording.
+
+She could watch herself in delayed real-time without touching the phone.
+
+Zero control or interaction with the device.
+
+Rep after rep, she could self-correct by glancing at the wall.
+
+$1.50
+
+Total cost to build and deploy
+
+🚀
+
+$1.50
+
+Mirror Mode
+
+VS
+
+☕
+
+$5.00
+
+Latte
+
+That accidental lag is now Mirror Mode in Player 1 Training.
+
+Instant replay without stopping the session.
+
+I built and deployed it with an AI coding agent.
+
+BUILD RECEIPT
+
+AI coding agent (Pi)$0.80
+
+Inference / tokens$0.45
+
+Deployment$0.25
+
+TOTAL$1.50
+
+Less than a cup of coffee. Shipping in production.
+
+### The 4-Second Delay That Became a Feature
+
+- URL: https://jonmaestas.com/blog/2026-05-19-the-4-second-delay.html
+- Published: 2026-05-19
+- Summary: An accidental projector lag in my barn turned into an instant replay feature for athletes.
+
+I was in the sports barn with Megan the other night, working on back bends and kickovers.
+
+I hooked my phone up to a cheap projector so we could pull up YouTube videos. While we were at it, I opened the camera to record her.
+
+The camera synced to the projector and turned the wall into a mirror.
+
+But something caused a 4-second lag.
+
+🐛
+
+Bug
+
+Lag ruins real-time feedback. Throw it away.
+
+✨
+
+Feature
+
+Lag becomes instant replay without touching the phone.
+
+At first I thought it was broken.
+
+Then Megan did a backbend and looked over at the screen. She watched herself complete the move in real time.
+
+She said, "This is awesome — I can see myself doing a backbend."
+
+```
+
+📱 Phone (Camera)
+↓
+⏱️ 4-second delay
+↓
+📽️ Projector
+↓
+🪞 Wall = Mirror
+↓
+✅ Athlete sees rep, self-corrects, repeats
+
+```
+
+The lag, normally a digital sin, became instant replay.
+
+No stopping to record, review, and rewind. She could do reps at her own cadence, glance over, and self-correct.
+
+That accident became Mirror Mode in Player 1 Training.
+
+A feature born from a dad trying to help his daughter and a cheap projector's glitch.
+
+### Building in Public
+
+- URL: https://jonmaestas.com/blog/2026-05-18-building-in-public.html
+- Published: 2026-05-18
+- Summary: Moving my public writing off social media and onto my own site.
+
+I've been posting on LinkedIn and X for years. Then it hit me: I don't own any of it.
+
+Platforms change the rules, throttle your reach, or just die. Your content lives on someone else's servers, subject to their algorithm. Not great.
+
+```
+
+BEFORE                              AFTER
+
+📢 Social Media                    🏠 jonmaestas.com
+↓                                   ↓
+⚠️  Their rules                ✅  My rules
+↓                                   ↓
+⚠️  Their servers              ✅  My domain
+↓                                   ↓
+⚠️  Ephemeral                  ✅  Permanent
+↓                                   ↓
+⚠️  Opaque to LLMs            ✅  llms.txt
+
+```
+
+So I'm moving my public writing here. This site is the canonical source. If an LLM or a human wants to know what I'm working on, this is the place.
+
+Player 1 Training
+
+Westplex Country Store
+
+AI experiments & automation
+
+Engineering notes
+
+You'll find updates on the stuff I'm building, things I break, and what I learn along the way. No algorithm. No feed. Just the work.
