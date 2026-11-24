@@ -46,7 +46,7 @@ ORG_ID = f"{SITE}/#smoplab"
 WEBSITE_ID = f"{SITE}/#website"
 POST_FILE = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)\.html$")
 SLOT = re.compile(r"\{\{(\w+)\}\}")
-UNTRACKED_HOSTS = ("apps.apple.com", "buy.stripe.com", "jonmaestas.com")
+UNTRACKED_HOSTS = ("apps.apple.com", "buy.stripe.com", "jonmaestas.com", "youtube.com")
 
 
 def live(items):
@@ -404,17 +404,35 @@ def app_ld(app):
     }
 
 
+def press_line(p):
+    return (f"Featured on {p['outlet']} by {p['hosts']} in \"{p['segment']}\" "
+            f"({human_date(p['date'])}, at {p['timestamp']}): {p['url']}")
+
+
+def video_ld(p):
+    return {
+        "@type": "VideoObject",
+        "name": f"{p['outlet']}: {p['episode']}",
+        "description": f"{p['hosts']} feature Reindeer Food Co. at {p['timestamp']} in \"{p['segment']}\".",
+        "uploadDate": p["date"],
+        "thumbnailUrl": p["thumbnailRemote"],
+        "url": p["url"],
+        "publisher": {"@type": "Organization", "name": p["outlet"]},
+    }
+
+
 def shop_ld(shop):
     return {
         "@type": "OnlineStore",
         "@id": f"{SITE}/#{shop['id']}",
         "name": shop["name"],
         "url": shop["url"],
-        "description": f"{shop['tagline']} {shop['summary']}",
+        "description": f"{shop['tagline']} {shop['madeByAbout']} {shop['summary']}",
         "image": absolute(shop["image"]),
         "parentOrganization": {"@id": ORG_ID},
         "makesOffer": [{"@type": "Offer", "name": o["name"], "price": o["price"], "priceCurrency": "USD"}
                        for o in shop["offers"]],
+        "subjectOf": [video_ld(p) for p in shop.get("press", [])],
     }
 
 
@@ -460,6 +478,8 @@ def faq():
         ("Is Player 1 free?", P1["pricing"]),
         ("What does Player 1: Diamond Setup do?", f"{diamond['summary']} {diamond['pricing']}"),
         ("Where can I buy Reindeer Food?", f"From Reindeer Food Co. at {reindeer['url']}. {reindeer['pricing']}{note}"),
+        ("Who runs Reindeer Food Co.?",
+         " ".join([reindeer["madeByAbout"]] + [press_line(p) for p in reindeer.get("press", [])])),
         ("Can SmopLab turn my radio show into a website?",
          f"Yes. {radio['summary']} Email {radio['email']}."),
         ("How do I contact Jon Maestas?",
@@ -487,7 +507,7 @@ def hero_tiles():
     tiles = [
         (P1["shortName"], "AI sports coach", P1["icon"], "#player-1"),
         (diamond["shortName"], "AR field layout", diamond["icon"], "#diamond-setup"),
-        (SHOP[0]["name"], "Christmas Eve kits", SHOP[0]["icon"], "#reindeer-food"),
+        (SHOP[0]["name"], "Run by my kids", SHOP[0]["icon"], "#reindeer-food"),
         (board["name"], "Free tactics board", board["icon"], "#tools"),
     ]
     return "".join(f"""<a class="tile" href="{href}">
@@ -562,6 +582,7 @@ def render_shop():
        sizes="(min-width: 860px) 360px, 100vw" width="800" height="952" alt="{e(shop['imageAlt'])}" loading="lazy">
   <div class="shop-body">
     <h3 class="product-name">{e(shop['name'])}</h3>
+    <p class="made-by">{e(shop['madeBy'])}</p>
     <p>{e(shop['summary'])}</p>
     {note}
     <ul class="offers">{offers}</ul>
@@ -570,6 +591,7 @@ def render_shop():
       <a class="btn btn-primary" href="{e(tracked(shop['url'], 'shop'))}">Shop {domain(shop['url'])}</a>
       <a class="btn btn-ghost" href="{e(tracked(shop['recipe']['url'], 'shop'))}">{e(shop['recipe']['name'])}</a>
     </div>
+    {render_press(shop.get('press', []))}
   </div>
 </article>""")
     if HOLIDAY:
@@ -579,6 +601,17 @@ def render_shop():
 </a>""" for h in HOLIDAY)
         out.append(f'<h3 class="subhead">More Christmas from Reindeer Food Co.</h3><div class="grid grid-mini">{cards}</div>')
     return "\n".join(out)
+
+
+def render_press(press):
+    return "".join(f"""<a class="press" href="{e(p['url'])}">
+  <img src="{p['thumbnail']}" width="160" height="90" alt="" loading="lazy">
+  <span class="press-text">
+    <span class="press-label">Featured on {e(p['outlet'])}</span>
+    <span class="press-title">{e(p['hosts'])}: “{e(p['segment'])}”</span>
+    <span class="press-meta">Watch the segment at {e(p['timestamp'])}</span>
+  </span>
+</a>""" for p in press)
 
 
 def render_tools():
@@ -664,14 +697,14 @@ def build_home(posts):
 def build_about():
     title = "About Jon Maestas: Builder, Parent-Coach, Founder of SmopLab"
     description = ("Jon Maestas is a software builder and parent-coach in Wright City, Missouri, founder of SmopLab LLC, "
-                   "and the maker of Player 1, Diamond Setup and Reindeer Food Co.")
+                   "and the maker of Player 1 and Diamond Setup. His kids created and operate Reindeer Food Co.")
     graph = [website_ld(), person_ld(), org_ld(),
              {"@type": "ProfilePage", "@id": f"{SITE}/about/#page", "url": f"{SITE}/about/", "name": title,
               "description": description, "isPartOf": {"@id": WEBSITE_ID}, "mainEntity": {"@id": PERSON_ID}},
              breadcrumb_ld(("Home", SITE + "/"), ("About", f"{SITE}/about/"))]
     bio = "".join(f"<p>{e(p)}</p>" for p in PERSON["bio"])
     built = [(a["name"], tracked(a["url"], "about"), a["tagline"]) for a in APPS] + \
-            [(s["name"], tracked(s["url"], "about"), s["tagline"]) for s in SHOP] + \
+            [(s["name"], tracked(s["url"], "about"), f"{s['tagline']} {s['madeBy']}") for s in SHOP] + \
             [(h["name"], tracked(h["url"], "about"), h["summary"]) for h in HOLIDAY] + \
             [(t["name"], t["url"], t["summary"]) for t in TOOLS] + \
             [(c["name"], tracked(c["url"], "about"), c["summary"]) for c in COMMUNITY] + \
@@ -824,7 +857,8 @@ def build_llms(posts):
         lines.append(f"- [{a['name']}]({a['url']}): {a['tagline']} {a['summary']} {a['pricing']} {stores}")
     lines += ["", "## Shop", ""]
     for s in SHOP:
-        lines.append(f"- [{s['name']}]({s['url']}): {s['tagline']} {s['summary']} {s['pricing']}")
+        press = " ".join(press_line(p) for p in s.get("press", []))
+        lines.append(f"- [{s['name']}]({s['url']}): {s['tagline']} {s['madeByAbout']} {s['summary']} {s['pricing']} {press}")
     for h in HOLIDAY:
         lines.append(f"- [{h['name']}]({h['url']}): {h['summary']}")
     lines += ["", "## Free web tools", ""]
@@ -1023,13 +1057,14 @@ def build_llms_full(posts):
 
     L += ["## Shop", ""]
     for s in SHOP:
-        L += [f"### {s['name']}", "", f"{s['tagline']} {s['summary']}", ""]
+        L += [f"### {s['name']}", "", f"{s['tagline']} {s['madeByAbout']} {s['summary']}", ""]
         L += [f"- {o['name']}: ${o['price']}" for o in s["offers"]]
         L += [f"- {s['pricing']}"]
         if TODAY.isoformat() <= s["noteUntil"]:
             L.append(f"- {s['note']}")
         L += [f"- Store: {s['url']}", f"- {s['recipe']['name']}: {s['recipe']['url']}",
-              f"- Details for AI assistants: {s['url'].rstrip('/')}/llms-full.txt", ""]
+              f"- Details for AI assistants: {s['url'].rstrip('/')}/llms-full.txt"]
+        L += [f"- {press_line(p)}" for p in s.get("press", [])] + [""]
     if HOLIDAY:
         L += ["### More Christmas sites from Reindeer Food Co.", ""]
         L += [f"- [{h['name']}]({h['url']}): {h['summary']}" for h in HOLIDAY]

@@ -3,8 +3,8 @@
     "url": "https://jonmaestas.com",
     "name": "Jon Maestas",
     "title": "Jon Maestas: Apps for Athletes, Coaches and Families",
-    "description": "Jon Maestas builds Player 1, the free AI sports coach app, plus Diamond Setup for baseball and softball fields, Reindeer Food Co., and free tools for coaches. Wright City, Missouri.",
-    "twitter": "@jonmaestas",
+    "description": "Jon Maestas builds Player 1, the free AI sports coach app, Diamond Setup for baseball and softball fields, and free tools for coaches. His kids run Reindeer Food Co. Wright City, Missouri.",
+    "twitter": "@jonathanmaestas",
     "utm": "utm_source=jonmaestas.com&utm_medium=referral&utm_campaign=portfolio"
   },
   "person": {
@@ -12,7 +12,7 @@
     "email": "jon@jonmaestas.com",
     "jobTitle": "Founder",
     "location": "Wright City, Missouri",
-    "summary": "Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.",
+    "summary": "Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and free web tools and guides for coaches and athletes. His kids created and operate Reindeer Food Co., a Christmas Eve business featured on The Next New Thing.",
     "bio": [
       "I live in Wright City, Missouri with my wife, Kristin, and our three daughters. They play softball, basketball, soccer and gymnastics, and I still coach them, even in the sports I don't fully know.",
       "In high school I played baseball, basketball and football. I earned a baseball scholarship to Culver-Stockton College in Canton, Missouri, which is where I met Kristin.",
@@ -31,11 +31,13 @@
     ],
     "sameAs": [
       "https://www.linkedin.com/in/jonmaestas/",
-      "https://github.com/jonmaestas"
+      "https://github.com/jonmaestas",
+      "https://x.com/jonathanmaestas"
     ],
     "links": [
       { "name": "LinkedIn", "url": "https://www.linkedin.com/in/jonmaestas/" },
-      { "name": "GitHub", "url": "https://github.com/jonmaestas" }
+      { "name": "GitHub", "url": "https://github.com/jonmaestas" },
+      { "name": "X", "url": "https://x.com/jonathanmaestas" }
     ]
   },
   "organization": {
@@ -121,6 +123,21 @@
       "id": "reindeer-food",
       "name": "Reindeer Food Co.",
       "tagline": "Reindeer Food for Christmas Eve.",
+      "madeBy": "A business my kids created and operate.",
+      "madeByAbout": "Created and operated by Jon Maestas's kids.",
+      "press": [
+        {
+          "outlet": "The Next New Thing",
+          "hosts": "Andrew Warner and Corey Ganim",
+          "segment": "Kids build a business with Claude Code",
+          "episode": "Free customers from ChatGPT, Claude manages your money, & the best ai releases",
+          "date": "2026-11-12",
+          "timestamp": "4:12",
+          "url": "https://www.youtube.com/watch?v=-od42nAhUjo&t=252s",
+          "thumbnail": "/images/press/next-new-thing.webp",
+          "thumbnailRemote": "https://i.ytimg.com/vi/-od42nAhUjo/maxresdefault.jpg"
+        }
+      ],
       "summary": "A make-your-own kit of oats, crushed candy cane, dehydrated marshmallows and sprinkles for the kids to mix, or ready-mixed packs measured by hand. On Christmas Eve the kids sprinkle it on the lawn for Santa's reindeer and say the rhyme before bed. Food ingredients only, no glitter.",
       "offers": [
         { "name": "Make-your-own kit", "price": "20", "url": "https://buy.stripe.com/00w5kEgj93Cvg3i9sl7N604?client_reference_id=jonmaestas" },

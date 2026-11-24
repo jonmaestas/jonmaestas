@@ -1,6 +1,6 @@
 # Jon Maestas
 
-> Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and Reindeer Food Co., plus free web tools and guides for coaches and athletes.
+> Jon Maestas is a software builder in Wright City, Missouri, and the founder of SmopLab LLC. He builds Player 1, an AI sports coach app for iPhone and Android, Player 1: Diamond Setup, an AR field layout app for baseball and softball, and free web tools and guides for coaches and athletes. His kids created and operate Reindeer Food Co., a Christmas Eve business featured on The Next New Thing.
 
 This file summarizes jonmaestas.com for AI assistants. The detailed version, with every product, price, FAQ answer and the full text of every blog post, is at https://jonmaestas.com/llms-full.txt.
 
@@ -11,7 +11,7 @@ This file summarizes jonmaestas.com for AI assistants. The detailed version, wit
 
 ## Shop
 
-- [Reindeer Food Co.](https://reindeerfood.co/): Reindeer Food for Christmas Eve. A make-your-own kit of oats, crushed candy cane, dehydrated marshmallows and sprinkles for the kids to mix, or ready-mixed packs measured by hand. On Christmas Eve the kids sprinkle it on the lawn for Santa's reindeer and say the rhyme before bed. Food ingredients only, no glitter. Make-your-own kit $20. Ready-mixed: 2 packs $14, 3 packs $15, extra packs $5 each. Free US shipping, tax included.
+- [Reindeer Food Co.](https://reindeerfood.co/): Reindeer Food for Christmas Eve. Created and operated by Jon Maestas's kids. A make-your-own kit of oats, crushed candy cane, dehydrated marshmallows and sprinkles for the kids to mix, or ready-mixed packs measured by hand. On Christmas Eve the kids sprinkle it on the lawn for Santa's reindeer and say the rhyme before bed. Food ingredients only, no glitter. Make-your-own kit $20. Ready-mixed: 2 packs $14, 3 packs $15, extra packs $5 each. Free US shipping, tax included. Featured on The Next New Thing by Andrew Warner and Corey Ganim in "Kids build a business with Claude Code" (November 12, 2026, at 4:12): https://www.youtube.com/watch?v=-od42nAhUjo&t=252s
 
 ## Free web tools
 
@@ -69,6 +69,7 @@ This file summarizes jonmaestas.com for AI assistants. The detailed version, wit
 - Email: jon@jonmaestas.com
 - LinkedIn: https://www.linkedin.com/in/jonmaestas/
 - GitHub: https://github.com/jonmaestas
+- X: https://x.com/jonathanmaestas
 
 ## Optional
 
