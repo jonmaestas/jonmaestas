@@ -58,6 +58,7 @@ P1 = next(a for a in APPS if a["id"] == "player-1")
 SHOP = DATA["shop"]
 HOLIDAY = live(DATA["holiday"])
 TOOLS = DATA["tools"]
+UTILITIES = DATA["utilities"]
 GUIDES = DATA["guides"]
 COMMUNITY = DATA["community"]
 SERVICES = DATA["services"]
@@ -196,6 +197,7 @@ GLYPHS = {
     "book": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7"/></svg>',
     "board": '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/></svg>',
     "trophy": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+    "qr": '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M17 20h4M20 17v3"/></svg>',
 }
 
 
@@ -269,7 +271,7 @@ def site_footer():
 
     apps = [(a["name"], tracked(a["url"], "footer")) for a in APPS]
     shop = [(s["name"], tracked(s["url"], "footer")) for s in SHOP + HOLIDAY]
-    tools = [(t["name"], t["url"]) for t in TOOLS]
+    tools = [(t["name"], t["url"]) for t in TOOLS + UTILITIES]
     company = [(ORG["name"], tracked(ORG["url"], "footer"))] + \
               [(s["name"], tracked(s["url"], "footer")) for s in SERVICES if s["url"] != ORG["url"]] + \
               [(c["name"], tracked(c["url"], "footer")) for c in COMMUNITY]
@@ -468,13 +470,15 @@ def faq():
     reindeer = SHOP[0]
     radio = next(s for s in SERVICES if s["id"] == "radio-to-web")
     tool_names = ", ".join(t["name"] for t in TOOLS)
+    utility_names = ", ".join(f"{u['name']} ({u['url']})" for u in UTILITIES)
     note = f" {reindeer['note']}" if TODAY.isoformat() <= reindeer["noteUntil"] else ""
     return [
         ("Who is Jon Maestas?", PERSON["summary"]),
         ("What apps has Jon Maestas built?",
          f"{P1['name']} ({P1['url']}), a free AI sports coach for iPhone and Android, and {diamond['name']} "
          f"({diamond['url']}), an AR baseball and softball field layout app for iPhone. He also makes free "
-         f"web tools for coaches and players: {tool_names}."),
+         f"web tools for coaches and players: {tool_names}, plus {utility_names} for moving text and files "
+         f"between devices."),
         ("Is Player 1 free?", P1["pricing"]),
         ("What does Player 1: Diamond Setup do?", f"{diamond['summary']} {diamond['pricing']}"),
         ("Where can I buy Reindeer Food?", f"From Reindeer Food Co. at {reindeer['url']}. {reindeer['pricing']}{note}"),
@@ -624,7 +628,27 @@ def render_tools():
   <span class="tool-summary">{e(t['summary'])}</span>
   <span class="tool-open">Open {GLYPHS['arrow']}</span>
 </a>""")
-    return f'<div class="grid grid-tools">{"".join(cards)}</div>'
+    return f'<div class="grid grid-tools">{"".join(cards)}</div>{render_utilities()}'
+
+
+def render_utilities():
+    cards = []
+    for u in UTILITIES:
+        links = "".join(f'<li><a href="{e(l["url"])}">{e(l["name"])}</a><p>{e(l["summary"])}</p></li>' for l in u["links"])
+        cards.append(f"""<article class="card utility" id="{u['id']}">
+  <div>
+    <div class="utility-head">
+      {glyph(u['glyph'])}
+      <div>
+        <h4 class="tool-name"><a href="{e(u['url'])}">{e(u['name'])}</a></h4>
+        <span class="mini-domain">{domain(u['url'])}</span>
+      </div>
+    </div>
+    <p class="tool-summary">{e(u['summary'])}</p>
+  </div>
+  <ul class="utility-links">{links}</ul>
+</article>""")
+    return f'<h3 class="subhead">Everyday tools</h3><div class="stack">{"".join(cards)}</div>' if cards else ""
 
 
 def render_guides():
@@ -676,7 +700,7 @@ def build_home(posts):
              {"@type": "WebPage", "@id": f"{SITE}/#webpage", "url": SITE + "/", "name": DATA["site"]["title"],
               "description": DATA["site"]["description"], "isPartOf": {"@id": WEBSITE_ID},
               "about": {"@id": PERSON_ID}, "primaryImageOfPage": OG_IMAGE, "inLanguage": "en-US"},
-             *[app_ld(a) for a in APPS], *[shop_ld(s) for s in SHOP], *[tool_ld(t) for t in TOOLS],
+             *[app_ld(a) for a in APPS], *[shop_ld(s) for s in SHOP], *[tool_ld(t) for t in TOOLS + UTILITIES],
              *[site_ld(h) for h in HOLIDAY], *[site_ld(c) for c in COMMUNITY], *[service_ld(s) for s in SERVICES],
              {"@type": "ItemList", "@id": f"{SITE}/#guides", "name": "Free coaching guides",
               "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": s["name"], "url": s["url"]}
@@ -706,7 +730,7 @@ def build_about():
     built = [(a["name"], tracked(a["url"], "about"), a["tagline"]) for a in APPS] + \
             [(s["name"], tracked(s["url"], "about"), f"{s['tagline']} {s['madeBy']}") for s in SHOP] + \
             [(h["name"], tracked(h["url"], "about"), h["summary"]) for h in HOLIDAY] + \
-            [(t["name"], t["url"], t["summary"]) for t in TOOLS] + \
+            [(t["name"], t["url"], t["summary"]) for t in TOOLS + UTILITIES] + \
             [(c["name"], tracked(c["url"], "about"), c["summary"]) for c in COMMUNITY] + \
             [(s["name"], tracked(s["url"], "about"), s["summary"]) for s in SERVICES]
     built_html = "".join(f'<li><a href="{e(u)}">{e(n)}</a>: {e(d)}</li>' for n, u, d in built)
@@ -863,6 +887,9 @@ def build_llms(posts):
         lines.append(f"- [{h['name']}]({h['url']}): {h['summary']}")
     lines += ["", "## Free web tools", ""]
     lines += [f"- [{t['name']}]({absolute(t['url'])}): {t['summary']}" for t in TOOLS]
+    for u in UTILITIES:
+        parts = "; ".join(f"[{l['name']}]({l['url']}): {l['summary']}" for l in u["links"])
+        lines.append(f"- [{u['name']}]({u['url']}): {u['summary']} {parts}")
     lines += ["", "## Free coaching guides", ""]
     for g in GUIDES:
         lines += [f"- [{s['name']}]({s['url']}) ({g['group']}): {s['summary']}" for s in g["sites"]]
@@ -1072,6 +1099,9 @@ def build_llms_full(posts):
 
     L += ["## Free web tools", "", "Free, in the browser, no download or account.", ""]
     L += [f"- [{t['name']}]({absolute(t['url'])}): {t['summary']}" for t in TOOLS]
+    for u in UTILITIES:
+        L += [f"- [{u['name']}]({u['url']}): {u['summary']}"] + \
+             [f"  - [{l['name']}]({l['url']}): {l['summary']}" for l in u["links"]]
     L += ["", "## Free coaching guides", "",
           "Guide sites Jon publishes for coaches, parents and players. Each one links to Player 1 for video feedback.", ""]
     for g in GUIDES:

@@ -278,6 +278,18 @@ p { margin: 0 0 1em; }
 .mini .glyph { margin-bottom: 0.6rem; }
 .mini-domain { color: var(--link); font-size: 0.875rem; }
 
+.utility { display: grid; gap: 1rem 2.5rem; }
+@media (min-width: 900px) { .utility { grid-template-columns: 1fr 2fr; align-items: start; } }
+.utility-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.75rem; }
+.utility-head .tool-name { margin: 0; }
+.utility-head .tool-name a { color: var(--fg); text-decoration: none; }
+.utility-head .tool-name a:hover { color: var(--link); text-decoration: underline; }
+.utility .tool-summary { margin: 0; }
+.utility-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.utility-links li { padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-alt); }
+.utility-links a { font-weight: 700; }
+.utility-links p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+
 .guide-groups { columns: 3 18rem; column-gap: 1.25rem; }
 .guide-group { break-inside: avoid; margin-bottom: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
 .guide-group h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1rem; }

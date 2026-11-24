@@ -219,6 +219,21 @@
       "summary": "Flick-to-swing golf you play against friends, one turn at a time. Driver, iron and putter, and no luck in the lies."
     }
   ],
+  "utilities": [
+    {
+      "id": "beam",
+      "name": "Beam",
+      "url": "https://beam.jonmaestas.com/",
+      "glyph": "qr",
+      "category": "UtilitiesApplication",
+      "summary": "Move text and files between your devices with a QR code, right in the browser. No app, no account, and nothing is sent to a server.",
+      "links": [
+        { "name": "Beam text", "url": "https://beam.jonmaestas.com/beam", "summary": "Paste text and it plays as an animated QR code that your phone's camera reads." },
+        { "name": "Scanner", "url": "https://beam.jonmaestas.com/scan", "summary": "Point the camera at a Beam code and get the text back, checked against a hash." },
+        { "name": "Share files", "url": "https://beam.jonmaestas.com/share", "summary": "Pair two devices with one scan, then send files up to 512 MB each, encrypted in the browser." }
+      ]
+    }
+  ],
   "guides": [
     {
       "group": "Baseball & softball",

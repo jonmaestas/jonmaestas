@@ -105,6 +105,10 @@ Free, in the browser, no download or account.
 - [Soccer Drill Timer](https://jonmaestas.com/drill-timer.html): 45-second ball-mastery reps with self-paced rest. Say "go" to start the next rep, no hands needed.
 - [Juggle Tracker](https://jonmaestas.com/juggle-tracker.html): Counts soccer juggles with your phone's camera, with milestones and a 0 to 100 progression guide.
 - [Pocket Golf](https://jonmaestas.com/pocket-golf.html): Flick-to-swing golf you play against friends, one turn at a time. Driver, iron and putter, and no luck in the lies.
+- [Beam](https://beam.jonmaestas.com/): Move text and files between your devices with a QR code, right in the browser. No app, no account, and nothing is sent to a server.
+  - [Beam text](https://beam.jonmaestas.com/beam): Paste text and it plays as an animated QR code that your phone's camera reads.
+  - [Scanner](https://beam.jonmaestas.com/scan): Point the camera at a Beam code and get the text back, checked against a hash.
+  - [Share files](https://beam.jonmaestas.com/share): Pair two devices with one scan, then send files up to 512 MB each, encrypted in the browser.
 
 ## Free coaching guides
 
@@ -179,7 +183,7 @@ Jon Maestas is a software builder in Wright City, Missouri, and the founder of S
 
 ### What apps has Jon Maestas built?
 
-Player 1: Athletic Intelligence (https://player1athlete.com/), a free AI sports coach for iPhone and Android, and Player 1: Diamond Setup (https://player1athlete.com/apps/diamondsetup), an AR baseball and softball field layout app for iPhone. He also makes free web tools for coaches and players: Soccer Board, Soccer Drill Timer, Juggle Tracker, Pocket Golf.
+Player 1: Athletic Intelligence (https://player1athlete.com/), a free AI sports coach for iPhone and Android, and Player 1: Diamond Setup (https://player1athlete.com/apps/diamondsetup), an AR baseball and softball field layout app for iPhone. He also makes free web tools for coaches and players: Soccer Board, Soccer Drill Timer, Juggle Tracker, Pocket Golf, plus Beam (https://beam.jonmaestas.com/) for moving text and files between devices.
 
 ### Is Player 1 free?
 
